@@ -1,0 +1,34 @@
+html {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  text-align: center;
+  font-family: "Verdana", Arial, sans-serif;
+  background-color: #2C2F33;
+  color: #FFFFFF;
+  font-size: 12px;
+}
+
+h1 {
+  font-family: "Arial";
+  color: #FFFFFF;
+  font-size: 26px;
+  font-weight: normal;
+  margin: 4px;
+}
+
+.txt1 {
+  font-family: "Verdana";
+  color: #FFFFFF;
+  font-size: 12px;
+  text-align: left;
+}
+
+.txt2 {
+  font-family: "Verdana";
+  color: #99AAB5;
+  font-size: 12px;
+  text-align: left;
+}
