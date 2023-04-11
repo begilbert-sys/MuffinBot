@@ -24,8 +24,8 @@ class MyClient(discord.Client):
             perms = channel.permissions_for(guild.me)
             if type(channel) is discord.channel.TextChannel and perms.read_message_history:
                 kwargs = {'limit': MSG_LIMIT}
-                if channel.id in database.channel_endmsgs:
-                    kwargs['after'] = database.channel_endmsgs[channel.id]
+                if str(channel.id) in database.channel_endmsgs:
+                    kwargs['after'] = database.channel_endmsgs[str(channel.id)]
                 else:
                     kwargs['oldest_first'] = True
                     
@@ -34,8 +34,9 @@ class MyClient(discord.Client):
                     if n % 1000 == 0:
                         print(n)
                     database.process_message(message)
-            database.channel_endmsgs[channel.id] = message.id
+            database.channel_endmsgs[str(channel.id)] = message.id
         print('done!')
+        database.save()
         await self.close()
 intents = discord.Intents.default()
 intents.message_content = True

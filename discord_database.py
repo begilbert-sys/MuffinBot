@@ -34,7 +34,7 @@ class Dictionary_Database:
             self.database = dict()
             self.channel_endmsgs = dict()
             
-    def upload(self):
+    def save(self):
         full_data = {'database': self.database,
                      'channel_endmsgs': self.channel_endmsgs}
         
@@ -46,14 +46,15 @@ class Dictionary_Database:
 
         default_info_dict = {'tag': f'{user.name}#{user.discriminator}',
                      'channel_counts': dict(),
-                     'hour_counts': {hour:0 for hour in range(24)},
+                     'hour_counts': {str(hour):0 for hour in range(24)},
                      'date_counts': dict(),
                      'emoji_counts': dict(),
                      'mention_counts': dict(),
                      'unique_word_counts': dict(),
                      'curse_word_count': 0}
-        
-        self.database[user.id] = default_info_dict
+
+        # json keys NEED to be strings
+        self.database[str(user.id)] = default_info_dict
         
     def process_message(self, message: discord.message):
 
@@ -64,15 +65,15 @@ class Dictionary_Database:
         if user_id not in self.database:
             self.add_user(message.author)
             
-        user_dict = self.database[user_id]
+        user_dict = self.database[str(user_id)]
         
         #channel
-        channel_id = message.channel.id
+        channel_id = str(message.channel.id)
         channel_dict = user_dict['channel_counts']
         channel_dict[channel_id] = channel_dict.get(channel_id, 0) + 1
 
         #hour
-        user_dict['hour_counts'][message.created_at.hour] += 1
+        user_dict['hour_counts'][str(message.created_at.hour)] += 1
 
         #date
         date = message.created_at.strftime('%y%m%d')
@@ -97,6 +98,7 @@ class Dictionary_Database:
                     
         #mentions
         if type(message) is discord.MessageType.reply:
+            # check this
             mentions_list = [message.reference.resolved.author]
         else:
             mentions_list = []
