@@ -97,7 +97,7 @@ class Dictionary_Database:
                     user_dict['curse_word_count'] += 1
                     
         #mentions
-        if type(message) is discord.MessageType.reply:
+        if message.type is discord.MessageType.reply:
             # check this
             mentions_list = [message.reference.resolved.author]
         else:
