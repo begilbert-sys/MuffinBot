@@ -4,9 +4,7 @@ import discord
 
 from discord_database import Dictionary_Database
 
-from API_Key import KEY
-
-GUILD_ID = 920955603638190090
+from presets import KEY, GUILD_ID
 
 MSG_LIMIT = 25
 
@@ -14,7 +12,6 @@ database = Dictionary_Database(GUILD_ID)
     
 class MyClient(discord.Client):
     async def on_ready(self):
-        global guild
         print(f'Logged on as {self.user}!')
         
         guild = self.get_guild(GUILD_ID)
@@ -46,4 +43,5 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = MyClient(intents=intents)
-client.run(KEY)
+if __name__ == '__main__':
+    client.run(KEY)

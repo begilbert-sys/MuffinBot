@@ -1,5 +1,5 @@
 __pycache__
 db.sqlite3
 discord_dbs/**
-API_key.py
+presets.py
 .DS_Store
