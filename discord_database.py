@@ -128,3 +128,6 @@ class Dictionary_Database:
             totals['curse_word_count'] += self.database[user]['curse_word_count']
         return totals
     
+    def total_users(self):
+        return len(self.database)
+    

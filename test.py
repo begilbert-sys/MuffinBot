@@ -4,7 +4,7 @@ import discord
 
 from discord_database import Dictionary_Database
 
-from API_key import KEY
+from API_Key import KEY
 
 GUILD_ID = 100770673609150464
 
