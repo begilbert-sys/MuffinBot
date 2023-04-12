@@ -4,17 +4,17 @@ import discord
 
 from discord_database import Dictionary_Database
 
-from presets import KEY, GUILD_ID
+from presets import KEY
 
 MSG_LIMIT = 25
 
-database = Dictionary_Database(GUILD_ID)
+database = Dictionary_Database()
     
 class MyClient(discord.Client):
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
         
-        guild = self.get_guild(GUILD_ID)
+        guild = self.get_guild(database.GUILD_ID)
         
         for channel in guild.channels:
             perms = channel.permissions_for(guild.me)

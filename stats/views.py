@@ -2,7 +2,8 @@ from django.shortcuts import render
 
 from ..discord_database import Dictionary_Database
 
-from ..presets import GUILD_ID
+
+database = Dictionary_Database()
 
 # Create your views here.
 def index(request):

@@ -7,6 +7,8 @@ import os
 import pytz
 import re
 
+from presets import GUILD_ID
+
 with open('words.txt') as f:
     WORDS = {w.lower() for w in f.read().split('\n')}
     
@@ -29,8 +31,9 @@ class Dictionary_Database:
 
     self.channel_endmsgs : a dictionary which keeps track of the last message that has been processed from each channel
     '''
-    def __init__(self, guild_id: int):
-        self.db_file = f'discord_dbs/discord_database_{guild_id}.json'
+    GUILD_ID = GUILD_ID
+    def __init__(self):
+        self.db_file = f'discord_dbs/discord_database_{self.GUILD_ID}.json'
         if os.path.isfile(self.db_file):
             with open(self.db_file) as f:
                 full_data = json.load(f)
