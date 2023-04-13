@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from ..discord_database import Dictionary_Database
+from .discord_database import Dictionary_Database
 
 
 database = Dictionary_Database()

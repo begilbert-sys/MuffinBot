@@ -150,4 +150,3 @@ class Dictionary_Database:
     def last_message_date(self):
         date_string = max(self.database_totals['date_counts'])
         return datetime.strptime(date_string, '%y%m%d')
-

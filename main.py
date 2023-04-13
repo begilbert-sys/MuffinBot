@@ -2,9 +2,9 @@
 
 import discord
 
-from discord_database import Dictionary_Database
+from stats.discord_database import Dictionary_Database
 
-from presets import KEY, MSG_LIMIT
+from presets import TOKEN, MSG_LIMIT
 
 database = Dictionary_Database()
     
@@ -42,4 +42,4 @@ intents.message_content = True
 
 client = MyClient(intents=intents)
 if __name__ == '__main__':
-    client.run(KEY)
+    client.run(TOKEN)
