@@ -151,6 +151,3 @@ class Dictionary_Database:
         date_string = max(self.database_totals['date_counts'])
         return datetime.strptime(date_string, '%y%m%d')
 
-database = Dictionary_Database()
-print(database.last_message_date())
-print(database.first_message_date())
