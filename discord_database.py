@@ -1,11 +1,13 @@
 import discord
 
-import datetime
+
 import emoji
 import json
 import os
 import pytz
 import re
+
+from datetime import datetime 
 
 from presets import GUILD_ID
 
@@ -148,3 +150,7 @@ class Dictionary_Database:
     def last_message_date(self):
         date_string = max(self.database_totals['date_counts'])
         return datetime.strptime(date_string, '%y%m%d')
+
+database = Dictionary_Database()
+print(database.last_message_date())
+print(database.first_message_date())

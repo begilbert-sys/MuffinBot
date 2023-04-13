@@ -4,9 +4,7 @@ import discord
 
 from discord_database import Dictionary_Database
 
-from presets import KEY
-
-MSG_LIMIT = 25
+from presets import KEY, MSG_LIMIT
 
 database = Dictionary_Database()
     
