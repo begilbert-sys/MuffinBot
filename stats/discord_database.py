@@ -11,10 +11,10 @@ from datetime import datetime
 
 from .presets import GUILD_ID
 
-with open('words.txt') as f:
+with open('words/words.txt') as f:
     WORDS = {w.lower() for w in f.read().split('\n')}
     
-with open('curse_words.txt') as f:
+with open('words/curse_words.txt') as f:
     CURSE_WORDS = set(f.read().split('\n'))
 
 ### utility functions 
