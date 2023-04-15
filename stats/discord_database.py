@@ -19,6 +19,7 @@ with open('stats/words/curse_words.txt') as f:
 
 ### utility functions 
 def get_emojis(string):
+    '''returns a list of all the unicoe and custom emojis in a discord message string'''
     unicode_emoji_list = emoji.distinct_emoji_list(string)
     custom_emoji_list = re.findall(r'<:\w*:\d*>', string)
     return unicode_emoji_list + custom_emoji_list
@@ -54,6 +55,7 @@ class Dictionary_Database:
             json.dump(full_data, f)
             
     def add_user(self, user: discord.user):
+        '''adds a new user to the database'''
         user_key = str(user.id)
         assert user_key not in self.database
 
@@ -70,6 +72,7 @@ class Dictionary_Database:
         self.database[user_key] = default_info_dict
         
     def process_message(self, message: discord.message):
+        '''adds all the relevant info from a discord message to the database'''
         #user
         user_key = str(message.author.id)
         if user_key not in self.database:
@@ -141,15 +144,35 @@ class Dictionary_Database:
         return totals
     
     def total_users(self):
+        '''total number of users in the database'''
         return len(self.database)
     
     def first_message_date(self):
+        '''returns the date of the earliest message'''
         date_string = min(self.database_totals['date_counts'])
         return datetime.strptime(date_string, '%y%m%d')
     
     def last_message_date(self):
+        '''returns the date of the latest message'''
         date_string = max(self.database_totals['date_counts'])
         return datetime.strptime(date_string, '%y%m%d')
     
     def total_days(self):
+        '''returns the total number of '''
         return (self.last_message_date() - self.first_message_date()).days
+    
+    @staticmethod
+    def graph_readable_values(dictionary):
+        MAX_WEIGHT = 120
+            
+        max_val = max(dictionary.values())
+
+        total = sum([dictionary[x] for x in dictionary])
+
+        readable_dict = dict()
+
+        for key in dictionary:
+            value = dictionary[key]
+            readable_dict[key] = {'percentage': "{:.1f}".format(value*100/total),
+                                  'weight': (value/max_val) * MAX_WEIGHT}
+        return readable_dict

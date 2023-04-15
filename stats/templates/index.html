@@ -31,14 +31,19 @@
     <table cellspacing="1" cellpadding="2">
       <tbody>
         <tr class="s1" valign="bottom">
-          <td class="tgr">
-            4.4%
-            <br>
-            <img src="{% static 'pipe1v.png' %}" width="18" height="72">
-          </td>
+          {% for key, value in total_hour_counts.items %}
+            <td class="tgr">
+              {{ value.percentage }}%
+              <br>
+              <img src="{% static 'pipe1v.png' %}" width="18" height="{{ value.weight }}">
+            </td>
+          {% endfor %}
         </tr>
+
         <tr class="s3">
-          <td class="cd">0</td>
+          {% for key, value in total_hour_counts.items %}
+            <td class="cd">{{ key }}</td>
+          {% endfor %}
         </tr>
       </tbody>
     </table>

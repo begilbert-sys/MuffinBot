@@ -17,7 +17,8 @@ def index(request):
         'first_message_date': database.first_message_date(),
         'last_message_date': database.last_message_date(),
         'total_users' : len(database.database),
-        'reporting_period_days': database.total_days()
+        'reporting_period_days': database.total_days(),
 
+        'total_hour_counts': database.graph_readable_values(database.database_totals['hour_counts'])
         }
     return render(request, "index.html", context)
