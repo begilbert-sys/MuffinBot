@@ -4,7 +4,7 @@ import discord
 
 from stats.discord_database import Dictionary_Database
 
-from presets import TOKEN, MSG_LIMIT
+from stats.presets import TOKEN, MSG_LIMIT
 
 database = Dictionary_Database()
     

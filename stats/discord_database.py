@@ -7,9 +7,9 @@ import os
 import pytz
 import re
 
-from datetime import datetime 
+from datetime import datetime
 
-from presets import GUILD_ID
+from .presets import GUILD_ID
 
 with open('words.txt') as f:
     WORDS = {w.lower() for w in f.read().split('\n')}
@@ -150,3 +150,6 @@ class Dictionary_Database:
     def last_message_date(self):
         date_string = max(self.database_totals['date_counts'])
         return datetime.strptime(date_string, '%y%m%d')
+    
+    def total_days(self):
+        return (self.last_message_date() - self.first_message_date()).days
