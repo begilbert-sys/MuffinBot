@@ -11,10 +11,10 @@ from datetime import datetime
 
 from .presets import GUILD_ID
 
-with open('words/words.txt') as f:
+with open('stats/words/words.txt') as f:
     WORDS = {w.lower() for w in f.read().split('\n')}
     
-with open('words/curse_words.txt') as f:
+with open('stats/words/curse_words.txt') as f:
     CURSE_WORDS = set(f.read().split('\n'))
 
 ### utility functions 
@@ -35,7 +35,7 @@ class Dictionary_Database:
     '''
     GUILD_ID = GUILD_ID
     def __init__(self):
-        self.db_file = f'discord_dbs/discord_database_{self.GUILD_ID}.json'
+        self.db_file = f'stats/discord_dbs/discord_database_{self.GUILD_ID}.json'
         if os.path.isfile(self.db_file):
             with open(self.db_file) as f:
                 full_data = json.load(f)
