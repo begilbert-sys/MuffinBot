@@ -4,8 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>replit</title>
+  <title>UCLA Students & Friends Stats</title>
   {% load static %}
+  {% load humanize %}
   <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 
@@ -15,12 +16,34 @@
       UCLA Students & Friends Stats by Muffinlicious#4263 (rendered on {% now "n/j/o" %})
     </h1>
     <span class="txt2">
-      Statistics generated from Thursday 9/28/2017 to Saturday 4/1/2023
+      Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
+    </span>
+    <br>
+    <span class="txt2">
+      {{ total_users }} users chatted in this server during this {{ reporting_period_days|intcomma }}-day reporting period
     </span>
     
     <img src="{% static 'pipeltv.png' %}" height="3" width="90%" alt="">
     <br>
     <br>
+
+    <h3>When's the best time to chat?</h3>
+    <table cellspacing="1" cellpadding="2">
+      <tbody>
+        <tr class="s1" valign="bottom">
+          <td class="tgr">
+            4.4%
+            <br>
+            <img src="{% static 'pipe1v.png' %}" width="18" height="72">
+          </td>
+        </tr>
+        <tr class="s3">
+          <td class="cd">0</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <span class="txt2">PST / PDT (UTC-8/7)</span>
     
     
   </center>

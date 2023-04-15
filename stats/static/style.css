@@ -19,6 +19,21 @@ h1 {
   margin: 4px;
 }
 
+h3 {
+  font-family: "Arial";
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: normal;
+  margin: 3px;
+}
+
+table {
+  border: 0px;
+  padding: 0px;
+  border-spacing: 1px;
+}
+
+
 .txt1 {
   font-family: "Verdana";
   color: #FFFFFF;
@@ -31,4 +46,28 @@ h1 {
   color: #99AAB5;
   font-size: 12px;
   text-align: left;
+}
+
+.s1 {
+  font-family: "Arial";
+  color: #99AAB5;
+  font-size: 9px;
+  vertical-align: bottom;
+  text-align: center;
+}
+
+.tgr, .tinv {
+  border: 0px;
+}
+
+.s3 {
+  font-family: "Arial";
+  color: #FFFFFF;
+  font-size: 9px;
+  vertical-align: bottom;
+  text-align: center;
+}
+
+.cd {
+  background-color: #7289DA;
 }
