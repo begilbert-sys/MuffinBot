@@ -61,7 +61,6 @@ class Dictionary_Database:
 
         # json keys NEED to be strings
         user_key = str(user.id)
-        assert user_key not in self.database
 
         default_info_dict = {'tag': f'{user.name}#{user.discriminator}',
                              'avatar': str(user.display_avatar),
@@ -144,6 +143,8 @@ class Dictionary_Database:
                 totals[stat] = totals.get(stat, 0) + self.database[user][key][stat]
         return totals
     
+    ### data display methods
+
     @property
     def database_totals(self):
         '''sums up subdictionary totals across all users'''

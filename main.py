@@ -24,7 +24,7 @@ class MyClient(discord.Client):
             if (type(channel) is discord.channel.TextChannel and perms.read_message_history 
                 and channel.last_message_id != database.channel_endmsgs.get(channel_key)):
 
-                # setup for message retrieval: allows both new and alread-scraped channels to be scraped
+                # setup for message retrieval: allows both new and already-scraped channels to be scraped
                 kwargs = {'limit': MSG_LIMIT}
                 if channel_key in database.channel_endmsgs:
                     last_msg_id = database.channel_endmsgs[channel_key]
