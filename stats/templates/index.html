@@ -7,6 +7,8 @@
   <title>UCLA Students & Friends Stats</title>
   {% load static %}
   {% load humanize %}
+  {% load mathfilters %}
+  {% load stat_extras %}
   <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 
@@ -20,7 +22,7 @@
     </span>
     <br>
     <span class="txt2">
-      {{ total_users }} users chatted in this server during this {{ reporting_period_days|intcomma }}-day reporting period
+      {{ database|length }} users chatted in this server during this {{ reporting_period_days|intcomma }}-day reporting period
     </span>
     
     <img src="{% static 'pipeltv.png' %}" height="3" width="90%" alt="">
@@ -31,18 +33,20 @@
     <table cellspacing="1" cellpadding="2">
       <tbody>
         <tr class="s1" valign="bottom">
-          {% for key, value in total_hour_counts.items %}
+          {% for hour, value in hour_counts.items %}
             <td class="tgr">
-              {{ value.percentage }}%
+              <!-- hour percentage value -->
+              {{ value|div:hour_max|floatformat:1 }}%
               <br>
-              <img src="{% static 'pipe1v.png' %}" width="18" height="{{ value.weight }}">
+              <!-- changes color of png based on time of day -->
+              <img src='{% static hour|set_hour_png %}' width="18" height="{% widthratio value hour_max 120 %}">
             </td>
           {% endfor %}
         </tr>
 
         <tr class="s3">
-          {% for key, value in total_hour_counts.items %}
-            <td class="cd">{{ key }}</td>
+          {% for hour, value in hour_counts.items %}
+            <td class="cd">{{ hour }}</td>
           {% endfor %}
         </tr>
       </tbody>

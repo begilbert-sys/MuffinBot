@@ -4,15 +4,18 @@ import discord
 
 from stats.discord_database import Dictionary_Database
 
-from stats.presets import TOKEN, MSG_LIMIT
+from stats.presets import TOKEN, MSG_LIMIT, GUILD_ID
 
-database = Dictionary_Database()
+database = Dictionary_Database(GUILD_ID)
     
 class MyClient(discord.Client):
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
         
-        guild = self.get_guild(database.GUILD_ID)
+        # register the guild's name 
+        guild = self.get_guild(GUILD_ID)
+        if not database.name:
+            database.name = guild.name
         
         for channel in guild.channels:
             perms = channel.permissions_for(guild.me)

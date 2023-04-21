@@ -9,7 +9,6 @@ import re
 
 from datetime import datetime
 
-from .presets import GUILD_ID
 
 with open('stats/words/words.txt') as f:
     WORDS = {w.lower() for w in f.read().split('\n')}
@@ -34,22 +33,25 @@ class Dictionary_Database:
 
     self.channel_endmsgs : a dictionary which keeps track of the last message that has been processed from each channel
     '''
-    GUILD_ID = GUILD_ID
-    def __init__(self):
-        self.db_file = f'stats/discord_dbs/discord_database_{self.GUILD_ID}.json'
+    def __init__(self, guild_id):
+        self.db_file = f'stats/discord_dbs/discord_database_{guild_id}.json'
         if os.path.isfile(self.db_file):
             with open(self.db_file) as f:
                 full_data = json.load(f)
             self.database = full_data['database']
             self.channel_endmsgs = full_data['channel_endmsgs']
+            self.name = full_data['guild_name']
         else:
             self.database = dict()
             self.channel_endmsgs = dict()
+            self.name = ''
+
             
     def save(self):
         '''stores the collected data in a json file'''
         full_data = {'database': self.database,
-                     'channel_endmsgs': self.channel_endmsgs}
+                     'channel_endmsgs': self.channel_endmsgs,
+                     'guild_name': self.name}
         
         with open(self.db_file, 'w') as f:
             json.dump(full_data, f)
@@ -70,7 +72,9 @@ class Dictionary_Database:
 
         # json keys NEED to be strings
         self.database[user_key] = default_info_dict
-        
+    
+    def _handle_mentions(self, message: discord.message):
+        pass
     def process_message(self, message: discord.message):
         '''adds all the relevant info from a discord message to the database'''
         #user
@@ -147,6 +151,14 @@ class Dictionary_Database:
         '''total number of users in the database'''
         return len(self.database)
     
+    def total_messages(self):
+        '''returns the total number of processed messages'''
+        assert (sum(self.database_totals['channel_counts'].values()) == 
+                sum(self.database_totals['hour_counts'].values()) == 
+                sum(self.database_totals['date_counts'].values()))
+        
+        return sum(self.database_totals['channel_counts'].values())
+
     def first_message_date(self):
         '''returns the date of the earliest message'''
         date_string = min(self.database_totals['date_counts'])
@@ -158,21 +170,6 @@ class Dictionary_Database:
         return datetime.strptime(date_string, '%y%m%d')
     
     def total_days(self):
-        '''returns the total number of '''
+        '''returns the total number of elapsed days between the first and last message '''
         return (self.last_message_date() - self.first_message_date()).days
     
-    @staticmethod
-    def graph_readable_values(dictionary):
-        MAX_WEIGHT = 120
-            
-        max_val = max(dictionary.values())
-
-        total = sum([dictionary[x] for x in dictionary])
-
-        readable_dict = dict()
-
-        for key in dictionary:
-            value = dictionary[key]
-            readable_dict[key] = {'percentage': "{:.1f}".format(value*100/total),
-                                  'weight': (value/max_val) * MAX_WEIGHT}
-        return readable_dict
