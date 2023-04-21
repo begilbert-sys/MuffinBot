@@ -58,23 +58,25 @@ class Dictionary_Database:
             
     def add_user(self, user: discord.user):
         '''adds a new user to the database'''
+
+        # json keys NEED to be strings
         user_key = str(user.id)
         assert user_key not in self.database
 
         default_info_dict = {'tag': f'{user.name}#{user.discriminator}',
-                     'channel_counts': dict(),
-                     'hour_counts': {str(hour):0 for hour in range(24)},
-                     'date_counts': dict(),
-                     'emoji_counts': dict(),
-                     'mention_counts': dict(),
-                     'unique_word_counts': dict(),
-                     'curse_word_count': 0}
+                             'avatar': str(user.display_avatar),
 
-        # json keys NEED to be strings
+                             'channel_counts': dict(),
+                             'hour_counts': {str(hour):0 for hour in range(24)},
+                             'date_counts': dict(),
+                             'emoji_counts': dict(),
+                             'mention_counts': dict(),
+                             'unique_word_counts': dict(),
+                             'curse_word_count': 0
+                             }
+
         self.database[user_key] = default_info_dict
     
-    def _handle_mentions(self, message: discord.message):
-        pass
     def process_message(self, message: discord.message):
         '''adds all the relevant info from a discord message to the database'''
         #user
@@ -106,8 +108,8 @@ class Dictionary_Database:
         unique_words_dict = user_dict['unique_word_counts']
         
         for word in message.content.split():
-            # valid 'words' need to be alphabetic and under 20 characters
-            if word.isalpha() and len(word) < 20:
+            # valid 'words' need to be alphabetic and between 2 and 19 characters
+            if word.isalpha() and len(word) in range(2,20):
                 word = word.lower()
                 if word not in WORDS:
                     unique_words_dict[word] = unique_words_dict.get(word, 0) + 1
@@ -115,18 +117,26 @@ class Dictionary_Database:
                     user_dict['curse_word_count'] += 1
                     
         #mentions
-        if message.type is discord.MessageType.reply:
-            # check this
-            mentions_list = [message.reference.resolved.author]
-        else:
-            mentions_list = []
-        mentions_list += message.mentions
-        mentions_list = [f'{user.name}#{user.discriminator}'
-                         for user in mentions_list]
+        mentions_list = self._message_mentions(message)
         mention_dict = user_dict['mention_counts']
         for user in mentions_list:
             mention_dict[user] = mention_dict.get(user, 0) + 1
     
+    @staticmethod
+    def _message_mentions(message: discord.message):
+        '''
+        a message's mentions consist of: the author of the message that's being replied to (if
+        applicable), as well as all users pinged in the message 
+        returns a list of user IDs
+        '''
+        mentions_list = list()
+        if message.type is discord.MessageType.reply:
+            # sometimes the referenced message is deleted, in this case ignore
+            if not message.reference.resolved.type is discord.DeletedReferencedMessage:
+                mentions_list.append(message.reference.resolved.author.id)
+        mentions_list += [user.id for user in message.mentions]
+        return mentions_list
+
     def _merge_dicts(self, key):
         totals = dict()
         for user in self.database:

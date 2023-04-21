@@ -22,7 +22,7 @@
     </span>
     <br>
     <span class="txt2">
-      {{ database|length }} users chatted in this server during this {{ reporting_period_days|intcomma }}-day reporting period
+      {{ database|length|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ reporting_period_days|intcomma }}-day reporting period
     </span>
     
     <img src="{% static 'pipeltv.png' %}" height="3" width="90%" alt="">
@@ -36,7 +36,7 @@
           {% for hour, value in hour_counts.items %}
             <td class="tgr">
               <!-- hour percentage value -->
-              {{ value|div:hour_max|floatformat:1 }}%
+              {{ value|div:total_messages|mul:100|floatformat:1 }}%
               <br>
               <!-- changes color of png based on time of day -->
               <img src='{% static hour|set_hour_png %}' width="18" height="{% widthratio value hour_max 120 %}">
@@ -53,7 +53,33 @@
     </table>
     <br>
     <span class="txt2">PST / PDT (UTC-8/7)</span>
-    
+    <br>
+    <br>
+    <table border="0" class="txt1">
+      <tbody>
+        <tr>
+          <td class="tinv">
+            <img src="{% static 'pipe1v.png' %}" height="15" width="30" align="top" title="0-6">
+            Hours 0-6
+          </td>
+          <td class="tinv" width="20"></td>
+          <td class="tinv">
+            <img src="{% static 'pipe2v.png' %}" height="15" width="30" align="top" title="6-12">
+            Hours 6-12
+          </td>
+          <td class="tinv" width="20"></td>
+          <td class="tinv">
+            <img src="{% static 'pipe3v.png' %}" height="15" width="30" align="top" title="12-18">
+            Hours 12-18
+          </td>
+          <td class="tinv" width="20"></td>
+          <td class="tinv">
+            <img src="{% static 'pipe4v.png' %}" height="15" width="30" align="top" title="18-24">
+            Hours 18-24
+          </td>
+        </tr>
+      </tbody>
+    </table>
     
   </center>
   
