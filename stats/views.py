@@ -14,6 +14,7 @@ def index(request):
     context = {
         'database': database.database, 
         'database_totals': database.database_totals,
+        'guild_name': database.name,
         'total_messages': database.total_messages(),
         'first_message_date': database.first_message_date(),
         'last_message_date': database.last_message_date(),

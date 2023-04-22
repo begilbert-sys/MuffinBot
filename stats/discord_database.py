@@ -23,6 +23,11 @@ def get_emojis(string):
     custom_emoji_list = re.findall(r'<:\w*:\d*>', string)
     return unicode_emoji_list + custom_emoji_list
 
+def get_URLs(string):
+    '''extracts all the URLs from a string'''
+    URL_REGEX = 'https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)'
+    return re.findall(URL_REGEX, string)
+
 def top_items(dictionary, n):
     ''' returns the top n items from a dictionary'''
     return sorted(dictionary, key=lambda x: dictionary[x], reverse=True)[:n]
@@ -69,6 +74,7 @@ class Dictionary_Database:
                              'hour_counts': {str(hour):0 for hour in range(24)},
                              'date_counts': dict(),
                              'emoji_counts': dict(),
+                             'URL_counts': dict(),
                              'mention_counts': dict(),
                              'unique_word_counts': dict(),
                              'curse_word_count': 0
@@ -102,6 +108,11 @@ class Dictionary_Database:
         emoji_dict = user_dict['emoji_counts']
         for e in get_emojis(message.content):
             emoji_dict[e] = emoji_dict.get(e, 0) + 1
+
+        #URL
+        URL_dict = user_dict['URL_counts']
+        for URL in get_URLs(message.content):
+            URL_dict[URL] = URL_dict.get(URL, 0) + 1
 
         #unique and curse words
         unique_words_dict = user_dict['unique_word_counts']
@@ -150,17 +161,13 @@ class Dictionary_Database:
         '''sums up subdictionary totals across all users'''
         totals = dict()
         iterlist = ['channel_counts', 'hour_counts', 'date_counts',
-                    'emoji_counts', 'mention_counts', 'unique_word_counts']
+                    'emoji_counts', 'URL_counts', 'mention_counts', 'unique_word_counts']
         for stat in iterlist:
             totals[stat] = self._merge_dicts(stat)
         totals['curse_word_count'] = 0
         for user in self.database:
             totals['curse_word_count'] += self.database[user]['curse_word_count']
         return totals
-    
-    def total_users(self):
-        '''total number of users in the database'''
-        return len(self.database)
     
     def total_messages(self):
         '''returns the total number of processed messages'''

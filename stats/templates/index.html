@@ -4,18 +4,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>UCLA Students & Friends Stats</title>
   {% load static %}
   {% load humanize %}
   {% load mathfilters %}
   {% load stat_extras %}
+  <title>{{ guild_name }} Stats</title>
   <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 
 <body>
   <center>
     <h1>
-      UCLA Students & Friends Stats by Muffinlicious#4263 (rendered on {% now "n/j/o" %})
+      {{ guild_name }} Stats by Muffinlicious#4263 (rendered on {% now "n/j/o" %})
     </h1>
     <span class="txt2">
       Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
@@ -60,22 +60,22 @@
         <tr>
           <td class="tinv">
             <img src="{% static 'pipe1v.png' %}" height="15" width="30" align="top" title="0-6">
-            Hours 0-6
+            Night
           </td>
           <td class="tinv" width="20"></td>
           <td class="tinv">
             <img src="{% static 'pipe2v.png' %}" height="15" width="30" align="top" title="6-12">
-            Hours 6-12
+            Morning
           </td>
           <td class="tinv" width="20"></td>
           <td class="tinv">
             <img src="{% static 'pipe3v.png' %}" height="15" width="30" align="top" title="12-18">
-            Hours 12-18
+            Afternoon
           </td>
           <td class="tinv" width="20"></td>
           <td class="tinv">
             <img src="{% static 'pipe4v.png' %}" height="15" width="30" align="top" title="18-24">
-            Hours 18-24
+            Evening
           </td>
         </tr>
       </tbody>
