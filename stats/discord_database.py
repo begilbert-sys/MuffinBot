@@ -32,6 +32,7 @@ def top_items(dictionary, n):
     ''' returns the top n items from a dictionary'''
     return sorted(dictionary, key=lambda x: dictionary[x], reverse=True)[:n]
 
+
 class Dictionary_Database:
     '''
     self.database - a dictionary of users, each with a number of sub-dictionaries keeping track of various statistics
