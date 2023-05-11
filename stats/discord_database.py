@@ -143,7 +143,7 @@ class Dictionary_Database:
         mentions_list = list()
         if message.type is discord.MessageType.reply:
             # sometimes the referenced message is deleted, in this case ignore
-            if not message.reference.resolved.type is discord.DeletedReferencedMessage:
+            if not type(message.reference.resolved) is discord.DeletedReferencedMessage:
                 mentions_list.append(message.reference.resolved.author.id)
         mentions_list += [user.id for user in message.mentions]
         return mentions_list
