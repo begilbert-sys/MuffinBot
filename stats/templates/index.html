@@ -45,9 +45,15 @@
         </tr>
 
         <tr class="s3">
-          {% for hour, value in hour_counts.items %}
-            <td class="cd">{{ hour }}</td>
-          {% endfor %}
+          {% with 'AM PM' as mlist %}
+            {% for meridem in mlist.split %}
+              {% with '12 1 2 3 4 5 6 7 8 9 10 11' as hourlist %}
+                {% for hour in hourlist.split %}
+                  <td class="cd">{{ hour }}{{ meridem }}</td>
+                {% endfor %}
+              {% endwith %}
+            {% endfor %}
+          {% endwith %}
         </tr>
       </tbody>
     </table>

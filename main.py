@@ -31,7 +31,7 @@ class MyClient(discord.Client):
                     kwargs['after'] = message_obj
                 else:
                     kwargs['oldest_first'] = True
-
+                    
                 async for message in channel.history(**kwargs):
                     if message.type in (discord.MessageType.default, discord.MessageType.reply):
                         database.process_message(message)

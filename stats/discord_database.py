@@ -32,6 +32,13 @@ def top_items(dictionary, n):
     ''' returns the top n items from a dictionary'''
     return sorted(dictionary, key=lambda x: dictionary[x], reverse=True)[:n]
 
+def convert_to_pacific_time(dt: datetime) -> datetime:
+    '''
+    discord messages are in UTC by default. 
+    this function converts them to PST/PDT
+    '''
+    PST_PDT = pytz.timezone('America/Los_Angeles')
+    return dt.astimezone(PST_PDT)
 
 class Dictionary_Database:
     '''
@@ -39,8 +46,9 @@ class Dictionary_Database:
 
     self.channel_endmsgs : a dictionary which keeps track of the last message that has been processed from each channel
     '''
+    DB_FOLDER = 'stats/discord_dbs/'
     def __init__(self, guild_id):
-        self.db_file = f'stats/discord_dbs/discord_database_{guild_id}.json'
+        self.db_file = f'{self.DB_FOLDER}/discord_database_{guild_id}.json'
         if os.path.isfile(self.db_file):
             with open(self.db_file) as f:
                 full_data = json.load(f)
@@ -61,7 +69,22 @@ class Dictionary_Database:
         
         with open(self.db_file, 'w') as f:
             json.dump(full_data, f)
-            
+    
+    @staticmethod
+    def erase_all_databases():
+        '''
+        deletes all .json databases
+        this function is for manual use
+        '''
+        yorn = input('Are you sure? y/n: ')
+        if yorn == 'y':
+            for filepath in os.listdir(Dictionary_Database.DB_FOLDER):
+                if filepath.startswith('discord_database_'):
+                    os.remove(f'{Dictionary_Database.DB_FOLDER}/{filepath}')
+            print('files deleted')
+        else:
+            print('operation terminated')
+
     def add_user(self, user: discord.user):
         '''adds a new user to the database'''
 
@@ -85,37 +108,40 @@ class Dictionary_Database:
     
     def process_message(self, message: discord.message):
         '''adds all the relevant info from a discord message to the database'''
-        #user
+        ### USER
         user_key = str(message.author.id)
         if user_key not in self.database:
             self.add_user(message.author)
             
         user_dict = self.database[user_key]
         
-        #channel
+        ### CHANNEL
         channel_key = str(message.channel.id)
         channel_dict = user_dict['channel_counts']
         channel_dict[channel_key] = channel_dict.get(channel_key, 0) + 1
 
-        #hour
-        user_dict['hour_counts'][str(message.created_at.hour)] += 1
+        # convert to PST/PDT
+        message_creation_dt = convert_to_pacific_time(message.created_at)
 
-        #date
-        date = message.created_at.strftime('%y%m%d')
+        ### HOUR 
+        user_dict['hour_counts'][str(message_creation_dt.hour)] += 1
+
+        ### DATE
+        date = message_creation_dt.strftime('%y%m%d')
         date_dict = user_dict['date_counts']
         date_dict[date] = date_dict.get(date, 0) + 1
 
-        #emoji
+        ### EMOJI
         emoji_dict = user_dict['emoji_counts']
         for e in get_emojis(message.content):
             emoji_dict[e] = emoji_dict.get(e, 0) + 1
 
-        #URL
+        ### URL
         URL_dict = user_dict['URL_counts']
         for URL in get_URLs(message.content):
             URL_dict[URL] = URL_dict.get(URL, 0) + 1
 
-        #unique and curse words
+        ### UNIQUE WORDS AND CURSE WORDS
         unique_words_dict = user_dict['unique_word_counts']
         
         for word in message.content.split():
@@ -127,7 +153,7 @@ class Dictionary_Database:
                 if word in CURSE_WORDS:
                     user_dict['curse_word_count'] += 1
                     
-        #mentions
+        ### MENTIONS
         mentions_list = self._message_mentions(message)
         mention_dict = user_dict['mention_counts']
         for user in mentions_list:
@@ -192,3 +218,6 @@ class Dictionary_Database:
         '''returns the total number of elapsed days between the first and last message '''
         return (self.last_message_date() - self.first_message_date()).days
     
+if __name__ == '__main__':
+    pass
+    #Dictionary_Database.erase_all_databases()
