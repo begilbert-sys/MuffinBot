@@ -71,3 +71,39 @@ table {
 .cd {
   background-color: #7289DA;
 }
+
+.t1 {
+  font-family: "Verdana";
+  color: #FFFFFF;
+  font-size: 12px;
+  text-align: left;
+  font-weight: bold;
+}
+
+.t2 {
+  font-family: "Verdana";
+  color: #FFFFFF;
+  font-size: 12px;
+  text-align: left;
+  font-style: normal;
+}
+
+.c {
+  background-color: #7289DA;
+}
+
+.darkrow { 
+  background-color: #53639E;
+}
+
+.lightrow {
+  background-color: #7289DA;
+}
+
+.rank {
+  text-align: right;
+}
+
+.win {
+  font-weight: bold;
+}

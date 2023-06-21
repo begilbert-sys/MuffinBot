@@ -9,13 +9,13 @@
   {% load mathfilters %}
   {% load stat_extras %}
   <title>{{ guild_name }} Stats</title>
-  <link rel="stylesheet" href="{% static 'style.css' %}">
+  <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
 </head>
 
 <body>
   <center>
     <h1>
-      {{ guild_name }} Stats by Muffinlicious#4263 (rendered on {% now "n/j/o" %})
+      {{ guild_name }} Stats (rendered on {% now "n/j/o" %})
     </h1>
     <span class="txt2">
       Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
@@ -28,6 +28,10 @@
     <img src="{% static 'pipeltv.png' %}" height="3" width="90%" alt="">
     <br>
     <br>
+
+    <!-- 
+      When's the best time to chat?
+    -->
 
     <h3>When's the best time to chat?</h3>
     <table cellspacing="1" cellpadding="2">
@@ -44,6 +48,7 @@
           {% endfor %}
         </tr>
 
+        <!-- lists out every hour from 12AM to 11PM -->
         <tr class="s3">
           {% with 'AM PM' as mlist %}
             {% for meridem in mlist.split %}
@@ -86,7 +91,40 @@
         </tr>
       </tbody>
     </table>
-    
+
+    <img src="{% static 'pipeltv.png' %}" height="3" width="90%" alt="">
+    <br>
+    <br>
+
+    <!-- 
+      100 Most Talkative Users
+    -->
+    <h3>100 Most Talkative Users</h3>
+    <table border="0" cellspacing="1" cellpadding="2" class="t2">
+      <tbody>
+        <tr class="t1">
+          <td class="tinv">&nbsp;</td>
+          <td class="c">Nick</td>
+          <td class="c">Line Count</td>
+          <td class="c">Average Lines Per Day</td>
+          <td colspan="2" class="c">Favorite Words</td>
+        </tr>
+        {% for user in user_ranking_display %}
+          <tr class="{% cycle 'darkrow' 'lightrow' %}">
+            <td class="rank">
+              {{ forloop.counter }}
+            </td>
+            <td class="win">
+              {{ user.username }}
+            </td>
+            <td class="win">
+              {{ user.messages }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
   </center>
   
 </body>

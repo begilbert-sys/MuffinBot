@@ -40,11 +40,10 @@ def convert_to_pacific_time(dt: datetime) -> datetime:
     PST_PDT = pytz.timezone('America/Los_Angeles')
     return dt.astimezone(PST_PDT)
 
+
 class Dictionary_Database:
     '''
     self.database - a dictionary of users, each with a number of sub-dictionaries keeping track of various statistics
-
-    self.channel_endmsgs : a dictionary which keeps track of the last message that has been processed from each channel
     '''
     DB_FOLDER = 'stats/discord_dbs/'
     def __init__(self, guild_id):
@@ -108,6 +107,7 @@ class Dictionary_Database:
     
     def process_message(self, message: discord.message):
         '''adds all the relevant info from a discord message to the database'''
+
         ### USER
         user_key = str(message.author.id)
         if user_key not in self.database:
@@ -145,8 +145,8 @@ class Dictionary_Database:
         unique_words_dict = user_dict['unique_word_counts']
         
         for word in message.content.split():
-            # valid 'words' need to be alphabetic and between 2 and 19 characters
-            if word.isalpha() and len(word) in range(2,20):
+            # valid 'words' need to be alphabetic and between 3 and 19 characters
+            if word.isalpha() and len(word) in range(3,20):
                 word = word.lower()
                 if word not in WORDS:
                     unique_words_dict[word] = unique_words_dict.get(word, 0) + 1
@@ -184,7 +184,7 @@ class Dictionary_Database:
     ### data display methods
 
     @property
-    def database_totals(self):
+    def database_totals(self) -> dict:
         '''sums up subdictionary totals across all users'''
         totals = dict()
         iterlist = ['channel_counts', 'hour_counts', 'date_counts',
@@ -196,7 +196,7 @@ class Dictionary_Database:
             totals['curse_word_count'] += self.database[user]['curse_word_count']
         return totals
     
-    def total_messages(self):
+    def total_messages(self) -> int:
         '''returns the total number of processed messages'''
         assert (sum(self.database_totals['channel_counts'].values()) == 
                 sum(self.database_totals['hour_counts'].values()) == 
@@ -204,19 +204,50 @@ class Dictionary_Database:
         
         return sum(self.database_totals['channel_counts'].values())
 
-    def first_message_date(self):
+    def first_message_date(self) -> datetime:
         '''returns the date of the earliest message'''
         date_string = min(self.database_totals['date_counts'])
         return datetime.strptime(date_string, '%y%m%d')
     
-    def last_message_date(self):
+    def last_message_date(self) -> datetime:
         '''returns the date of the latest message'''
         date_string = max(self.database_totals['date_counts'])
         return datetime.strptime(date_string, '%y%m%d')
     
-    def total_days(self):
+    def total_days(self) -> int:
         '''returns the total number of elapsed days between the first and last message '''
         return (self.last_message_date() - self.first_message_date()).days
+    
+    def user_first_message_date(self, user) -> datetime:
+        '''returns the date of the first message sent by a user'''
+        date_string = min(self.database[user]['date_counts'])
+        return datetime.strptime(date_string, '%y%m%d')
+    
+    def user_last_message_date(self, user) -> datetime:
+        '''returns the date of the last message sent by a user'''
+        date_string = max(self.database[user]['date_counts'])
+        return datetime.strptime(date_string, '%y%m%d')  
+
+
+    def _user_ranking_display_setup(self, user: int) -> dict:
+        '''returns a dictionary item containing all of the relevant ranking info for a specific user'''
+        total_messages = sum(self.database[user]['channel_counts'].values())
+        info_dict = {
+            'username': self.database[user]['tag'],
+            'messages': total_messages,
+            'average_daily_messages': ((self.user_last_message_date(user) - self.user_first_message_date(user)).days) / total_messages,
+            'favorite_words': top_items(self.database[user]['unique_word_counts'], 5),
+            'favorite_emojis': top_items(self.database[user]['emoji_counts'], 5)
+        }
+
+        return info_dict
+    
+    def user_ranking_display(self) -> list:
+        user_ranking = list()
+        for user in self.database:
+            user_ranking.append(self. _user_ranking_display_setup(user))
+        user_ranking = sorted(user_ranking, key=lambda u: u['messages'], reverse=True)
+        return user_ranking
     
 if __name__ == '__main__':
     pass

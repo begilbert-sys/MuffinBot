@@ -20,7 +20,7 @@ class MyClient(discord.Client):
         for channel in guild.channels:
             perms = channel.permissions_for(guild.me)
             channel_key = str(channel.id)
-            # only iterates thru channels that: are text channels, it has perms to, and the last msg hasn't been processed
+            # only iterates thru channels that: are text channels it has perms to, and the last msg hasn't been processed
             if (type(channel) is discord.channel.TextChannel and perms.read_message_history 
                 and channel.last_message_id != database.channel_endmsgs.get(channel_key)):
                 # setup for message retrieval: allows both new and already-scraped channels to be scraped
@@ -35,6 +35,9 @@ class MyClient(discord.Client):
                 async for message in channel.history(**kwargs):
                     if message.type in (discord.MessageType.default, discord.MessageType.reply):
                         database.process_message(message)
+                        
+                # saves the ID of the last scraped message
+                database.channel_endmsgs[channel_key] = message.id
         print('done!')
         database.save()
         print(database.database_totals['channel_counts'])

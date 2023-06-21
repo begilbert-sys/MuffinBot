@@ -21,6 +21,8 @@ def index(request):
         'reporting_period_days': database.total_days(),
         
         'hour_counts': database.database_totals['hour_counts'],
-        'hour_max': max(database.database_totals['hour_counts'].values())
+        'hour_max': max(database.database_totals['hour_counts'].values()),
+
+        'user_ranking_display': database.user_ranking_display()
         }
     return render(request, "index.html", context)
