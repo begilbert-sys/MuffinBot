@@ -13,6 +13,7 @@
 </head>
 
 <body>
+  <script src="{% static 'index.js' %}"></script>
   <center>
     <h1>
       {{ guild_name }} Stats (rendered on {% now "n/j/o" %})
@@ -100,25 +101,40 @@
       100 Most Talkative Users
     -->
     <h3>100 Most Talkative Users</h3>
-    <table border="0" cellspacing="1" cellpadding="2" class="t2">
+    <table border="0" cellspacing="1" cellpadding="2" class="t2" id="user_rank">
       <tbody>
         <tr class="t1">
-          <td class="tinv">&nbsp;</td>
-          <td class="c">Nick</td>
-          <td class="c">Line Count</td>
-          <td class="c">Average Lines Per Day</td>
-          <td colspan="2" class="c">Favorite Words</td>
+          <th class="tinv">&nbsp;</td>
+          <th class="c">Nick</td>
+          <th class="c">Line Count</td>
+          <th class="c">Lines Per Day</td>
+          <th class="c">Favorite Words</td>
+          <th class="c">Favorite Emojis</td>
         </tr>
         {% for user in user_ranking_display %}
           <tr class="{% cycle 'darkrow' 'lightrow' %}">
             <td class="rank">
               {{ forloop.counter }}
             </td>
-            <td class="win">
-              {{ user.username }}
+
+            <td>
+              <img src="{{user.avatar }}">{{ user.username }}
             </td>
+
             <td class="win">
               {{ user.messages }}
+            </td>
+
+            <td>
+              {{ user.average_daily_messages|floatformat:1 }}
+            </td>
+
+            <td>
+              {{ user.favorite_words |join:", " }}
+            </td>
+
+            <td>
+              <font size="+1">{{ user.favorite_default_emojis |join:" " }}</font>
             </td>
           </tr>
         {% endfor %}

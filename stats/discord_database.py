@@ -17,11 +17,11 @@ with open('stats/words/curse_words.txt') as f:
     CURSE_WORDS = set(f.read().split('\n'))
 
 ### utility functions 
-def get_emojis(string):
-    '''returns a list of all the unicoe and custom emojis in a discord message string'''
-    unicode_emoji_list = emoji.distinct_emoji_list(string)
-    custom_emoji_list = re.findall(r'<:\w*:\d*>', string)
-    return unicode_emoji_list + custom_emoji_list
+def get_custom_emoji_URLs(string):
+    '''returns a list of the URLs of all the custom emojis in a discord message'''
+    EMOJI_URL = 'https://cdn.discordapp.com/emojis/'
+    custom_emoji_id_list = re.findall(r'<:\w*:(\d*)>', string)
+    return [EMOJI_URL + emoji_id for emoji_id in custom_emoji_id_list]
 
 def get_URLs(string):
     '''extracts all the URLs from a string'''
@@ -46,7 +46,7 @@ class Dictionary_Database:
     self.database - a dictionary of users, each with a number of sub-dictionaries keeping track of various statistics
     '''
     DB_FOLDER = 'stats/discord_dbs/'
-    def __init__(self, guild_id):
+    def __init__(self, guild_id: int):
         self.db_file = f'{self.DB_FOLDER}/discord_database_{guild_id}.json'
         if os.path.isfile(self.db_file):
             with open(self.db_file) as f:
@@ -90,13 +90,20 @@ class Dictionary_Database:
         # json keys NEED to be strings
         user_key = str(user.id)
 
-        default_info_dict = {'tag': f'{user.name}#{user.discriminator}',
+        # accounting for the usernames update
+        if user.discriminator == '0':
+            tag = user.name
+        else:
+            tag = f'{user.name}#{user.discriminator}'
+
+        default_info_dict = {'tag': tag,
                              'avatar': str(user.display_avatar),
 
                              'channel_counts': dict(),
                              'hour_counts': {str(hour):0 for hour in range(24)},
                              'date_counts': dict(),
-                             'emoji_counts': dict(),
+                             'default_emoji_counts': dict(),
+                             'custom_emoji_counts': dict(),
                              'URL_counts': dict(),
                              'mention_counts': dict(),
                              'unique_word_counts': dict(),
@@ -105,7 +112,7 @@ class Dictionary_Database:
 
         self.database[user_key] = default_info_dict
     
-    def process_message(self, message: discord.message):
+    def process_message(self, message: discord.message, reply_message: discord.message = None):
         '''adds all the relevant info from a discord message to the database'''
 
         ### USER
@@ -131,11 +138,16 @@ class Dictionary_Database:
         date_dict = user_dict['date_counts']
         date_dict[date] = date_dict.get(date, 0) + 1
 
-        ### EMOJI
-        emoji_dict = user_dict['emoji_counts']
-        for e in get_emojis(message.content):
-            emoji_dict[e] = emoji_dict.get(e, 0) + 1
+        ### DEFAULT EMOJIS
+        default_emoji_dict = user_dict['default_emoji_counts']
+        for e in emoji.distinct_emoji_list(message.content):
+            default_emoji_dict[e] = default_emoji_dict.get(e, 0) + 1
 
+        ### CUSTOM EMOJIS
+        custom_emoji_dict = user_dict['custom_emoji_counts']
+        for e in get_custom_emoji_URLs(message.content):
+            custom_emoji_dict[e] = custom_emoji_dict.get(e, 0) + 1
+  
         ### URL
         URL_dict = user_dict['URL_counts']
         for URL in get_URLs(message.content):
@@ -152,25 +164,23 @@ class Dictionary_Database:
                     unique_words_dict[word] = unique_words_dict.get(word, 0) + 1
                 if word in CURSE_WORDS:
                     user_dict['curse_word_count'] += 1
-                    
+
         ### MENTIONS
-        mentions_list = self._message_mentions(message)
+        mentions_list = self._message_mentions(message, reply_message)
         mention_dict = user_dict['mention_counts']
         for user in mentions_list:
             mention_dict[user] = mention_dict.get(user, 0) + 1
     
     @staticmethod
-    def _message_mentions(message: discord.message):
+    def _message_mentions(message: discord.message, reply_message: discord.message = None):
         '''
         a message's mentions consist of: the author of the message that's being replied to (if
         applicable), as well as all users pinged in the message 
         returns a list of user IDs
         '''
         mentions_list = list()
-        if message.type is discord.MessageType.reply:
-            # sometimes the referenced message is deleted, in this case ignore
-            if not type(message.reference.resolved) is discord.DeletedReferencedMessage:
-                mentions_list.append(message.reference.resolved.author.id)
+        if reply_message:
+            mentions_list.append(message.author.id)
         mentions_list += [user.id for user in message.mentions]
         return mentions_list
 
@@ -188,7 +198,8 @@ class Dictionary_Database:
         '''sums up subdictionary totals across all users'''
         totals = dict()
         iterlist = ['channel_counts', 'hour_counts', 'date_counts',
-                    'emoji_counts', 'URL_counts', 'mention_counts', 'unique_word_counts']
+                    'default_emoji_counts', 'custom_emoji_counts',
+                    'URL_counts', 'mention_counts', 'unique_word_counts']
         for stat in iterlist:
             totals[stat] = self._merge_dicts(stat)
         totals['curse_word_count'] = 0
@@ -234,10 +245,11 @@ class Dictionary_Database:
         total_messages = sum(self.database[user]['channel_counts'].values())
         info_dict = {
             'username': self.database[user]['tag'],
+            'avatar': self.database[user]['avatar'],
             'messages': total_messages,
             'average_daily_messages': ((self.user_last_message_date(user) - self.user_first_message_date(user)).days) / total_messages,
             'favorite_words': top_items(self.database[user]['unique_word_counts'], 5),
-            'favorite_emojis': top_items(self.database[user]['emoji_counts'], 5)
+            'favorite_default_emojis': top_items(self.database[user]['default_emoji_counts'], 5)
         }
 
         return info_dict
@@ -247,8 +259,8 @@ class Dictionary_Database:
         for user in self.database:
             user_ranking.append(self. _user_ranking_display_setup(user))
         user_ranking = sorted(user_ranking, key=lambda u: u['messages'], reverse=True)
-        return user_ranking
+        return user_ranking[:100] # only the first 100 users get displayed
     
 if __name__ == '__main__':
     pass
-    #Dictionary_Database.erase_all_databases()
+    Dictionary_Database.erase_all_databases()
