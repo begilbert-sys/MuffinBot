@@ -8,9 +8,15 @@
   {% load humanize %}
   {% load mathfilters %}
   {% load stat_extras %}
+  
   <title>{{ guild_name }} Stats</title>
+
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
   <link rel="icon" href="{{ guild_icon }}">
+
+  <script type="text/javascript" src="{% static 'js/jquery-3.7.0.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/jquery.tablesorter.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/index.js' %}"></script>
 </head>
 
 <body>
@@ -101,7 +107,8 @@
       100 Most Talkative Users
     -->
     <h3>100 Most Talkative Users</h3>
-    <table border="0" cellspacing="1" cellpadding="2" class="user_rankings">
+    <table border="0" cellspacing="1" cellpadding="2" 
+    class="user_rankings tablesorter" id="user_rankings">
       <tbody>
         <thead class="user_ranking_headers">
           <th class="blankheader">&nbsp;</td>

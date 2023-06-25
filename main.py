@@ -1,5 +1,3 @@
-# This example requires the 'message_content' intent.
-
 import discord
 
 from stats.discord_database import Dictionary_Database
@@ -48,7 +46,7 @@ class MyClient(discord.Client):
                 kwargs['oldest_first'] = True
 
             async for message in channel.history(**kwargs):
-                # custom emojis must be read by the client 
+
                 messages_scraped += 1
                 if message.type is discord.MessageType.default:
                     database.process_message(message)
@@ -60,7 +58,12 @@ class MyClient(discord.Client):
                     if not message.reference.fail_if_not_exists: # checks if the reply was deleted
                         if message.reference.resolved is None: # this means the message isn't in the cache
                             reply_message = channel.fetch_message(message.reference.message_id)
+                            #
+                            # REVISIT THIS - suspicious that there's no error even though it's 
+                            # a coroutine
+                            #
                     database.process_message(message, reply_message)
+            # save the ID of the last scraped message
             database.channel_endmsgs[channel_key] = message.id
 
         print('done!')
