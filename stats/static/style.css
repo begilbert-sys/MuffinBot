@@ -68,11 +68,7 @@ table {
   text-align: center;
 }
 
-.cd {
-  background-color: #7289DA;
-}
-
-.t1 {
+.user_rankings {
   font-family: "Verdana";
   color: #FFFFFF;
   font-size: 12px;
@@ -80,30 +76,38 @@ table {
   font-weight: bold;
 }
 
-.t2 {
+.user_rankings tr:nth-child(even) {
+  background: #7289DA;
+}
+.user_rankings tr:nth-child(odd) {
+  background: #53639E;
+}
+
+.user_ranking_headers {
   font-family: "Verdana";
   color: #FFFFFF;
   font-size: 12px;
   text-align: left;
   font-style: normal;
 }
-
-.c {
+.user_ranking_headers th {
   background-color: #7289DA;
 }
 
-.darkrow { 
-  background-color: #53639E;
-}
-
-.lightrow {
-  background-color: #7289DA;
+.blankheader {
+  background-color: #2C2F33 !important;
 }
 
 .rank {
   text-align: right;
 }
 
-.win {
-  font-weight: bold;
+.nick {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.words {
+  font-weight: normal;
 }

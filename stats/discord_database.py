@@ -53,18 +53,21 @@ class Dictionary_Database:
                 full_data = json.load(f)
             self.database = full_data['database']
             self.channel_endmsgs = full_data['channel_endmsgs']
-            self.name = full_data['guild_name']
+            self.guild_name = full_data['guild_name']
+            self.guild_icon = full_data['guild_icon']
         else:
             self.database = dict()
             self.channel_endmsgs = dict()
-            self.name = ''
+            self.guild_name = ''
+            self.guild_icon = ''
 
             
     def save(self):
         '''stores the collected data in a json file'''
         full_data = {'database': self.database,
                      'channel_endmsgs': self.channel_endmsgs,
-                     'guild_name': self.name}
+                     'guild_name': self.guild_name,
+                     'guild_icon': self.guild_icon}
         
         with open(self.db_file, 'w') as f:
             json.dump(full_data, f)
@@ -95,8 +98,16 @@ class Dictionary_Database:
             tag = user.name
         else:
             tag = f'{user.name}#{user.discriminator}'
+        
+        # if the user has left, they are no longer a member 
+        # and they don't have a guild-specific nick
+        if type(user) is discord.Member:
+            nick = user.nick
+        else:
+            nick = tag
 
         default_info_dict = {'tag': tag,
+                             'nick': nick,
                              'avatar': str(user.display_avatar),
 
                              'channel_counts': dict(),
@@ -245,19 +256,23 @@ class Dictionary_Database:
         total_messages = sum(self.database[user]['channel_counts'].values())
         info_dict = {
             'username': self.database[user]['tag'],
+            'nick': self.database[user]['nick'],
             'avatar': self.database[user]['avatar'],
             'messages': total_messages,
             'average_daily_messages': ((self.user_last_message_date(user) - self.user_first_message_date(user)).days) / total_messages,
             'favorite_words': top_items(self.database[user]['unique_word_counts'], 5),
-            'favorite_default_emojis': top_items(self.database[user]['default_emoji_counts'], 5)
+            'favorite_default_emojis': top_items(self.database[user]['default_emoji_counts'], 5),
+            'favorite_custom_emojis': top_items(self.database[user]['custom_emoji_counts'], 5),
         }
 
         return info_dict
     
     def user_ranking_display(self) -> list:
+        DELETED_USER_TAG = "Deleted User#0000"
         user_ranking = list()
         for user in self.database:
-            user_ranking.append(self. _user_ranking_display_setup(user))
+            if self.database[user]['tag'] != DELETED_USER_TAG:
+                user_ranking.append(self. _user_ranking_display_setup(user))
         user_ranking = sorted(user_ranking, key=lambda u: u['messages'], reverse=True)
         return user_ranking[:100] # only the first 100 users get displayed
     

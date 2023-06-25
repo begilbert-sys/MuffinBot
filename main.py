@@ -16,8 +16,9 @@ class MyClient(discord.Client):
         print(f'Logged on as {self.user}!')
         # register the guild's name 
         guild = self.get_guild(GUILD_ID)
-        if not database.name:
-            database.name = guild.name
+        if not database.guild_name:
+            database.guild_name = guild.name
+            database.guild_icon = guild.icon.url
         
         messages_scraped = 0 
         start_time = timeit.default_timer()

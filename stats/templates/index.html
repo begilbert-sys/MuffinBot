@@ -10,10 +10,10 @@
   {% load stat_extras %}
   <title>{{ guild_name }} Stats</title>
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+  <link rel="icon" href="{{ guild_icon }}">
 </head>
 
 <body>
-  <script src="{% static 'index.js' %}"></script>
   <center>
     <h1>
       {{ guild_name }} Stats (rendered on {% now "n/j/o" %})
@@ -26,7 +26,7 @@
       {{ database|length|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ reporting_period_days|intcomma }}-day reporting period
     </span>
     
-    <img src="{% static 'pipeltv.png' %}" height="3" width="90%" alt="">
+    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
     <br>
     <br>
 
@@ -71,29 +71,29 @@
       <tbody>
         <tr>
           <td class="tinv">
-            <img src="{% static 'pipe1v.png' %}" height="15" width="30" align="top" title="0-6">
+            <img src="{% static 'assets/pipe1v.png' %}" height="15" width="30" align="top" title="0-6">
             Night
           </td>
           <td class="tinv" width="20"></td>
           <td class="tinv">
-            <img src="{% static 'pipe2v.png' %}" height="15" width="30" align="top" title="6-12">
+            <img src="{% static 'assets/pipe2v.png' %}" height="15" width="30" align="top" title="6-12">
             Morning
           </td>
           <td class="tinv" width="20"></td>
           <td class="tinv">
-            <img src="{% static 'pipe3v.png' %}" height="15" width="30" align="top" title="12-18">
+            <img src="{% static 'assets/pipe3v.png' %}" height="15" width="30" align="top" title="12-18">
             Afternoon
           </td>
           <td class="tinv" width="20"></td>
           <td class="tinv">
-            <img src="{% static 'pipe4v.png' %}" height="15" width="30" align="top" title="18-24">
+            <img src="{% static 'assets/pipe4v.png' %}" height="15" width="30" align="top" title="18-24">
             Evening
           </td>
         </tr>
       </tbody>
     </table>
 
-    <img src="{% static 'pipeltv.png' %}" height="3" width="90%" alt="">
+    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
     <br>
     <br>
 
@@ -101,40 +101,44 @@
       100 Most Talkative Users
     -->
     <h3>100 Most Talkative Users</h3>
-    <table border="0" cellspacing="1" cellpadding="2" class="t2" id="user_rank">
+    <table border="0" cellspacing="1" cellpadding="2" class="user_rankings">
       <tbody>
-        <tr class="t1">
-          <th class="tinv">&nbsp;</td>
-          <th class="c">Nick</td>
-          <th class="c">Line Count</td>
-          <th class="c">Lines Per Day</td>
-          <th class="c">Favorite Words</td>
-          <th class="c">Favorite Emojis</td>
-        </tr>
+        <thead class="user_ranking_headers">
+          <th class="blankheader">&nbsp;</td>
+          <th>Nick</td>
+          <th>Line Count</td>
+          <th>Lines Per Day</td>
+          <th>Unique Words</td>
+          <th>Favorite Emojis</td>
+        </thead>
         {% for user in user_ranking_display %}
-          <tr class="{% cycle 'darkrow' 'lightrow' %}">
+          <tr>
             <td class="rank">
               {{ forloop.counter }}
             </td>
-
-            <td>
-              <img src="{{user.avatar }}">{{ user.username }}
+            <td class="nick">
+              <img src="{{ user.avatar }}" height="30">
+              &nbsp;
+              {{ user.nick }}
             </td>
 
-            <td class="win">
-              {{ user.messages }}
+            <td>
+              {{ user.messages|intcomma }}
             </td>
 
             <td>
               {{ user.average_daily_messages|floatformat:1 }}
             </td>
 
-            <td>
+            <td class="words">
               {{ user.favorite_words |join:", " }}
             </td>
 
             <td>
               <font size="+1">{{ user.favorite_default_emojis |join:" " }}</font>
+              {% for emoji_URL in user.favorite_custom_emojis %}
+                <img src="{{ emoji_URL }}" height="15">
+              {% endfor %}
             </td>
           </tr>
         {% endfor %}
