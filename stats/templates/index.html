@@ -8,15 +8,19 @@
   {% load humanize %}
   {% load mathfilters %}
   {% load stat_extras %}
-  
+
   <title>{{ guild_name }} Stats</title>
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
   <link rel="icon" href="{{ guild_icon }}">
 
   <script type="text/javascript" src="{% static 'js/jquery-3.7.0.js' %}"></script>
-  <script type="text/javascript" src="{% static 'js/jquery.tablesorter.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/tablesorter/js/jquery.tablesorter.js' %}"></script>
+
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
   <script type="text/javascript" src="{% static 'js/index.js' %}"></script>
+
 </head>
 
 <body>
@@ -102,21 +106,28 @@
     <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
     <br>
     <br>
-
+    <!-- 
+      Day-by-day server load
+    -->
+    <h3>Day-by-day server load</h3>
+    <div id="chart_div"></div>
+    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
+    <br>
+    <br>
     <!-- 
       100 Most Talkative Users
     -->
     <h3>100 Most Talkative Users</h3>
     <table border="0" cellspacing="1" cellpadding="2" 
-    class="user_rankings tablesorter" id="user_rankings">
+    class="tablesorter" id="user_rankings">
       <tbody>
         <thead class="user_ranking_headers">
-          <th class="blankheader">&nbsp;</td>
-          <th>Nick</td>
-          <th>Line Count</td>
-          <th>Lines Per Day</td>
-          <th>Unique Words</td>
-          <th>Favorite Emojis</td>
+          <th id="blankheader" data-sorter="false">&nbsp;</th>
+          <th data-sorter="false">Nick</th>
+          <th data-lockedorder="desc">Line Count</th>
+          <th data-lockedorder="desc">Lines Per Day</th>
+          <th data-sorter="false">Unique Words</th>
+          <th data-sorter="false">Favorite Emojis</th>
         </thead>
         {% for user in user_ranking_display %}
           <tr>

@@ -68,7 +68,7 @@ table {
   text-align: center;
 }
 
-.user_rankings {
+#user_rankings {
   font-family: "Verdana";
   color: #FFFFFF;
   font-size: 12px;
@@ -76,10 +76,10 @@ table {
   font-weight: bold;
 }
 
-.user_rankings tr:nth-child(even) {
+#user_rankings tr:nth-child(even) {
   background: #7289DA;
 }
-.user_rankings tr:nth-child(odd) {
+#user_rankings tr:nth-child(odd) {
   background: #53639E;
 }
 
@@ -94,7 +94,7 @@ table {
   background-color: #7289DA;
 }
 
-.blankheader {
+#blankheader {
   background-color: #2C2F33 !important;
 }
 
@@ -110,4 +110,8 @@ table {
 
 .words {
   font-weight: normal;
+}
+
+#chart_div {
+  width: 75%;
 }

@@ -6,6 +6,7 @@ from stats.presets import TOKEN, MSG_LIMIT, GUILD_ID
 
 import timeit
 
+
 database = Dictionary_Database(GUILD_ID)
     
 class MyClient(discord.Client):
@@ -47,7 +48,12 @@ class MyClient(discord.Client):
 
             async for message in channel.history(**kwargs):
 
+                ### progress update 
                 messages_scraped += 1
+                if messages_scraped%10000 == 0:
+                    print(f'{messages_scraped // 1000}k/', end='')
+
+                ### actual code
                 if message.type is discord.MessageType.default:
                     database.process_message(message)
                     
@@ -66,7 +72,7 @@ class MyClient(discord.Client):
             # save the ID of the last scraped message
             database.channel_endmsgs[channel_key] = message.id
 
-        print('done!')
+        print('\ndone!')
         end_time = timeit.default_timer()
         time_elapsed = end_time - start_time
         print('Time elapsed:', end_time - start_time)
