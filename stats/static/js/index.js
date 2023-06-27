@@ -16,7 +16,7 @@ function drawBasic() {
 
     var data = new google.visualization.DataTable();
     data.addColumn('date', 'Year');
-    data.addColumn('number', 'Messages');
+    data.addColumn('number', 'Msgs');
 
     var sorted_keys = Object.keys(date_data).sort();
     for (let i = 0; i < sorted_keys.length; i++) {
@@ -34,7 +34,8 @@ function drawBasic() {
         },
         vAxis: {
           title: 'Number of Messages'
-        }
+        },
+        backgroundColor: '#2C2F33'
       };
 
     var chart = new google.visualization.LineChart(document.getElementById('chart_div'));

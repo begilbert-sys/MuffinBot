@@ -115,3 +115,7 @@ table {
 #chart_div {
   width: 75%;
 }
+
+#chart_div text {
+  fill: white !important;
+}

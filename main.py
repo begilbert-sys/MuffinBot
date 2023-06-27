@@ -53,6 +53,10 @@ class MyClient(discord.Client):
                 if messages_scraped%10000 == 0:
                     print(f'{messages_scraped // 1000}k/', end='')
 
+                # ignore all messages by bots
+                if message.author.bot:
+                    continue
+                
                 ### actual code
                 if message.type is discord.MessageType.default:
                     database.process_message(message)
