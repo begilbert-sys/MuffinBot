@@ -4,6 +4,8 @@ from .discord_database import Dictionary_Database
 
 from .presets import GUILD_ID
 
+import json 
+
 database = Dictionary_Database(GUILD_ID)
 
 
@@ -26,6 +28,8 @@ def index(request):
         'hour_max': max(database.database_totals['hour_counts'].values()),
 
         'user_ranking_display': database.user_ranking_display(),
-        'user_most_messages': database.user_ranking_display()[0]['messages']
+        'user_most_messages': database.user_ranking_display()[0]['messages'],
+
+        'total_date_counts_json': json.dumps(database.database_totals['date_counts'])
         }
     return render(request, "index.html", context)

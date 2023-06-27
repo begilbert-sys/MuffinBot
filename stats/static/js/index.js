@@ -1,35 +1,44 @@
-// table sort
+/* 
+table sort
+*/
 $(function() {
     $("#user_rankings").tablesorter();
 });
 
-// charts 
+/* 
+charts 
+*/
 google.charts.load('current', {packages: ['corechart', 'line']});
 google.charts.setOnLoadCallback(drawBasic);
 
 function drawBasic() {
+    const date_data = JSON.parse(document.getElementById('date_counts').textContent);
 
-      var data = new google.visualization.DataTable();
-      data.addColumn('date', 'Year');
-      data.addColumn('number', 'Dogs');
+    var data = new google.visualization.DataTable();
+    data.addColumn('date', 'Year');
+    data.addColumn('number', 'Messages');
 
-      data.addRows([
-      [new Date(2014, 0, 5), 5],
-      [new Date(2014, 0, 6), 7],
-      [new Date(2014, 0, 7), 1],
-      [new Date(2014, 0, 8), 8],
-      ]);
+    var sorted_keys = Object.keys(date_data).sort();
+    for (let i = 0; i < sorted_keys.length; i++) {
+        var date = sorted_keys[i];
+        var value = date_data[date];
+        var year = Number(date.substring(0,2)) + 2000;
+        var monthIndex = Number(date.substring(2,4)) - 1;
+        var day = Number(date.substring(4,6));
+        data.addRow([new Date(year, monthIndex, day), value]);
+    };
 
-      var options = {
+    var options = {
         hAxis: {
           title: 'Time'
         },
         vAxis: {
-          title: 'Popularity'
+          title: 'Number of Messages'
         }
       };
 
-      var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
 
-      chart.draw(data, options);
-    }
+    chart.draw(data, options);
+
+}

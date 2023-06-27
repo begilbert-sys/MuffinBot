@@ -14,11 +14,13 @@
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
   <link rel="icon" href="{{ guild_icon }}">
 
-  <script type="text/javascript" src="{% static 'js/jquery-3.7.0.js' %}"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
   <script type="text/javascript" src="{% static 'js/tablesorter/js/jquery.tablesorter.js' %}"></script>
 
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
+  <!-- this line submits date data to the js script -->
+  {{ database_totals.date_counts|json_script:"date_counts" }}
   <script type="text/javascript" src="{% static 'js/index.js' %}"></script>
 
 </head>
@@ -111,6 +113,7 @@
     -->
     <h3>Day-by-day server load</h3>
     <div id="chart_div"></div>
+    <div id="test"></div>
     <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
     <br>
     <br>
@@ -122,6 +125,7 @@
     class="tablesorter" id="user_rankings">
       <tbody>
         <thead class="user_ranking_headers">
+          <!-- tablesort settings for each column defined here-->
           <th id="blankheader" data-sorter="false">&nbsp;</th>
           <th data-sorter="false">Nick</th>
           <th data-lockedorder="desc">Line Count</th>
