@@ -6,6 +6,7 @@ import json
 import os
 import pytz
 import re
+import sqlite3
 
 from datetime import datetime
 
@@ -47,6 +48,7 @@ class Dictionary_Database:
     '''
     DB_FOLDER = 'stats/discord_dbs/'
     def __init__(self, guild_id: int):
+        
         self.db_file = f'{self.DB_FOLDER}/discord_database_{guild_id}.json'
         if os.path.isfile(self.db_file):
             with open(self.db_file) as f:
@@ -60,6 +62,10 @@ class Dictionary_Database:
             self.channel_endmsgs = dict()
             self.guild_name = ''
             self.guild_icon = ''
+        ###
+
+
+        
 
             
     def save(self):

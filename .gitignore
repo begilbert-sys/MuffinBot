@@ -1,4 +1,6 @@
 __pycache__
+.DS_Store
 db.sqlite3
 presets.py
-.DS_Store
+migrations
+blacklists

@@ -1,63 +1,52 @@
 import discord
 
-import stats.models as models
+from .presets import MSG_LIMIT, GUILD_ID
 
-from stats.data_processor import Data_Processor
-from stats.discord_database import Dictionary_Database
+from .data_processor import Data_Processor
+from . import models
 
-from stats.presets import TOKEN, MSG_LIMIT, GUILD_ID
 
 import timeit
 
-import os, django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "MuffinWeb")
-django.setup()
-
-
-database = Dictionary_Database(GUILD_ID)
-
-class MyClient(discord.Client):
+class ProcessorClient(discord.Client):
     async def on_ready(self):
 
         print(f'Logged on as {self.user}!')
+        processor = Data_Processor()
         # register the guild's name 
-        
         guild = self.get_guild(GUILD_ID)
-         #
-        guild_model_object = models.Guild.objects.get_or_create(
-            id=guild.id, 
-            name=guild.name, 
-            URL=guild.icon.url
+        guild_model_object, created = await models.Guild.objects.aget_or_create(
+            id=guild.id,
+            defaults={'name': guild.name, 'icon': guild.icon.url}
             )
-         #
-        if not database.guild_name:
-            database.guild_name = guild.name
-            database.guild_icon = guild.icon.url
         
         messages_scraped = 0 
         start_time = timeit.default_timer()
 
         for channel in guild.channels:
-            perms = channel.permissions_for(guild.me)
-            channel_key = str(channel.id)
-
-
             # only iterates thru channels that are text channels it has perms to
+            perms = channel.permissions_for(guild.me)
             if not (type(channel) is discord.channel.TextChannel and perms.read_message_history):
                 continue
 
-            # this is the only way to reliably get the last *readable* message in a channel
-            last_readable_message_id = [message async for message in channel.history(limit=1)][0].id
-            if last_readable_message_id == database.channel_endmsgs.get(channel_key):
-                continue
-
-
-            # setup for message retrieval: allows both new and already-scraped channels to be scraped
+            channel_model_object, channel_created = await models.Channel.objects.aget_or_create(
+                id=channel.id,
+                defaults={'name': channel.name}
+            )
+            # setup for message retrieval:
+            # if the channel has been processed at least once, begin at the last processed message
+            # if the channel has never been processed, start at the oldest message
             kwargs = {'limit': MSG_LIMIT}
-            if channel_key in database.channel_endmsgs:
-                last_msg_id = database.channel_endmsgs[channel_key]
-                message_obj = await channel.fetch_message(last_msg_id)
+            if not channel_created: # this means the channel has been processed at least once
+                # skip the channel if all messages have been processed 
+                # note: this is the only way to reliably get the last *readable* message in a channel
+                last_readable_message_id = [message async for message in channel.history(limit=1)][0].id
+                if last_readable_message_id == channel_model_object.last_processed_message_id:
+                    continue
+
+                message_obj = await channel.fetch_message(channel_model_object.last_processed_message_id)
                 kwargs['after'] = message_obj
+
             else:
                 kwargs['oldest_first'] = True
 
@@ -68,10 +57,13 @@ class MyClient(discord.Client):
                 if messages_scraped%10000 == 0:
                     print(f'{messages_scraped // 1000}k/', end='')
 
-                # ignore all messages by bots
+                # skip all messages by bots
                 if message.author.bot:
                     continue
-                
+
+                await processor.process_message(message)
+
+                '''
                 ### actual code
                 if message.type is discord.MessageType.default:
                     database.process_message(message)
@@ -88,8 +80,10 @@ class MyClient(discord.Client):
                             # a coroutine
                             #
                     database.process_message(message, reply_message)
-            # save the ID of the last scraped message
-            database.channel_endmsgs[channel_key] = message.id
+                '''
+            # save the ID of the last processed message
+            channel_model_object.last_processed_message_id = message.id
+            await channel_model_object.asave()
 
         print('\ndone!')
         end_time = timeit.default_timer()
@@ -97,12 +91,13 @@ class MyClient(discord.Client):
         print('Time elapsed:', end_time - start_time)
         print('Messages scraped: ', messages_scraped)
         print('Time per message:', time_elapsed / messages_scraped)
-        database.save()
         await self.close()
+        
 
 intents = discord.Intents.default()
 intents.message_content = True
 
-client = MyClient(intents=intents)
-if __name__ == '__main__':
-    client.run(TOKEN)
+client = ProcessorClient(intents=intents)
+
+# Due to how Django is structured, this bot must be run as a management command
+# The file where it runs is stats/management/commands/MuffinBot.py
