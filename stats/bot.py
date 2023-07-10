@@ -19,9 +19,14 @@ class ProcessorClient(discord.Client):
             id=guild.id,
             defaults={'name': guild.name, 'icon': guild.icon.url}
             )
+        if created:
+            await guild_model_object.asave()
         
         messages_scraped = 0 
         start_time = timeit.default_timer()
+
+        bulk_channel_model_objects = list()
+
 
         for channel in guild.channels:
             # only iterates thru channels that are text channels it has perms to
@@ -38,30 +43,23 @@ class ProcessorClient(discord.Client):
             # if the channel has never been processed, start at the oldest message
             kwargs = {'limit': MSG_LIMIT}
             if not channel_created: # this means the channel has been processed at least once
-                # skip the channel if all messages have been processed 
-                # note: this is the only way to reliably get the last *readable* message in a channel
-                last_readable_message_id = [message async for message in channel.history(limit=1)][0].id
-                if last_readable_message_id == channel_model_object.last_processed_message_id:
-                    continue
-
-                message_obj = await channel.fetch_message(channel_model_object.last_processed_message_id)
-                kwargs['after'] = message_obj
+                last_message_datetime = channel_model_object.last_processed_message_datetime
+                kwargs['after'] = last_message_datetime
 
             else:
                 kwargs['oldest_first'] = True
 
             async for message in channel.history(**kwargs):
-
-                ### progress update 
-                messages_scraped += 1
-                if messages_scraped%10000 == 0:
-                    print(f'{messages_scraped // 1000}k/', end='')
-
                 # skip all messages by bots
                 if message.author.bot:
                     continue
 
-                await processor.process_message(message)
+                processor.process_message(message)
+
+                ### progress update
+                messages_scraped += 1
+                if messages_scraped % 100 == 0:
+                    print('Message #: ', messages_scraped)
 
                 '''
                 ### actual code
@@ -81,9 +79,9 @@ class ProcessorClient(discord.Client):
                             #
                     database.process_message(message, reply_message)
                 '''
-            # save the ID of the last processed message
-            channel_model_object.last_processed_message_id = message.id
-            await channel_model_object.asave()
+            # save the datetime of the last processed message
+            channel_model_object.last_processed_message_datetime = message.created_at
+            bulk_channel_model_objects.append(channel_model_object)
 
         print('\ndone!')
         end_time = timeit.default_timer()
@@ -91,6 +89,15 @@ class ProcessorClient(discord.Client):
         print('Time elapsed:', end_time - start_time)
         print('Messages scraped: ', messages_scraped)
         print('Time per message:', time_elapsed / messages_scraped)
+
+        print('Updating database. . .')
+        await models.Channel.objects.abulk_create(
+            bulk_channel_model_objects, 
+            update_conflicts=True,
+            update_fields = ['last_processed_message_datetime'],
+            unique_fields  = ['id']
+        )
+        await processor.asave_to_database()
         await self.close()
         
 

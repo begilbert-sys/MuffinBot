@@ -1,4 +1,5 @@
 # completely resets the Django database
+# this purely exists for personal debugging purposes
 read -p "Are you sure you want to erase the database? (Y/N): " confirm
 if [ "$confirm" == "Y" ]; then
     find . | grep -E "(/__pycache__$|\.pyc$|\.pyo$)" | xargs rm -rf;

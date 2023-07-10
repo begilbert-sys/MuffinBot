@@ -11,7 +11,7 @@ class Channel(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
 
     name = models.CharField(max_length=100)
-    last_processed_message_id = models.PositiveBigIntegerField(null=True)
+    last_processed_message_datetime = models.DateTimeField(null=True)
 
 class User(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
@@ -22,18 +22,24 @@ class User(models.Model):
 
     curse_word_count = models.PositiveIntegerField()
 
+    def __str__(self):
+        return self.tag
+
 
 class UserStat(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    count = models.PositiveIntegerField()
-
+    count = models.PositiveIntegerField(default=0)
+    def __str__(self):
+        return f"{self.user.tag} / count: {self.count}"
+    
     class Meta:
         abstract = True
+    
 
 # every model here has an additional 'user' and 'count' field, thanks to the UserStat abc
 
 class Channel_Count(UserStat):
-    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    channel_id = models.PositiveBigIntegerField()
 
 class Mention_Count(UserStat):
     mentioned_user_id = models.PositiveBigIntegerField()
