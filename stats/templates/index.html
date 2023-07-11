@@ -9,10 +9,10 @@
   {% load mathfilters %}
   {% load stat_extras %}
 
-  <title>{{ guild_name }} Stats</title>
+  <title>{{ guild.name }} Stats</title>
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
-  <link rel="icon" href="{{ guild_icon }}">
+  <link rel="icon" href="{{ guild.icon }}">
 
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
   <script type="text/javascript" src="{% static 'js/tablesorter/js/jquery.tablesorter.js' %}"></script>
@@ -28,14 +28,14 @@
 <body>
   <center>
     <h1>
-      {{ guild_name }} Stats (rendered on {% now "n/j/o" %})
+      {{ guild.name }} Stats (rendered on {% now "n/j/o" %})
     </h1>
     <span class="txt2">
       Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
     </span>
     <br>
     <span class="txt2">
-      {{ database|length|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ reporting_period_days|intcomma }}-day reporting period
+      {{ number_of_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ reporting_period_days|intcomma }}-day reporting period
     </span>
     
     <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
