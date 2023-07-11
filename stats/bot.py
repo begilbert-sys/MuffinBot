@@ -54,17 +54,9 @@ class ProcessorClient(discord.Client):
                 if message.author.bot:
                     continue
 
-                processor.process_message(message)
 
-                ### progress update
-                messages_scraped += 1
-                if messages_scraped % 100 == 0:
-                    print('Message #: ', messages_scraped)
-
-                '''
-                ### actual code
                 if message.type is discord.MessageType.default:
-                    database.process_message(message)
+                    processor.process_message(message)
                     
                 # first we check if the reply is deleted, or still in the cache (fast af)
                 # if not, we fetch the message (slow af)
@@ -72,13 +64,15 @@ class ProcessorClient(discord.Client):
                     reply_message = message.reference.resolved
                     if not message.reference.fail_if_not_exists: # checks if the reply was deleted
                         if message.reference.resolved is None: # this means the message isn't in the cache
-                            reply_message = channel.fetch_message(message.reference.message_id)
-                            #
-                            # REVISIT THIS - suspicious that there's no error even though it's 
-                            # a coroutine
-                            #
-                    database.process_message(message, reply_message)
-                '''
+                            raise Exception('examine this reply. message contents: ' + message.contents)
+                            reply_message = await channel.fetch_message(message.reference.message_id)
+                    processor.process_message(message, reply_message)
+
+                ### progress update
+                messages_scraped += 1
+                if messages_scraped % 100 == 0:
+                    print('Message #: ', messages_scraped)
+                    
             # save the datetime of the last processed message
             channel_model_object.last_processed_message_datetime = message.created_at
             bulk_channel_model_objects.append(channel_model_object)

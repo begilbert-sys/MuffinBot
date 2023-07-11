@@ -24,6 +24,9 @@ class User(models.Model):
 
     def __str__(self):
         return self.tag
+    
+    def number_of_users(self):
+        return len(self.objects.all())
 
 
 class UserStat(models.Model):
@@ -57,6 +60,13 @@ class Hour_Count(UserStat):
 class Date_Count(UserStat):
     date = models.DateField()
 
+    def first_message_date(self):
+        return models.Date_Count.objects.all().order_by('date')[0].date
+    def last_message_date(self):
+        return models.Date_Count.objects.all().order_by('-date')[0].date
+    def total_days(self):
+        return (self.last_message_date - self.first_message_date).days
+    
 class URL_Count(UserStat):
     URL = models.URLField()
 
