@@ -35,7 +35,7 @@
     </span>
     <br>
     <span class="txt2">
-      {{ number_of_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ reporting_period_days|intcomma }}-day reporting period
+      {{ User_Model.objects.number_of_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
     </span>
     
     <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
@@ -133,7 +133,7 @@
           <th data-sorter="false">Unique Words</th>
           <th data-sorter="false">Favorite Emojis</th>
         </thead>
-        {% for user in user_ranking_display %}
+        {% for user_dict in top_100_users_display %}
           <tr>
             <td class="rank">
               {{ forloop.counter }}
@@ -141,24 +141,24 @@
             <td class="nick">
               <img src="{{ user.avatar }}" height="30">
               &nbsp;
-              {{ user.nick }}
+              {{ user_dict.user.tag }}
             </td>
 
             <td>
-              {{ user.messages|intcomma }}
+              {{ user_dict.user.messages|intcomma }}
             </td>
 
             <td>
-              {{ user.average_daily_messages|floatformat:1 }}
+              {{ user_dict.average_daily_messages|floatformat:1 }}
             </td>
 
             <td class="words">
-              {{ user.favorite_words |join:", " }}
+              {{ user_dict.favorite_words |join:", " }}
             </td>
 
             <td>
-              <font size="+1">{{ user.favorite_default_emojis |join:" " }}</font>
-              {% for emoji_URL in user.favorite_custom_emojis %}
+              <font size="+1">{{ user_dict.favorite_default_emojis |join:" " }}</font>
+              {% for emoji_URL in user_dict.favorite_custom_emojis %}
                 <img src="{{ emoji_URL }}" height="15">
               {% endfor %}
             </td>

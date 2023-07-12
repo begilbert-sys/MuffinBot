@@ -14,6 +14,7 @@ with open('stats/words/words.txt') as f:
 with open('stats/words/curse_words.txt') as f:
     CURSE_WORDS = set(f.read().split('\n'))
 
+### utility functions
 def convert_to_pacific_time(dt: datetime.datetime) -> datetime.datetime:
     '''
     discord messages are in UTC by default. 
@@ -34,6 +35,7 @@ def get_URLs(string):
 
     return re.findall(URL_REGEX, string)
 
+
 class Data_Processor:
     '''self.cached_database structure:
     {
@@ -46,7 +48,8 @@ class Data_Processor:
         {hash((user_id, obj)): models.Mention_Count},
     etc. 
     '''
-    DATABASE_KEY_TO_MODEL = {
+
+    DATABASE_KEY_TO_COUNT_MODEL = {
         'channel_counts': models.Channel_Count,
         'mention_counts': models.Mention_Count,
         'hour_counts': models.Hour_Count,
@@ -54,13 +57,14 @@ class Data_Processor:
         'URL_counts': models.URL_Count,
         'default_emoji_counts': models.Default_Emoji_Count,
         'custom_emoji_counts': models.Custom_Emoji_Count,
-        'unique_word_counts': models.Unique_Word_Count,
+        'unique_word_counts': models.Unique_Word_Count
     }
+
     def __init__(self):
         self.cached_database = {
             'users': dict(),
         }
-        for key in self.DATABASE_KEY_TO_MODEL:
+        for key in self.DATABASE_KEY_TO_COUNT_MODEL:
             self.cached_database[key] = dict()
     
     def _add_user(self, user: discord.User) -> models.User:
@@ -70,24 +74,21 @@ class Data_Processor:
             tag = user.name,
             nick = user.display_name,
             avatar = str(user.display_avatar),
-            curse_word_count = 0
         )
         self.cached_database['users'][user.id] = user_model_obj
         return user_model_obj
     
     def _create_or_increment(self, user: models.User, object: typing.Any, database_key: str, 
                              field_name: str) -> None:
-        Model_Class = self.DATABASE_KEY_TO_MODEL[database_key]
+        Model_Class = self.DATABASE_KEY_TO_COUNT_MODEL[database_key]
         hash_value = hash((user.id, object))
         if hash_value in self.cached_database[database_key]:
             count_model_obj = self.cached_database[database_key][hash_value]
-            count_model_obj.count += 1
         else:
             # what the fuck is this call
-            count_model_obj = Model_Class(user=user, count=1, **{field_name: object})
+            count_model_obj = Model_Class(user=user, **{field_name: object})
             self.cached_database[database_key][hash_value] = count_model_obj
-
-
+        count_model_obj.count += 1
 
     @staticmethod
     def _message_mentions(message: discord.message, reply_message: discord.message = None) -> typing.List[int]:
@@ -103,13 +104,13 @@ class Data_Processor:
         return mentions_list
     
     def process_message(self, message: discord.Message, reply_message: discord.Message = None):
-
         ### USER
         if message.author.id in self.cached_database['users']:
             user_model_obj = self.cached_database['users'][message.author.id]
         else:
             user_model_obj = self._add_user(message.author)
-        
+        user_model_obj.messages += 1
+
         ### CHANNEL
         channel_id = message.channel.id
         self._create_or_increment(user_model_obj, channel_id, 'channel_counts', 'channel_id')
@@ -165,7 +166,7 @@ class Data_Processor:
             )
 
     async def _bulk_save_count_model(self, database_key: str):
-        Model_Class = self.DATABASE_KEY_TO_MODEL[database_key]
+        Model_Class = self.DATABASE_KEY_TO_COUNT_MODEL[database_key]
         bulk_count_model_objects = list(self.cached_database[database_key].values())
         await Model_Class.objects.abulk_create(
             bulk_count_model_objects, 
@@ -179,8 +180,8 @@ class Data_Processor:
         await models.User.objects.abulk_create(
             bulk_user_model_objects, 
             update_conflicts=True,
-            update_fields = ['curse_word_count'],
+            update_fields = ['messages', 'curse_word_count'],
             unique_fields  = ['id']
         )
-        for database_key in self.DATABASE_KEY_TO_MODEL:
+        for database_key in self.DATABASE_KEY_TO_COUNT_MODEL:
             await self._bulk_save_count_model(database_key)

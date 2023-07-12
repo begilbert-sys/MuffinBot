@@ -7,6 +7,7 @@ if [ "$confirm" == "Y" ]; then
     rm -rf stats/migrations;
     python3 manage.py makemigrations stats;
     python3 manage.py migrate stats;
+    python3 manage.py migrate;
     echo "Database Erased and Reset";
 else
     echo "Operation Cancelled";
