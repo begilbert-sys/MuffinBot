@@ -4,3 +4,6 @@ db.sqlite3
 presets.py
 migrations
 blacklists
+tablesorter
+curse_words.txt
+words.txt
