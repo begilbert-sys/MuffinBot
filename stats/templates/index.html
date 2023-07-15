@@ -35,7 +35,7 @@
     </span>
     <br>
     <span class="txt2">
-      {{ User_Model.objects.number_of_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
+      {{ number_of_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
     </span>
     
     <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
@@ -50,13 +50,13 @@
     <table cellspacing="1" cellpadding="2">
       <tbody>
         <tr class="s1" valign="bottom">
-          {% for hour, value in hour_counts.items %}
+          {% for hour, value in total_hour_counts.items %}
             <td class="tgr">
               <!-- hour percentage value -->
               {{ value|div:total_messages|mul:100|floatformat:1 }}%
               <br>
               <!-- changes color of png based on time of day -->
-              <img src='{% static hour|set_hour_png %}' width="18" height="{% widthratio value hour_max 120 %}">
+              <img src='{% static hour|set_hour_png %}' width="18" height="{% widthratio value total_hour_count_max 120 %}">
             </td>
           {% endfor %}
         </tr>
@@ -112,8 +112,8 @@
       Day-by-day server load
     -->
     <h3>Day-by-day server load</h3>
-    <div id="chart_div"></div>
-    <div id="test"></div>
+    <!-- <div id="chart_div"></div> -->
+    <div class="test"></div>
     <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
     <br>
     <br>
@@ -139,7 +139,7 @@
               {{ forloop.counter }}
             </td>
             <td class="nick">
-              <img src="{{ user.avatar }}" height="30">
+              <img src="{{ user_dict.user.avatar }}" height="30">
               &nbsp;
               {{ user_dict.user.tag }}
             </td>

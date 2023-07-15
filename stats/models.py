@@ -56,6 +56,17 @@ class Mention_Count(UserStat):
     mentioned_user_id = models.PositiveBigIntegerField()
 
 
+class Hour_Count_Manager(models.Manager):
+    def total_hour_counts(self) -> dict:
+        hour_count_dict = dict()
+        for hour in range(24):
+            hour_objs =  self.filter(hour=hour)
+            hour_count_dict[hour] = hour_objs.aggregate(models.Sum('count'))['count__sum']
+        return hour_count_dict
+    
+    def total_hour_count_max(self) -> int:
+        return max(self.total_hour_counts().values())
+
 class Hour_Count(UserStat):
     Hours = models.IntegerChoices(
         'Hours', 
@@ -65,6 +76,8 @@ class Hour_Count(UserStat):
          )
     
     hour = models.IntegerField(choices=Hours.choices)
+
+    objects = Hour_Count_Manager()
 
 
 class Date_Count_Manager(models.Manager):
@@ -81,7 +94,7 @@ class Date_Count_Manager(models.Manager):
         return self.filter(user=user).order_by('date')[0].date
     
     def last_user_message_date(self, user: User):
-        return self.filter(user=user).order_by('date')[0].date
+        return self.filter(user=user).order_by('-date')[0].date
     
     def total_user_days(self, user: User):
         return (self.last_user_message_date(user) - self.first_user_message_date(user)).days + 1
