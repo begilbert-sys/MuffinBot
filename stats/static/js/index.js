@@ -5,20 +5,20 @@ table sort
 $.tablesorter.addParser({ 
   // set a unique id 
   id: 'bignumber',
-  is: function(s) { 
+  is: function(s, table, cell, $cell) { 
       // return false so this parser is not auto detected 
       return false; 
   }, 
-  format: function(s) {
+  format: function(s, table, cell, cellIndex) {
       // format your data for normalization 
-      return s.replace('$','').replace(/,/g,'');
+      return s.replace(/,/g,'');
   }, 
   // set type, either numeric or text 
   type: 'numeric' 
 }); 
 
 $(function() {
-  $("#user_rankings").tablesorter({theme: 'blue'});
+  $("#user_rankings").tablesorter();
 });
 
 

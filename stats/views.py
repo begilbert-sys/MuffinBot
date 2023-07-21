@@ -51,7 +51,7 @@ def ajax_get_date_data(request):
     if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         return HttpResponseNotFound()
     #past_n_days = int(request.headers.get('volume'))
-    unserialized_data = models.Date_Count.objects.date_counts(365)
+    unserialized_data = models.Date_Count.objects.date_counts(31)
     serialized_data = dict() # data needs to be sorted
     for date in unserialized_data.keys():
         serialized_data[date.isoformat()] = unserialized_data[date] # {date: count}
