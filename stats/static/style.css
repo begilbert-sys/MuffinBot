@@ -62,7 +62,7 @@ table {
 
 .s3 {
   font-family: "Arial";
-  color: #FFFFFF;
+  color: #000000;
   font-size: 9px;
   vertical-align: bottom;
   text-align: center;
@@ -70,7 +70,7 @@ table {
 
 #user_rankings {
   font-family: "Verdana";
-  color: #FFFFFF;
+  color: #000000;
   font-size: 12px;
   text-align: left;
   font-weight: bold;
@@ -83,13 +83,6 @@ table {
   background: #53639E;
 }
 
-.user_ranking_headers {
-  font-family: "Verdana";
-  color: #FFFFFF;
-  font-size: 12px;
-  text-align: left;
-  font-style: normal;
-}
 .user_ranking_headers th {
   background-color: #7289DA;
 }

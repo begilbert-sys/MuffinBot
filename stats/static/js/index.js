@@ -2,8 +2,23 @@
 table sort
 */
 
+$.tablesorter.addParser({ 
+  // set a unique id 
+  id: 'bignumber',
+  is: function(s) { 
+      // return false so this parser is not auto detected 
+      return false; 
+  }, 
+  format: function(s) {
+      // format your data for normalization 
+      return s.replace('$','').replace(/,/g,'');
+  }, 
+  // set type, either numeric or text 
+  type: 'numeric' 
+}); 
+
 $(function() {
-  $("#user_rankings").tablesorter();
+  $("#user_rankings").tablesorter({theme: 'blue'});
 });
 
 
@@ -11,7 +26,8 @@ $(function() {
 display date data
 */
 
-function getJsonData(url) {
+// util function for getting the data from views.py
+function getDateData(url, number_of_days) {
   return $.ajax({
     url: url,
     type: 'GET',
@@ -20,14 +36,15 @@ function getJsonData(url) {
     headers: {'X-Requested-With': 'XMLHttpRequest'},
     success: function(data) {return data}
   }).responseJSON;
-}
+};
 
-//charts 
 
+// chart 
 google.charts.load('current', {packages: ['corechart', 'line']});
 google.charts.setOnLoadCallback(drawBasic);
 
 function drawBasic() {
+  var date_data = getDateData("date_data/", 100);
 
   var data = new google.visualization.DataTable();
   data.addColumn('date', 'Year');
@@ -35,12 +52,9 @@ function drawBasic() {
 
   var sorted_keys = Object.keys(date_data).sort();
   for (let i = 0; i < sorted_keys.length; i++) {
-    var date = sorted_keys[i];
-    var value = date_data[date];
-    var year = Number(date.substring(0,2)) + 2000;
-    var monthIndex = Number(date.substring(2,4)) - 1;
-    var day = Number(date.substring(4,6));
-    data.addRow([new Date(year, monthIndex, day), value]);
+    var dateiso = sorted_keys[i];
+    var value = date_data[dateiso];
+    data.addRow([new Date(dateiso), value]);
   };
   
   var options = {

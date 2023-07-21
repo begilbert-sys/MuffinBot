@@ -66,6 +66,8 @@ class Data_Processor:
         }
         for key in self.DATABASE_KEY_TO_COUNT_MODEL:
             self.cached_database[key] = dict()
+        
+        self.cached_channel_objects = list()
     
     def _add_user(self, user: discord.User) -> models.User:
         assert user.id not in self.cached_database['users']
@@ -165,23 +167,39 @@ class Data_Processor:
                 user_model_obj, user_id, 'mention_counts', 'mentioned_user_id'
             )
 
-    async def _bulk_save_count_model(self, database_key: str):
+    async def _asave_count_model(self, database_key: str):
         Model_Class = self.DATABASE_KEY_TO_COUNT_MODEL[database_key]
-        bulk_count_model_objects = list(self.cached_database[database_key].values())
-        await Model_Class.objects.abulk_create(
-            bulk_count_model_objects, 
-            update_conflicts=True,
-            update_fields = ['count'],
-            unique_fields  = ['id']
-        )
 
+        # this is a REALLY hacky way to get the name of the unique database attribute
+        # I should probably rewrite this part 
+        unique_field_name = Model_Class._meta.get_fields()[3].name
+
+        bulk_count_model_objects = list(self.cached_database[database_key].values())
+        for cached_count_model_object in bulk_count_model_objects:
+            kwargs = {
+                'user': cached_count_model_object.user,
+                unique_field_name: getattr(cached_count_model_object, unique_field_name)
+            }
+            if await Model_Class.objects.filter(**kwargs).aexists():
+                real_count_model_object = await Model_Class.objects.aget(**kwargs)
+                real_count_model_object.count += cached_count_model_object.count
+                await real_count_model_object.asave()
+            else:
+                await cached_count_model_object.asave()
+        
     async def asave_to_database(self):
+        print('Saving. . . ')
         bulk_user_model_objects = list(self.cached_database['users'].values())
-        await models.User.objects.abulk_create(
-            bulk_user_model_objects, 
-            update_conflicts=True,
-            update_fields = ['messages', 'curse_word_count'],
-            unique_fields  = ['id']
-        )
+        for cached_user_model_object in bulk_user_model_objects:
+            user_id = cached_user_model_object.id
+            if await models.User.objects.filter(id=user_id).aexists():
+                real_user_model_object = await models.User.objects.aget(id=user_id)
+                real_user_model_object.messages += cached_user_model_object.messages
+                real_user_model_object.curse_word_count += cached_user_model_object.curse_word_count
+                await real_user_model_object.asave()
+            else:
+                await cached_user_model_object.asave()
+
         for database_key in self.DATABASE_KEY_TO_COUNT_MODEL:
-            await self._bulk_save_count_model(database_key)
+            print("working on", database_key)
+            await self._asave_count_model(database_key)

@@ -20,6 +20,9 @@ class User_Manager(models.Manager):
     
     def total_messages(self):
         return self.all().aggregate(models.Sum('messages'))['messages__sum']
+    
+    def top_user_message_count(self) -> int:
+        return self.all().order_by('-messages').first().messages
 
 class User(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
@@ -66,6 +69,14 @@ class Hour_Count_Manager(models.Manager):
     
     def total_hour_count_max(self) -> int:
         return max(self.total_hour_counts().values())
+    
+    def user_hour_count_range(self, user: User, start: int, end: int):
+        total = 0
+        for hour in range(start, end+1):
+            if self.filter(user=user, hour=hour).exists():
+                total += self.get(user=user, hour=hour).count
+        return total
+        
 
 class Hour_Count(UserStat):
     Hours = models.IntegerChoices(
@@ -82,22 +93,32 @@ class Hour_Count(UserStat):
 
 class Date_Count_Manager(models.Manager):
     def first_message_date(self):
-        return self.all().order_by('date')[0].date
+        return self.all().order_by('date').first().date
     
     def last_message_date(self):
-        return self.all().order_by('-date')[0].date
+        return self.all().order_by('date').last().date
     
     def total_days(self):
         return (self.last_message_date() - self.first_message_date()).days + 1
     
     def first_user_message_date(self, user: User):
-        return self.filter(user=user).order_by('date')[0].date
+        return self.filter(user=user).order_by('date').first().date
     
     def last_user_message_date(self, user: User):
-        return self.filter(user=user).order_by('-date')[0].date
+        return self.filter(user=user).order_by('date').last().date
     
     def total_user_days(self, user: User):
         return (self.last_user_message_date(user) - self.first_user_message_date(user)).days + 1
+    
+    def date_counts(self, past_n_days: int = None) -> dict:
+        '''returns a dictionary of how many messages were sent on every date
+        past_n_days: allows the dict to be limited to the past n days. If None, returns all.'''
+        dates_dict = dict()
+        for obj in Date_Count.objects.all().order_by('-date')[:past_n_days]:
+            filtered_objs = Date_Count.objects.filter(date=obj.date)
+            dates_dict[obj.date] = filtered_objs.aggregate(models.Sum('count'))['count__sum']
+        return dates_dict
+
     
 class Date_Count(UserStat):
     date = models.DateField()

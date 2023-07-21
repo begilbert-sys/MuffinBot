@@ -5,5 +5,5 @@ from . import views
 app_name = 'stats'
 urlpatterns = [
     path("", views.index, name="index"),
-    path("data/", views.ajax_get_view, name="ajax_get_request")
+    path("date_data/", views.ajax_get_date_data, name="ajax_get_date_data")
     ]
