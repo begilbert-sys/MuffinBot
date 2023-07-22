@@ -20,9 +20,9 @@
 
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
-  <!-- this line submits date data to the js script -->
-  {{ database_totals.date_counts|json_script:"date_counts" }}
-  <script type="text/javascript" src="{% static 'js/index.js' %}"></script>
+
+  <script type="text/javascript" src="{% static 'js/chart_setup.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/tablesort_setup.js' %}"></script>
 
 </head>
 
@@ -122,11 +122,11 @@
     -->
     <h3>100 Most Talkative Users</h3>
     <table border="0" cellspacing="1" cellpadding="2" 
-    class="tablesorter" id="user_rankings">
+    class="tablesorter user_rankings" id="user_rankings">
       <tbody>
         <thead class="user_ranking_headers">
           <!-- tablesort settings for each column defined here-->
-          <th id="blankheader" data-sorter="false">&nbsp;</th>
+          <th class="blankheader" data-sorter="false">&nbsp;</th>
           <th data-sorter="false">Nick</th>
           <th data-lockedorder="desc" class="sorter-bignumber">Line Count</th>
           <th data-lockedorder="desc">Lines Per Day</th>
@@ -138,13 +138,13 @@
             <td class="rank">
               {{ forloop.counter }}
             </td>
-            <td class="nick">
+            <td>
               <img src="{{ user_dict.user.avatar }}" height="30">
               &nbsp;
               {{ user_dict.user.tag }}
             </td>
 
-            <td class="line_count">
+            <td class="">
               <img src="{% static 'assets/pipe1v.png' %}" height="15" width="{% widthratio user_dict.night_hour_count most_messages 100 %}"><!--
               --><img src="{% static 'assets/pipe2v.png' %}" height="15" width="{% widthratio user_dict.morning_hour_count most_messages 100 %}"><!--
               --><img src="{% static 'assets/pipe3v.png' %}" height="15" width="{% widthratio user_dict.afternoon_hour_count most_messages 100 %}"><!--
@@ -170,7 +170,15 @@
         {% endfor %}
       </tbody>
     </table>
+    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
+    <br>
+    <br>
 
+    <!-- 
+      Time of Day Stats
+    -->
+    <h3>Time of day stats</h3>
+    <table cellspacing="1" cellpadding="2" id=""></table>
   </center>
   
 </body>
