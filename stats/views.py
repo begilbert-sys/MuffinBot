@@ -40,7 +40,14 @@ def index(request):
         'total_hour_counts': models.Hour_Count.objects.total_hour_counts(),
         'total_hour_count_max': models.Hour_Count.objects.total_hour_count_max(),
 
-        'top_100_users_display': top_100_users_display
+        'top_100_users_display': top_100_users_display,
+
+        'top_10_hour_users': list(zip(
+            models.Hour_Count.objects.top_n_users_in_range(10, 0, 5), # night (0)
+            models.Hour_Count.objects.top_n_users_in_range(10, 6, 11), # morning (1)
+            models.Hour_Count.objects.top_n_users_in_range(10, 12, 17), # afternoon (2)
+            models.Hour_Count.objects.top_n_users_in_range(10, 18, 23) #evening (3)
+        ))
     }
     return render(request, "index.html", context)
 

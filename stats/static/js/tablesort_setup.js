@@ -6,7 +6,7 @@ $.tablesorter.addParser({
         return false; 
     }, 
     format: function(s, table, cell, cellIndex) {
-        // format your data for normalization 
+        // format data for normalization 
         return s.replace(/,/g,'');
     }, 
     // set type, either numeric or text 

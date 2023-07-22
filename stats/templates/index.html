@@ -122,9 +122,9 @@
     -->
     <h3>100 Most Talkative Users</h3>
     <table border="0" cellspacing="1" cellpadding="2" 
-    class="tablesorter user_rankings" id="user_rankings">
+    class="tablesorter default_table" id="user_rankings">
       <tbody>
-        <thead class="user_ranking_headers">
+        <thead>
           <!-- tablesort settings for each column defined here-->
           <th class="blankheader" data-sorter="false">&nbsp;</th>
           <th data-sorter="false">Nick</th>
@@ -138,13 +138,13 @@
             <td class="rank">
               {{ forloop.counter }}
             </td>
-            <td>
+            <td class="nick">
               <img src="{{ user_dict.user.avatar }}" height="30">
               &nbsp;
               {{ user_dict.user.tag }}
             </td>
 
-            <td class="">
+            <td class="line_count">
               <img src="{% static 'assets/pipe1v.png' %}" height="15" width="{% widthratio user_dict.night_hour_count most_messages 100 %}"><!--
               --><img src="{% static 'assets/pipe2v.png' %}" height="15" width="{% widthratio user_dict.morning_hour_count most_messages 100 %}"><!--
               --><img src="{% static 'assets/pipe3v.png' %}" height="15" width="{% widthratio user_dict.afternoon_hour_count most_messages 100 %}"><!--
@@ -178,7 +178,26 @@
       Time of Day Stats
     -->
     <h3>Time of day stats</h3>
-    <table cellspacing="1" cellpadding="2" id=""></table>
+    <table cellspacing="1" cellpadding="2" class="default_table" id="time_of_day">
+      <tbody>
+        <thead>
+          <th class="blankheader"></th>
+          <th>Nightcrawlers<br> <span class="hours">(12AM - 6AM)</span></th>
+          <th>Early Birds<br> <span class="hours">(6AM - 12PM)</span></th>
+          <th>Afternoon Shift<br> <span class="hours">(12PM - 5PM)</span></th>
+          <th>Evening chatters<br> <span class="hours">(6PM - 11PM)</span></th>
+          {% for zip_packet in top_10_hour_users %}
+          <tr>
+            <td>{{ forloop.counter }} </td>
+            {% for user, count in zip_packet %}
+              <td>{{ user.tag }} - {{ count }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </thead>
+
+      </tbody>
+    </table>
   </center>
   
 </body>

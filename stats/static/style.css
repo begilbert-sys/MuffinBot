@@ -8,7 +8,7 @@ body {
   font-family: "Verdana", Arial, sans-serif;
   background-color: #2C2F33;
   color: #FFFFFF;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 h1 {
@@ -68,7 +68,7 @@ table {
   text-align: center;
 }
 
-.user_rankings {
+.default_table {
   font-family: "Verdana";
   color: #000000;
   font-size: 12px;
@@ -76,19 +76,19 @@ table {
   font-weight: bold;
 }
 
-.user_rankings tr:nth-child(even) {
+.default_table tr:nth-child(even) {
   background: #7289DA;
 }
-.user_rankings tr:nth-child(odd) {
+.default_table tr:nth-child(odd) {
   background: #53639E;
 }
 
-.user_ranking_headers th {
-  background-color: #7289DA;
+.nick img, .line_count img {
+  vertical-align: middle;
 }
 
-.user_rankings img {
-  vertical-align: middle;
+.default_table th {
+  background-color: #7289DA;
 }
 
 .blankheader {
@@ -97,6 +97,10 @@ table {
 
 .rank {
   text-align: right;
+}
+
+.nick img {
+  border-radius: 50%;
 }
 
 .words {
@@ -109,4 +113,15 @@ table {
 
 #chart_div text {
   fill: white !important;
+}
+
+#time_of_day {
+  text-align: right;
+}
+#time_of_day tr {
+  font-weight: normal;
+}
+
+.hours {
+  font-size: 10px;
 }

@@ -76,6 +76,17 @@ class Hour_Count_Manager(models.Manager):
             if self.filter(user=user, hour=hour).exists():
                 total += self.get(user=user, hour=hour).count
         return total
+    
+    def top_n_users_in_range(self, n: int, start: int, end: int):
+        user_dict = dict()
+        for hour in range(start, end+1):
+            for hour_count_obj in self.filter(hour=hour):
+                user = hour_count_obj.user
+                if user in user_dict:
+                    user_dict[user] += hour_count_obj.count
+                else:
+                    user_dict[user] = hour_count_obj.count
+        return sorted(user_dict.items(), key=lambda k: user_dict[k[0]], reverse=True)[:10]
         
 
 class Hour_Count(UserStat):
