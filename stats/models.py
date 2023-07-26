@@ -87,6 +87,10 @@ class Hour_Count_Manager(models.Manager):
                 else:
                     user_dict[user] = hour_count_obj.count
         return sorted(user_dict.items(), key=lambda k: user_dict[k[0]], reverse=True)[:10]
+    
+    def top_user_in_range_message_count(self, start, end):
+        user, count = self.top_n_users_in_range(1, start, end)[0]
+        return count
         
 
 class Hour_Count(UserStat):

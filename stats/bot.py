@@ -9,7 +9,9 @@ import asyncio
 import datetime
 import pytz
 import timeit
+import warnings
 
+DELETED_USER_ID = 456226577798135808
 # gets the blacklist of user IDs
 with open('stats/blacklists/user_blacklist.txt') as f:
     USER_BLACKLIST = [int(user_id) for user_id in f.read().split('\n')]
@@ -56,38 +58,45 @@ class ProcessorClient(discord.Client):
             # if the channel has never been processed, start at the oldest message
             else:
                 kwargs['oldest_first'] = True
+            
+            # sometimes, an asyncio.TimeoutError occurs. in this case, the current channel.history loop will just stop when
+            # the error is encountered instead of at the message limit, and the program will continue running normally 
+            try:
+                async for message in channel.history(**kwargs):
+                    # skip all messages by bots
+                    if message.author.bot:
+                        continue
 
-            async for message in channel.history(**kwargs):
-                # skip all messages by bots
-                if message.author.bot:
-                    continue
+                    # skip all messages by deleted users
+                    if message.author.id == DELETED_USER_ID:
+                        continue 
 
-                # skip all messages by users on the blacklist 
-                if message.author.id in USER_BLACKLIST:
-                    continue 
+                    # if the message is a reply, get the reply and pass it with the original message
+                    if message.type is discord.MessageType.reply:
+                        reply_message = message.reference.resolved
+                        if not reply_message:
+                            print(message.content)
+                            print(message.created_at)
+                            raise AssertionError("Reply Message Failed")
+                        if reply_message:
+                            processor.process_message(message, reply_message)
+                    
+                    # if the message is not a reply, process it normally
+                    elif message.type is discord.MessageType.default:
+                        processor.process_message(message)
 
-                # if the message is a reply, get the reply and pass it with the original message
-                if message.type is discord.MessageType.reply:
-                    reply_message = message.reference.resolved
-                    if not reply_message:
-                        print(message.content)
-                        print(message.created_at)
-                        raise AssertionError("Reply Message Failed")
-                    if reply_message:
-                        processor.process_message(message, reply_message)
-                
-                # if the message is not a reply, process it normally
-                elif message.type is discord.MessageType.default:
-                    processor.process_message(message)
+                    ### progress update
+                    messages_scraped += 1
+                    if messages_scraped % 100 == 0:
+                        print('Message #: ', messages_scraped)
+                            # save the datetime of the last processed message
 
-                ### progress update
-                messages_scraped += 1
-                if messages_scraped % 100 == 0:
-                    print('Message #: ', messages_scraped)
-                        # save the datetime of the last processed message
-
+            except asyncio.TimeoutError:
+                warnings.warn('asyncio.TimeoutError ignored. Offending message: ' + str(message))
+            
             channel_model_object.last_processed_message_datetime = message.created_at
             await channel_model_object.asave()
+        print('Saving. . . ')
         await processor.asave_to_database()
         print('\ndone!')
         end_time = timeit.default_timer()

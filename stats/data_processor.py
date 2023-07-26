@@ -188,7 +188,6 @@ class Data_Processor:
                 await cached_count_model_object.asave()
         
     async def asave_to_database(self):
-        print('Saving. . . ')
         bulk_user_model_objects = list(self.cached_database['users'].values())
         for cached_user_model_object in bulk_user_model_objects:
             user_id = cached_user_model_object.id
