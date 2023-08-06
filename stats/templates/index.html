@@ -162,7 +162,7 @@
 
             <td>
               {% for emoji_URL in user_dict.favorite_custom_emojis %}
-                <img src="{{ emoji_URL }}" height="15">
+                <img src="{{ emoji_URL }}.png" height="15">
               {% endfor %}
               <font size="+1">{{ user_dict.favorite_default_emojis |join:" " }}</font>
             </td>

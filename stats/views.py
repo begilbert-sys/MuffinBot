@@ -30,7 +30,7 @@ def index(request):
         'guild': models.Guild.objects.get(id=GUILD_ID),
 
         'first_message_date': models.Date_Count.objects.first_message_date(),
-        'last_message_date': models.Date_Count.objects.first_message_date(),
+        'last_message_date': models.Date_Count.objects.last_message_date(),
         'total_days': models.Date_Count.objects.total_days(),
 
         'number_of_users': models.User.objects.number_of_users(),
@@ -55,7 +55,11 @@ def index(request):
     }
     return render(request, "index.html", context)
 
-
+def details(request):
+    context = {
+        
+    }
+    return render(request, "details.html", context)
 
 def ajax_get_date_data(request):
     '''this is for javascript. it provides all of the dates to be put into a chart'''

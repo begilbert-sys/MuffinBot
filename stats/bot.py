@@ -7,9 +7,9 @@ from . import models
 
 import asyncio
 import datetime
+import logging
 import pytz
 import timeit
-import warnings
 
 DELETED_USER_ID = 456226577798135808
 # gets the blacklist of user IDs
@@ -75,10 +75,8 @@ class ProcessorClient(discord.Client):
                     if message.type is discord.MessageType.reply:
                         reply_message = message.reference.resolved
                         if not reply_message:
-                            print(message.content)
-                            print(message.created_at)
-                            raise AssertionError("Reply Message Failed")
-                        if reply_message:
+                            logging.info('Reply message doesn\'t exist. Offending message:\n' + str(message))
+                        else:
                             processor.process_message(message, reply_message)
                     
                     # if the message is not a reply, process it normally
@@ -88,11 +86,11 @@ class ProcessorClient(discord.Client):
                     ### progress update
                     messages_scraped += 1
                     if messages_scraped % 100 == 0:
-                        print('Message #: ', messages_scraped)
+                        logging.info('Message #: ' + str(messages_scraped))
                             # save the datetime of the last processed message
 
             except asyncio.TimeoutError:
-                warnings.warn('asyncio.TimeoutError ignored. Offending message: ' + str(message))
+                logging.exception('asyncio.TimeoutError ignored. Offending message:\n' + str(message))
             
             channel_model_object.last_processed_message_datetime = message.created_at
             await channel_model_object.asave()
@@ -118,6 +116,8 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = ProcessorClient(intents=intents)
+
+logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
 # Due to how Django is structured, this bot must be run as a management command
 # The file where it runs is stats/management/commands/MuffinBot.py
