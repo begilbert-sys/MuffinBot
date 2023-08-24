@@ -1,10 +1,12 @@
 import discord
 
+import asyncio
 import datetime 
 import emoji
+import logging
 import pytz
 import re
-import typing
+
 
 from . import models
 
@@ -17,188 +19,224 @@ with open('stats/words/curse_words.txt') as f:
 ### utility functions
 def convert_to_pacific_time(dt: datetime.datetime) -> datetime.datetime:
     '''
-    discord messages are in UTC by default. 
+    discord messages are in UTC by default
     this function converts them to PST/PDT
     '''
     PST_PDT = pytz.timezone('America/Los_Angeles')
     return dt.astimezone(PST_PDT)
 
-def get_custom_emoji_URLs(string):
-    '''returns a list of the URLs of all the custom emojis in a discord message'''
+def get_custom_emoji_URLs(string: str) -> list[str]:
+    '''Returns a list of the URLs of all the custom emojis in a discord message'''
     EMOJI_URL = 'https://cdn.discordapp.com/emojis/'
     custom_emoji_id_list = re.findall(r'<:\w*:(\d*)>', string)
     return [EMOJI_URL + emoji_id for emoji_id in custom_emoji_id_list]
 
-def get_URLs(string):
-    '''extracts all the URLs from a string'''
+def get_URLs(string: str) -> list[str]:
+    '''Extracts all the URLs from a string'''
     URL_REGEX = 'https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)'
 
     return re.findall(URL_REGEX, string)
 
+def _message_mentions(message: discord.message, reply_message: discord.message = None) -> list[int]:
+    '''
+    A message's mentions consist of: the author of the message that's being replied to (if
+    applicable), as well as all users pinged in the message 
+    returns a list of user IDs
+    '''
+    mentions_list = list()
+    if reply_message:
+        mentions_list.append(message.author.id)
+    mentions_list += [user.id for user in message.mentions]
+    return mentions_list
+
+def _get_special_field(Count_Class: type) -> str:
+    '''
+    Given a count class, returns the field unique to that count class
+    for example, Hour_Counts would return 'hour'
+    '''
+    INHERITED_FIELDS = ['id', 'user', 'count']
+    [special_field] = [field.name for field in Count_Class._meta.fields if field.name not in INHERITED_FIELDS]
+    return special_field
+
+# list of all the count model classes
+COUNT_MODELS = models.UserStat.__subclasses__()
 
 class Data_Processor:
-    '''self.cached_database structure:
-    {
-    'users':
-        {user_id: models.User},
-
-    'channel_counts':
-        {hash((user_id, obj)): models.Channel_Count},
-    'mention_counts':
-        {hash((user_id, obj)): models.Mention_Count},
-    etc. 
-    '''
-
-    DATABASE_KEY_TO_COUNT_MODEL = {
-        'channel_counts': models.Channel_Count,
-        'mention_counts': models.Mention_Count,
-        'hour_counts': models.Hour_Count,
-        'date_counts': models.Date_Count,
-        'URL_counts': models.URL_Count,
-        'default_emoji_counts': models.Default_Emoji_Count,
-        'custom_emoji_counts': models.Custom_Emoji_Count,
-        'unique_word_counts': models.Unique_Word_Count
-    }
-
     def __init__(self):
-        self.cached_database = {
-            'users': dict(),
+        self.cached_model_objects = {
+            Model_Class: dict() for Model_Class in COUNT_MODELS
         }
-        for key in self.DATABASE_KEY_TO_COUNT_MODEL:
-            self.cached_database[key] = dict()
-        
-        self.cached_channel_objects = list()
-    
-    def _add_user(self, user: discord.User) -> models.User:
-        assert user.id not in self.cached_database['users']
-        user_model_obj = models.User(
-            id = user.id,
-            tag = user.name,
-            nick = user.display_name,
-            avatar = str(user.display_avatar),
-        )
-        self.cached_database['users'][user.id] = user_model_obj
+        self.cached_model_objects[models.User] = dict()
+
+        self.cached_channels = dict()
+    def _get_or_add_user(self, user: discord.User) -> models.User:
+        '''
+        Return a user model object from the cache dict or, if one does not exist, then add one and return it
+        The cache dict key is the user's ID
+        '''
+        if user.id in self.cached_model_objects[models.User]:
+            user_model_obj = self.cached_model_objects[models.User][user.id]
+        else:
+            user_model_obj = models.User(
+                id=user.id,
+                tag=user.name,
+                nick = user.display_name,
+                avatar = str(user.display_avatar)
+            )
+            self.cached_model_objects[models.User][user.id] = user_model_obj
         return user_model_obj
     
-    def _create_or_increment(self, user: models.User, object: typing.Any, database_key: str, 
-                             field_name: str) -> None:
-        Model_Class = self.DATABASE_KEY_TO_COUNT_MODEL[database_key]
-        hash_value = hash((user.id, object))
-        if hash_value in self.cached_database[database_key]:
-            count_model_obj = self.cached_database[database_key][hash_value]
+    def _create_or_increment(self, Count_Class: type, user: models.User, object):
+        '''
+        Increment a count object from the cache dict or, if one does not exist, create one and add it to the cache
+        The cache dict key is a hashed tuple consisting of the user's ID and a unique object associated with the model object
+        '''
+        special_field = _get_special_field(Count_Class)
+
+        key = hash((user.id, object))
+        if key in self.cached_model_objects[Count_Class]:
+            count_model_obj = self.cached_model_objects[Count_Class][key]
         else:
-            # what the fuck is this call
-            count_model_obj = Model_Class(user=user, **{field_name: object})
-            self.cached_database[database_key][hash_value] = count_model_obj
+            count_model_obj = Count_Class(**{special_field: object, 'user': user})
+            self.cached_model_objects[Count_Class][key] = count_model_obj
         count_model_obj.count += 1
 
-    @staticmethod
-    def _message_mentions(message: discord.message, reply_message: discord.message = None) -> typing.List[int]:
+    async def process_guild(self, guild: discord.guild):
         '''
-        a message's mentions consist of: the author of the message that's being replied to (if
-        applicable), as well as all users pinged in the message 
-        returns a list of user IDs
+        Save a guild's info to the DB if it has not already been added
         '''
-        mentions_list = list()
-        if reply_message:
-            mentions_list.append(message.author.id)
-        mentions_list += [user.id for user in message.mentions]
-        return mentions_list
+        if not await models.Guild.objects.aexists():
+            guild_model_object = await models.Guild.objects.acreate(id=guild.id, name=guild.name, icon=guild.icon.url)
+            await guild_model_object.asave()
+
+    async def handle_channel(self, channel: discord.channel) -> datetime.datetime:
+        '''
+        If a channel is already in the database, add it to the chanel cache and return the datetime of the last processed message
+        If it is not in the database, create a new channel model object and add it to the cache - the return value in this case will be None
+        '''
+        channel_model_object, channel_created = await models.Channel.objects.aget_or_create(
+            id=channel.id,
+            defaults={'name': channel.name}
+        )
+        self.cached_channels[channel.id] = channel_model_object
+        return channel_model_object.last_processed_message_datetime
     
+    async def update_channel_last_message(self, channel, last_message: discord.Message):
+        '''
+        Update the last processed message of a channel model object
+        '''
+        channel_model_obj =  self.cached_channels[channel.id]
+        channel_model_obj.last_processed_message_datetime = last_message.created_at
+    
+    async def _save_channels(self):
+        '''
+        Save all of the cached channel model objects to the DB
+        '''
+        await models.Channel.objects.abulk_create(
+            self.cached_channels.values(),
+            update_conflicts = True,
+            update_fields = ['last_processed_message_datetime'],
+            unique_fields = ['id']
+        )
+
     def process_message(self, message: discord.Message, reply_message: discord.Message = None):
-        ### USER
-        if message.author.id in self.cached_database['users']:
-            user_model_obj = self.cached_database['users'][message.author.id]
-        else:
-            user_model_obj = self._add_user(message.author)
+        '''
+        Given a message, increment all of the cached models accordingly 
+        '''
+        user_id = message.author.id
+
+        ### USER 
+        user_model_obj = self._get_or_add_user(message.author)
         user_model_obj.messages += 1
 
         ### CHANNEL
         channel_id = message.channel.id
-        self._create_or_increment(user_model_obj, channel_id, 'channel_counts', 'channel_id')
+        self._create_or_increment(models.Channel_Count, user_model_obj, channel_id)
 
         # convert to PST/PDT
         message_creation_dt = convert_to_pacific_time(message.created_at)
 
-        ### HOUR 
-        self._create_or_increment(
-            user_model_obj, message_creation_dt.hour, 'hour_counts', 'hour'
-        )
+        ### HOUR
+        msg_hour = message_creation_dt.hour
+        self._create_or_increment(models.Hour_Count, user_model_obj, msg_hour)
 
         ### DATE 
-        self._create_or_increment(
-            user_model_obj, message_creation_dt.date(), 'date_counts', 'date'
-        )
+        msg_date = message_creation_dt.date()
+        self._create_or_increment(models.Date_Count, user_model_obj, msg_date)
 
         ### DEFAULT EMOJI
         for e in emoji.distinct_emoji_list(message.content):
-            self._create_or_increment(
-                user_model_obj, e, 'default_emoji_counts', 'default_emoji'
-            )
-
+            self._create_or_increment(models.Default_Emoji_Count, user_model_obj, e)
+        
         ### CUSTOM EMOJI
         for e in get_custom_emoji_URLs(message.content):
-            self._create_or_increment(
-                user_model_obj, e, 'custom_emoji_counts', 'custom_emoji'
-            )
-
+            self._create_or_increment(models.Custom_Emoji_Count, user_model_obj, e)
+        
         ### URL
         for URL in get_URLs(message.content):
-            self._create_or_increment(
-                user_model_obj, URL, 'URL_counts', 'URL'
-            )
-
+            self._create_or_increment(models.URL_Count, user_model_obj, URL)
+        
         ### UNIQUE WORDS AND CURSE WORDS
         for word in message.content.split():
             # valid 'words' need to be alphabetic and between 3 and 18 characters
             if word.isalpha() and len(word) in range(3,19):
                 word = word.lower()
                 if word not in WORDS:
-                    self._create_or_increment(
-                        user_model_obj, word, 'unique_word_counts', 'word'
-                    )
+                    self._create_or_increment(models.Unique_Word_Count, user_model_obj, word)
                 if word in CURSE_WORDS:
                     user_model_obj.curse_word_count += 1
-    
+
         ### MENTIONS
-        mentions_list = self._message_mentions(message, reply_message)
+        mentions_list = _message_mentions(message, reply_message)
         for user_id in mentions_list:
-            self._create_or_increment(
-                user_model_obj, user_id, 'mention_counts', 'mentioned_user_id'
-            )
+            self._create_or_increment(models.Mention_Count, user_model_obj, user_id)
 
-    async def _asave_count_model(self, database_key: str):
-        Model_Class = self.DATABASE_KEY_TO_COUNT_MODEL[database_key]
+    async def _update_model_objects(self, Model_Class):
+        '''
+        For a specific model: update all of the DB models with data from the cached models
+        '''
+        for hash_val, dummy_model_obj in self.cached_model_objects[Model_Class].items():
+            if Model_Class is models.User:
+                kwargs = {'id': dummy_model_obj.id}
+            else:
+                assert issubclass(Model_Class, models.UserStat)
+                special_field = _get_special_field(Model_Class)
+                kwargs = {'user': dummy_model_obj.user, special_field: getattr(dummy_model_obj, special_field)}
 
-        # this is a REALLY hacky way to get the name of the unique database attribute
-        # I should probably rewrite this part 
-        unique_field_name = Model_Class._meta.get_fields()[3].name
-
-        bulk_count_model_objects = list(self.cached_database[database_key].values())
-        for cached_count_model_object in bulk_count_model_objects:
-            kwargs = {
-                'user': cached_count_model_object.user,
-                unique_field_name: getattr(cached_count_model_object, unique_field_name)
-            }
             if await Model_Class.objects.filter(**kwargs).aexists():
-                real_count_model_object = await Model_Class.objects.aget(**kwargs)
-                real_count_model_object.count += cached_count_model_object.count
-                await real_count_model_object.asave()
-            else:
-                await cached_count_model_object.asave()
-        
-    async def asave_to_database(self):
-        bulk_user_model_objects = list(self.cached_database['users'].values())
-        for cached_user_model_object in bulk_user_model_objects:
-            user_id = cached_user_model_object.id
-            if await models.User.objects.filter(id=user_id).aexists():
-                real_user_model_object = await models.User.objects.aget(id=user_id)
-                real_user_model_object.messages += cached_user_model_object.messages
-                real_user_model_object.curse_word_count += cached_user_model_object.curse_word_count
-                await real_user_model_object.asave()
-            else:
-                await cached_user_model_object.asave()
+                real_model_obj = await Model_Class.objects.aget(**kwargs)
+                real_model_obj.update(dummy_model_obj)
+                self.cached_model_objects[Model_Class][hash_val] = real_model_obj
 
-        for database_key in self.DATABASE_KEY_TO_COUNT_MODEL:
-            print("working on", database_key)
-            await self._asave_count_model(database_key)
+
+    async def _update_and_save_model_objects(self, Model_Class):
+        '''
+        Updates all model objects for a specific model, and saves them to the DB
+        '''
+        logging.debug(Model_Class.__name__ + ' saving. . .')
+        await self._update_model_objects(Model_Class)
+        if Model_Class is models.User:
+            update_fields = ['messages', 'curse_word_count']
+        else:
+            update_fields = ['count']
+        await Model_Class.objects.abulk_create(
+            self.cached_model_objects[Model_Class].values(),
+            update_conflicts = True,
+            update_fields = update_fields,
+            unique_fields = ['id']
+        )
+        logging.debug(Model_Class.__name__ + ' saved to DB')
+
+    async def save(self):
+        '''
+        Asynchronously saves all info to the DB
+        '''
+        # save User objects first, to avoid foreign key conflicts (you dummy)
+        await self._update_and_save_model_objects(models.User)
+        # save the rest asynchronously
+        gather_list = []
+        gather_list.append(self._save_channels())
+        for Model_Class in COUNT_MODELS:
+            gather_list.append(self._update_and_save_model_objects(Model_Class))
+
+        await asyncio.gather(*gather_list)

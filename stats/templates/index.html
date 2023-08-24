@@ -31,11 +31,11 @@
     <h1>
       {{ guild.name }} Stats (rendered on {% now "n/j/o" %})
     </h1>
-    <span class="txt2">
+    <span class="subtext">
       Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
     </span>
     <br>
-    <span class="txt2">
+    <span class="subtext">
       {{ number_of_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
     </span>
     
@@ -77,7 +77,7 @@
       </tbody>
     </table>
     <br>
-    <span class="txt2">PST / PDT (UTC-8/7)</span>
+    <span class="subtext">PST / PDT (UTC-8/7)</span>
     <br>
     <br>
     <table border="0" class="txt1">
@@ -126,7 +126,7 @@
       <tbody>
         <thead>
           <!-- tablesort settings for each column defined here-->
-          <th class="blankheader" data-sorter="false">&nbsp;</th>
+          <th data-sorter="false"></th>
           <th data-sorter="false">Nick</th>
           <th data-lockedorder="desc" class="sorter-bignumber">Line Count</th>
           <th data-lockedorder="desc">Lines Per Day</th>
@@ -139,7 +139,7 @@
               {{ forloop.counter }}
             </td>
             <td class="nick">
-              <img src="{{ user_dict.user.avatar }}">
+              <img src="{{ user_dict.user.avatar }}" class="icon">
               &nbsp;
               {{ user_dict.user.tag }}
             </td>
@@ -179,33 +179,32 @@
     -->
     <h3>Time of day stats</h3>
     <table cellspacing="1" cellpadding="2" class="default_table" id="time_of_day">
+      <thead>
+        <th class="blankheader"></th>
+        <th>Nightcrawlers<br> <span class="hours">(12AM - 6AM)</span></th>
+        <th>Early Birds<br> <span class="hours">(6AM - 12PM)</span></th>
+        <th>Afternoon Shift<br> <span class="hours">(12PM - 6PM)</span></th>
+        <th>Evening chatters<br> <span class="hours">(6PM - 12AM)</span></th>
+      </thead>
       <tbody>
-        <thead>
-          <th class="blankheader"></th>
-          <th>Nightcrawlers<br> <span class="hours">(12AM - 6AM)</span></th>
-          <th>Early Birds<br> <span class="hours">(6AM - 12PM)</span></th>
-          <th>Afternoon Shift<br> <span class="hours">(12PM - 6PM)</span></th>
-          <th>Evening chatters<br> <span class="hours">(6PM - 12AM)</span></th>
-          {% for zip_packet in top_10_hour_users %}
-          <tr>
-            <td>{{ forloop.counter }} </td>
-            {% for user, count in zip_packet %}
-              <td>
-                {{ user.tag }} - {{ count }}
-                <br>
-                {% cycle 'assets/pipe1v.png' 'assets/pipe2v.png' 'assets/pipe3v.png' 'assets/pipe4v.png' as pipev_png silent %}
-                {% cycle most_night_messages most_morning_messages most_afternoon_messages most_evening_messages as current_time_most_messages silent %}
-                <img class="time_of_day_icon" src="{{ user.avatar }}"><!--
-                --><img src="{% static pipev_png %}" height="5" width="{% widthratio count current_time_most_messages 100 %}">
-              </td>
-            {% endfor %}
-          </tr>
+        {% for zip_packet in top_10_hour_users %}
+        <tr>
+          <td>{{ forloop.counter }} </td>
+          {% for user, count in zip_packet %}
+          <td>
+            {{ user.tag }} - {{ count }}
+            <br>
+            {% cycle 'assets/pipe1v.png' 'assets/pipe2v.png' 'assets/pipe3v.png' 'assets/pipe4v.png' as pipev_png silent %}
+            {% cycle most_night_messages most_morning_messages most_afternoon_messages most_evening_messages as current_time_most_messages silent %}
+            <img class="icon time_of_day_icon" src="{{ user.avatar }}"><!--
+            --><img src="{% static pipev_png %}" height="5" width="{% widthratio count current_time_most_messages 100 %}">
+          </td>
           {% endfor %}
-        </thead>
+        </tr>
+        {% endfor %}
       </tbody>
     </table>
   </center>
-  
 </body>
 
 </html>

@@ -23,6 +23,10 @@ class User_Manager(models.Manager):
     
     def top_user_message_count(self) -> int:
         return self.all().order_by('-messages').first().messages
+    
+    def top_n_user_curse_proportion(self, n):
+        top_100_users = self.all().order_by('-messages')[:100]
+        return sorted(top_100_users, key = lambda user: user.curse_word_count / user.messages, reverse=True)[:n]
 
 class User(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
@@ -37,7 +41,28 @@ class User(models.Model):
 
     def __str__(self):
         return self.tag
+    
+    def update(self, other):
+        '''
+        Update the counts of one User with the counts of another, with the equivalent 
+        Args:
+            other (UserStat) - a model of the same type 
+        '''
 
+        # make absolutely sure that the correct models are being combined
+
+        assert type(self) is type(other) # check that the objects are of the same class
+        
+        # check that the objects share the same user attribute, as well as the attribute unique to their class
+        unneeded_attrs = ['_state', 'id', 'messages', 'curse_word_count']
+
+        self_attrs = vars(self)
+        for attr in self_attrs:
+            if attr not in unneeded_attrs:
+                assert getattr(self, attr) == getattr(other, attr)
+
+        self.messages += other.messages
+        self.curse_word_count += other.curse_word_count
 
 class UserStat(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -45,6 +70,27 @@ class UserStat(models.Model):
     def __str__(self):
         return f"{self.user.tag} / count: {self.count}"
     
+    
+    def update(self, other):
+        '''
+        Update the count of one model with the counts of another, with the equivalent 
+        Args:
+            other (UserStat) - a model of the same type 
+        '''
+
+        # make absolutely sure that the correct models are being combined
+
+        assert type(self) is type(other) # check that the objects are of the same class
+        
+        # check that the objects share the same user attribute, as well as the attribute unique to their class
+        unneeded_attrs = ['_state', 'id', 'count']
+
+        self_attrs = vars(self)
+        for attr in self_attrs:
+            if attr not in unneeded_attrs:
+                assert getattr(self, attr) == getattr(other, attr)
+        self.count += other.count
+
     class Meta:
         abstract = True
     

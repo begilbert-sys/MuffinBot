@@ -57,7 +57,7 @@ def index(request):
 
 def details(request):
     context = {
-        
+        'guild': models.Guild.objects.get(id=GUILD_ID)
     }
     return render(request, "details.html", context)
 

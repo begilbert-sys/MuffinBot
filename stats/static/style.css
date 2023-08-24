@@ -42,7 +42,7 @@ table {
   text-align: left;
 }
 
-.txt2 {
+.subtext {
   font-family: "Verdana";
   color: #99AAB5;
   font-size: 12px;
@@ -69,12 +69,24 @@ table {
   text-align: center;
 }
 
+.icon {
+  border-radius: 50%;
+}
+
 .default_table {
   font-family: "Verdana";
   color: #000000;
   font-size: 12px;
   text-align: left;
   font-weight: bold;
+}
+
+.default_table th {
+  background-color: #7289DA;
+}
+
+.default_table th:first-child {
+  background-color: #2C2F33 !important;
 }
 
 .default_table tr:nth-child(even) {
@@ -88,20 +100,12 @@ table {
   vertical-align: middle;
 }
 
-.default_table th {
-  background-color: #7289DA;
-}
-
-.blankheader {
-  background-color: #2C2F33 !important;
-}
 
 .rank {
   text-align: right;
 }
 
 .nick img {
-  border-radius: 50%;
   height: 30px;
 }
 
@@ -131,7 +135,6 @@ table {
 
 .time_of_day_icon {
   height: 15px;
-  border-radius: 50%;
   vertical-align: middle;
 }
 
