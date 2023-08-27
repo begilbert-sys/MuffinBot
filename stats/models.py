@@ -57,9 +57,6 @@ class User(models.Model):
         unneeded_attrs = ['_state', 'id', 'messages', 'curse_word_count']
 
         self_attrs = vars(self)
-        for attr in self_attrs:
-            if attr not in unneeded_attrs:
-                assert getattr(self, attr) == getattr(other, attr)
 
         self.messages += other.messages
         self.curse_word_count += other.curse_word_count
@@ -100,10 +97,39 @@ class UserStat(models.Model):
 class Channel_Count(UserStat):
     channel_id = models.PositiveBigIntegerField()
 
+class Mention_Count_Manager(models.Manager):
+    def top_n_mention_pairs(self, n):
+        # put together the pairs list
+        pairs = dict()
+        for mention_count in self.all():
+            id_pair = frozenset({mention_count.user.id, mention_count.mentioned_user_id})
+            if len(id_pair) == 1:
+                continue
+            if id_pair in pairs:
+                pairs[id_pair] += mention_count.count
+            else:
+                pairs[id_pair] = mention_count.count
+        top_n_keys = sorted(pairs, key=lambda key: pairs[key], reverse=True)[:n]
+        top_n_tuples = list()
+
+        # assemble the top n tuples
+        for key in top_n_keys:
+            user_id_1, user_id_2 = key
+            user_1 = User.objects.get(id=user_id_1)
+            user_2 = User.objects.get(id=user_id_2)
+            top_n_tuples.append((
+                user_1,
+                user_2,
+                self.get(user=user_1, mentioned_user_id=user_id_2).count,
+                self.get(user=user_2, mentioned_user_id=user_id_1).count
+            ))
+        return top_n_tuples
+
 
 class Mention_Count(UserStat):
     mentioned_user_id = models.PositiveBigIntegerField()
 
+    objects = Mention_Count_Manager()
 
 class Hour_Count_Manager(models.Manager):
     def total_hour_counts(self) -> dict:

@@ -57,7 +57,8 @@ def index(request):
 
 def details(request):
     context = {
-        'guild': models.Guild.objects.get(id=GUILD_ID)
+        'guild': models.Guild.objects.get(id=GUILD_ID),
+        'top_curse_users': models.User.objects.top_n_user_curse_proportion(10),
     }
     return render(request, "details.html", context)
 

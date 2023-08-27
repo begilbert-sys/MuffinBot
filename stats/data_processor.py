@@ -216,7 +216,7 @@ class Data_Processor:
         logging.debug(Model_Class.__name__ + ' saving. . .')
         await self._update_model_objects(Model_Class)
         if Model_Class is models.User:
-            update_fields = ['messages', 'curse_word_count']
+            update_fields = ['messages', 'curse_word_count', 'avatar']
         else:
             update_fields = ['count']
         await Model_Class.objects.abulk_create(

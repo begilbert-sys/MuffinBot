@@ -129,9 +129,18 @@ table {
   text-align: center;
 }
 
-#time_of_day tr {
+#time_of_day img {
+  padding-right: 0px;
+}
+
+.tiny_table tr {
   font-weight: normal;
 }
+
+.tiny_table img {
+  padding-right: 4px;
+}
+
 
 .time_of_day_icon {
   height: 15px;

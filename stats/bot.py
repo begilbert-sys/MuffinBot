@@ -45,14 +45,14 @@ class Processor_Client(discord.Client):
                 self.db_processor.process_message(message)
 
             self._last_message = message
+            
             ### progress update
             self.messages_scraped += 1
-            if self.messages_scraped % 100 == 0:
+            if self.messages_scraped % 500 == 0:
                 logging.debug('Message #: ' + str(self.messages_scraped))
 
     @tasks.loop(count=1)
     async def process_data(self):
-        await self.wait_until_ready()
         self.guild = self.get_guild(GUILD_ID)
         await self.db_processor.process_guild(self.guild)
 
