@@ -22,10 +22,10 @@ class User_Manager(models.Manager):
         return self.all().aggregate(models.Sum('messages'))['messages__sum']
     
     def top_user_message_count(self) -> int:
-        return self.all().order_by('-messages').first().messages
+        return self.filter(blacklist=True).order_by('-messages').first().messages
     
     def top_n_user_curse_proportion(self, n):
-        top_100_users = self.all().order_by('-messages')[:100]
+        top_100_users = self.filter(blacklist=False).order_by('-messages')[:100]
         return sorted(top_100_users, key = lambda user: user.curse_word_count / user.messages, reverse=True)[:n]
 
 class User(models.Model):
@@ -36,6 +36,8 @@ class User(models.Model):
     avatar = models.URLField()
     messages = models.PositiveIntegerField(default=0)
     curse_word_count = models.PositiveIntegerField(default=0)
+
+    blacklist = models.BooleanField(default=False)
 
     objects = User_Manager()
 
@@ -52,11 +54,10 @@ class User(models.Model):
         # make absolutely sure that the correct models are being combined
 
         assert type(self) is type(other) # check that the objects are of the same class
+
+        assert self.id == other.id # check that the users match 
         
         # check that the objects share the same user attribute, as well as the attribute unique to their class
-        unneeded_attrs = ['_state', 'id', 'messages', 'curse_word_count']
-
-        self_attrs = vars(self)
 
         self.messages += other.messages
         self.curse_word_count += other.curse_word_count
@@ -94,8 +95,14 @@ class UserStat(models.Model):
 
 # every model here has an additional 'user' and 'count' field, thanks to the UserStat abc
 
+class Channel_Count_Manager(models.Manager):
+    def sorted_channels(self):
+        pass
+
 class Channel_Count(UserStat):
-    channel_id = models.PositiveBigIntegerField()
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+
+    objects = Channel_Count_Manager()
 
 class Mention_Count_Manager(models.Manager):
     def top_n_mention_pairs(self, n):
@@ -127,7 +134,7 @@ class Mention_Count_Manager(models.Manager):
 
 
 class Mention_Count(UserStat):
-    mentioned_user_id = models.PositiveBigIntegerField()
+    mentioned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mentioned_user')
 
     objects = Mention_Count_Manager()
 
@@ -152,13 +159,13 @@ class Hour_Count_Manager(models.Manager):
     def top_n_users_in_range(self, n: int, start: int, end: int):
         user_dict = dict()
         for hour in range(start, end+1):
-            for hour_count_obj in self.filter(hour=hour):
+            for hour_count_obj in self.filter(hour=hour, user__blacklist=False):
                 user = hour_count_obj.user
                 if user in user_dict:
                     user_dict[user] += hour_count_obj.count
                 else:
                     user_dict[user] = hour_count_obj.count
-        return sorted(user_dict.items(), key=lambda k: user_dict[k[0]], reverse=True)[:10]
+        return sorted(user_dict.items(), key=lambda k: user_dict[k[0]], reverse=True)[:n]
     
     def top_user_in_range_message_count(self, start, end):
         user, count = self.top_n_users_in_range(1, start, end)[0]

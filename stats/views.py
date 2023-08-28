@@ -1,8 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseNotFound
 
-from .presets import GUILD_ID
-
 from . import models
 
 def index(request):
@@ -11,7 +9,7 @@ def index(request):
 
     # precalculated variables 
     top_100_users_display = []
-    for user_model_object in models.User.objects.order_by('-messages')[:100]:
+    for user_model_object in models.User.objects.filter(blacklist=False).order_by('-messages')[:100]:
         user_display_chunk = {
             'user': user_model_object,
             'average_daily_messages': (user_model_object.messages / models.Date_Count.objects.total_user_days(user_model_object)),
@@ -27,7 +25,7 @@ def index(request):
         top_100_users_display.append(user_display_chunk)
 
     context = {
-        'guild': models.Guild.objects.get(id=GUILD_ID),
+        'guild': models.Guild.objects.all().first(),
 
         'first_message_date': models.Date_Count.objects.first_message_date(),
         'last_message_date': models.Date_Count.objects.last_message_date(),

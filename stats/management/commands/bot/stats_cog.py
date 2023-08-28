@@ -1,5 +1,5 @@
 import discord
-from discord.ext import tasks
+from discord.ext import commands, tasks
 
 import datetime
 import logging
@@ -7,7 +7,7 @@ import pytz
 import timeit
 import traceback
 
-from .presets import MSG_LIMIT, GUILD_ID, TOKEN
+from .presets import MSG_LIMIT, GUILD_ID
 
 from .data_processor import Data_Processor
 
@@ -18,15 +18,14 @@ def get_datetime_from_snowflake(snowflake: int) -> datetime.datetime:
     '''given a discord ID (a snowflake), performs a calculation on the ID to retreieve its creation datetime in UTC'''
     return datetime.datetime.fromtimestamp(((snowflake >> 22) + 1420070400000) / 1000, pytz.UTC)
 
-class Processor_Client(discord.Client):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+
+class Processor_Cog(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
         self.messages_scraped = 0
         self.db_processor = Data_Processor()
-    
-    async def setup_hook(self):
-        self.process_data.start()
+
     
 
     async def _read_history(self, channel, kwargs):
@@ -53,7 +52,7 @@ class Processor_Client(discord.Client):
 
     @tasks.loop(count=1)
     async def process_data(self):
-        self.guild = self.get_guild(GUILD_ID)
+        self.guild = self.bot.get_guild(GUILD_ID)
         await self.db_processor.process_guild(self.guild)
 
         start_time = timeit.default_timer()
@@ -83,6 +82,8 @@ class Processor_Client(discord.Client):
             
             try:
                 await self._read_history(channel, kwargs)
+            except:
+                traceback.print_exc()
             finally:
                 await self.db_processor.update_channel_last_message(channel, self._last_message)
                 logging.debug(channel.name + ' saved')
@@ -96,9 +97,8 @@ class Processor_Client(discord.Client):
 
     @process_data.before_loop
     async def before_process(self):
-        await self.wait_until_ready()
+        await self.bot.wait_until_ready()
     
-
     @process_data.after_loop
     async def after_process(self):
         logging.info('Saving. . . ')
@@ -111,22 +111,27 @@ class Processor_Client(discord.Client):
         except:
             traceback.print_exc()
         finally:
-            await self.close()
+            await self.bot.close()
+
+    ### Bot Commands Start Here
+
+    @commands.command()
+    async def stats(self, ctx):
+        await ctx.send("https://bengilbert.net/stats/statsindex")
+
+    @commands.command()
+    async def source(self, ctx):
+        await ctx.send("https://github.com/begilbert-sys/MuffinBot")
     
-    async def on_ready(self):
-        print(f'Logged in as {self.user} (ID: {self.user.id})')
-        print('------')
+    @commands.command()
+    async def blacklist(self, ctx):
+        status = await self.db_processor.blacklist(ctx.author)
+        await ctx.send(status)
+    
+    @commands.command()
+    async def whitelist(self, ctx):
+        status = await self.db_processor.whitelist(ctx.author)
+        await ctx.send(status)
 
-
-logging.basicConfig(level=logging.DEBUG, format='%(message)s')
-
-intents = discord.Intents.default()
-intents.message_content = True
-
-client = Processor_Client(intents=intents)
-
-def run():
-    client.run(TOKEN)
-
-# Due to how Django is structured, this bot must be run as a management command
-# The file where it runs is stats/management/commands/MuffinBot.py
+async def setup(bot):
+    await bot.add_cog(Processor_Cog(bot))

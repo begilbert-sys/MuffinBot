@@ -7,8 +7,7 @@ import logging
 import pytz
 import re
 
-
-from . import models
+from stats import models
 
 with open('stats/words/words.txt') as f:
     WORDS = {w.lower() for w in f.read().split('\n')}
@@ -36,18 +35,6 @@ def get_URLs(string: str) -> list[str]:
     URL_REGEX = 'https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)'
 
     return re.findall(URL_REGEX, string)
-
-def _message_mentions(message: discord.message, reply_message: discord.message = None) -> list[int]:
-    '''
-    A message's mentions consist of: the author of the message that's being replied to (if
-    applicable), as well as all users pinged in the message 
-    returns a list of user IDs
-    '''
-    mentions_list = list()
-    if reply_message:
-        mentions_list.append(message.author.id)
-    mentions_list += [user.id for user in message.mentions]
-    return mentions_list
 
 def _get_special_field(Count_Class: type) -> str:
     '''
@@ -101,43 +88,17 @@ class Data_Processor:
             self.cached_model_objects[Count_Class][key] = count_model_obj
         count_model_obj.count += 1
 
-    async def process_guild(self, guild: discord.guild):
+    def _message_mentions(self, message: discord.message, reply_message: discord.message = None) -> list[models.User]:
         '''
-        Save a guild's info to the DB if it has not already been added
+        A message's mentions consist of: the author of the message that's being replied to (if
+        applicable), as well as all users pinged in the message 
+        returns a list of the User model objects
         '''
-        if not await models.Guild.objects.aexists():
-            guild_model_object = await models.Guild.objects.acreate(id=guild.id, name=guild.name, icon=guild.icon.url)
-            await guild_model_object.asave()
-
-    async def handle_channel(self, channel: discord.channel) -> datetime.datetime:
-        '''
-        If a channel is already in the database, add it to the chanel cache and return the datetime of the last processed message
-        If it is not in the database, create a new channel model object and add it to the cache - the return value in this case will be None
-        '''
-        channel_model_object, channel_created = await models.Channel.objects.aget_or_create(
-            id=channel.id,
-            defaults={'name': channel.name}
-        )
-        self.cached_channels[channel.id] = channel_model_object
-        return channel_model_object.last_processed_message_datetime
-    
-    async def update_channel_last_message(self, channel, last_message: discord.Message):
-        '''
-        Update the last processed message of a channel model object
-        '''
-        channel_model_obj =  self.cached_channels[channel.id]
-        channel_model_obj.last_processed_message_datetime = last_message.created_at
-    
-    async def _save_channels(self):
-        '''
-        Save all of the cached channel model objects to the DB
-        '''
-        await models.Channel.objects.abulk_create(
-            self.cached_channels.values(),
-            update_conflicts = True,
-            update_fields = ['last_processed_message_datetime'],
-            unique_fields = ['id']
-        )
+        mentions_list = list()
+        if reply_message:
+            mentions_list.append(self._get_or_add_user(message.author.id))
+        mentions_list += [self._get_or_add_user(user) for user in message.mentions]
+        return mentions_list
 
     def process_message(self, message: discord.Message, reply_message: discord.Message = None):
         '''
@@ -151,7 +112,7 @@ class Data_Processor:
 
         ### CHANNEL
         channel_id = message.channel.id
-        self._create_or_increment(models.Channel_Count, user_model_obj, channel_id)
+        self._create_or_increment(models.Channel_Count, user_model_obj, self.current_channel_model_obj)
 
         # convert to PST/PDT
         message_creation_dt = convert_to_pacific_time(message.created_at)
@@ -187,9 +148,48 @@ class Data_Processor:
                     user_model_obj.curse_word_count += 1
 
         ### MENTIONS
-        mentions_list = _message_mentions(message, reply_message)
-        for user_id in mentions_list:
-            self._create_or_increment(models.Mention_Count, user_model_obj, user_id)
+        mentions_list = self._message_mentions(message, reply_message)
+        for user in mentions_list:
+            self._create_or_increment(models.Mention_Count, user_model_obj, user)
+
+    async def process_guild(self, guild: discord.guild):
+        '''
+        Save a guild's info to the DB if it has not already been added
+        '''
+        if not await models.Guild.objects.aexists():
+            guild_model_object = await models.Guild.objects.acreate(id=guild.id, name=guild.name, icon=guild.icon.url)
+            await guild_model_object.asave()
+
+    async def handle_channel(self, channel: discord.channel) -> datetime.datetime:
+        '''
+        If a channel is already in the database, add it to the chanel cache and return the datetime of the last processed message
+        If it is not in the database, create a new channel model object and add it to the cache - the return value in this case will be None
+        '''
+        channel_model_object, channel_created = await models.Channel.objects.aget_or_create(
+            id=channel.id,
+            defaults={'name': channel.name}
+        )
+        self.current_channel_model_obj = channel_model_object
+        self.cached_channels[channel.id] = channel_model_object
+        return channel_model_object.last_processed_message_datetime
+    
+    async def update_channel_last_message(self, channel, last_message: discord.Message):
+        '''
+        Update the last processed message of a channel model object
+        '''
+        channel_model_obj =  self.cached_channels[channel.id]
+        channel_model_obj.last_processed_message_datetime = last_message.created_at
+    
+    async def _save_channels(self):
+        '''
+        Save all of the cached channel model objects to the DB
+        '''
+        await models.Channel.objects.abulk_create(
+            self.cached_channels.values(),
+            update_conflicts = True,
+            update_fields = ['last_processed_message_datetime'],
+            unique_fields = ['id']
+        )
 
     async def _update_model_objects(self, Model_Class):
         '''
@@ -198,6 +198,8 @@ class Data_Processor:
         for hash_val, dummy_model_obj in self.cached_model_objects[Model_Class].items():
             if Model_Class is models.User:
                 kwargs = {'id': dummy_model_obj.id}
+            elif Model_Class is models.Mention_Count: # mention counts are special because the field is a user
+                kwargs = {'user': dummy_model_obj.user, 'mentioned_user': await models.User.objects.aget(dummy_model_obj.mentioned_user.id)}
             else:
                 assert issubclass(Model_Class, models.UserStat)
                 special_field = _get_special_field(Model_Class)
@@ -207,7 +209,6 @@ class Data_Processor:
                 real_model_obj = await Model_Class.objects.aget(**kwargs)
                 real_model_obj.update(dummy_model_obj)
                 self.cached_model_objects[Model_Class][hash_val] = real_model_obj
-
 
     async def _update_and_save_model_objects(self, Model_Class):
         '''
@@ -240,3 +241,23 @@ class Data_Processor:
             gather_list.append(self._update_and_save_model_objects(Model_Class))
 
         await asyncio.gather(*gather_list)
+    
+    async def blacklist(self, user: discord.User):
+        if await models.User.objects.filter(id=user.id).aexists():
+            user_model_obj = await models.User.objects.aget(id=user.id)
+            if user_model_obj.blacklist:
+                return 'You are already blacklisted.'
+        else:
+            user_model_obj = self._get_or_add_user(user)
+        user_model_obj.blacklist = True
+        await user_model_obj.asave()
+        return 'You have been blacklisted.'
+
+    async def whitelist(self, user: discord.User):
+        if await models.User.objects.filter(id=user.id).aexists():
+            user_model_obj = await models.User.objects.aget(id=user.id)
+            if user_model_obj.blacklist:
+                user_model_obj.blacklist = False
+                await user_model_obj.asave()
+                return 'You have been whitelisted.'
+        return 'You are already whitelisted.'
