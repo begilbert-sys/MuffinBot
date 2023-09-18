@@ -25,10 +25,13 @@ class Processor_Cog(commands.Cog):
 
         self.messages_scraped = 0
         self.db_processor = Data_Processor()
+        
+        self.process_data.start()
 
     
 
     async def _read_history(self, channel, kwargs):
+        self._last_message = None
         async for message in channel.history(**kwargs):
             if message.author.bot:
                 continue
@@ -36,15 +39,24 @@ class Processor_Cog(commands.Cog):
                 continue
             if message.type is discord.MessageType.reply:
                 reply_message = message.reference.resolved
-                if not reply_message:
-                    logging.debug('Reply message doesn\'t exist. Offending message:\n' + str(message.content))
-                else:
-                    self.db_processor.process_message(message, reply_message)
+                if not reply_message: # either the message is deleted or just wasn't resolved
+                    logging.debug('Reply message wasn\'t resolved. Offending message:\n' + str(message.content))
+                    logging.debug('Reference info:' + str({k: getattr(message.reference, k) for k in message.reference.__slots__})) # print all attrs for debugging purposes
+                    if type(reply_message) is not discord.DeletedReferencedMessage:
+                        try:
+                            reply_message = await channel.fetch_message(message.reference.message_id)
+                            logging.debug("Message was found")
+                        except discord.NotFound:
+                            reply_message = None
+                            logging.debug("Message was deleted")
+                    else:
+                        reply_message = None
+                self.db_processor.process_message(message, reply_message)
             elif message.type is discord.MessageType.default:
                 self.db_processor.process_message(message)
-
+                
             self._last_message = message
-            
+                
             ### progress update
             self.messages_scraped += 1
             if self.messages_scraped % 500 == 0:
@@ -85,8 +97,11 @@ class Processor_Cog(commands.Cog):
             except:
                 traceback.print_exc()
             finally:
-                await self.db_processor.update_channel_last_message(channel, self._last_message)
-                logging.debug(channel.name + ' saved')
+                if self._last_message:
+                    await self.db_processor.update_channel_last_message(channel, self._last_message)
+                    logging.info(channel.name + ' saved')
+                else:
+                    logging.info(channel.name + ' skipped')
 
         end_time = timeit.default_timer()
         time_elapsed = end_time - start_time

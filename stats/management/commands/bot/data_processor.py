@@ -96,7 +96,7 @@ class Data_Processor:
         '''
         mentions_list = list()
         if reply_message:
-            mentions_list.append(self._get_or_add_user(message.author.id))
+            mentions_list.append(self._get_or_add_user(message.author))
         mentions_list += [self._get_or_add_user(user) for user in message.mentions]
         return mentions_list
 
@@ -199,7 +199,7 @@ class Data_Processor:
             if Model_Class is models.User:
                 kwargs = {'id': dummy_model_obj.id}
             elif Model_Class is models.Mention_Count: # mention counts are special because the field is a user
-                kwargs = {'user': dummy_model_obj.user, 'mentioned_user': await models.User.objects.aget(dummy_model_obj.mentioned_user.id)}
+                kwargs = {'user': dummy_model_obj.user, 'mentioned_user': await models.User.objects.aget(id=dummy_model_obj.mentioned_user.id)}
             else:
                 assert issubclass(Model_Class, models.UserStat)
                 special_field = _get_special_field(Model_Class)

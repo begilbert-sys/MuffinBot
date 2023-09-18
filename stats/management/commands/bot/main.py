@@ -6,7 +6,7 @@ import logging
 from .presets import TOKEN
 
 from .stats_cog import Processor_Cog
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
 class Stats_Bot(commands.Bot):
     async def setup_hook(self):
@@ -23,6 +23,7 @@ bot = Stats_Bot(command_prefix='giveme ', description=description, intents=inten
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
+
 
 def run():
     bot.run(TOKEN)

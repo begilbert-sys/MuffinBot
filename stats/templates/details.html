@@ -22,33 +22,10 @@
 <body>
     <center>
         <!-- 
-        Channels
-        -->    
-        <h3></h3>
-        <table cellspacing="1" cellpadding="2" class="default_table">
-            <thead>
-                <th class="blankheader"></th>
-                <th>Channel</th>
-                <th>Messages</th>
-                <th>Top Contributors</th>
-            </thead>
-            <tbody>
-                <tr>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
-
-
-        <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
-        <br>
-        <br>
-
-        <!-- 
         Top Swearers
         -->    
         <h3>
-            Top 10 Swearers
+            Top Swearers
         </h3>
         <span class="subtext">
             These users had the mouths of a sailor
@@ -74,6 +51,124 @@
             </tr>
             {% endfor %}
         </tbody>
+        </table>
+
+        <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
+        <br>
+        <br>
+
+
+        <!-- 
+        Top Mention Pairs
+        -->    
+        <h3>
+            Chat Partners
+        </h3>
+        <span class="subtext">
+            Get a room!
+        </span>
+        <table cellspacing="1" cellpadding="2" class="default_table tiny_table">
+        <thead>
+            <th></th>
+            <th colspan="3">Nicks</th>
+
+        </thead>
+        <tbody>
+            {% for user1, user2, user1count, user2count in top_mention_pairs %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td style="text-align: right;">
+                    {{ user1.nick }}
+                    <img class="icon time_of_day_icon" src="{{ user1.avatar }}">
+                    <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user1count max_mention_count 100 %}">
+                    {{ user1count }}
+                </td>
+                <td>
+                    {{ user2count }}
+                    <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user2count max_mention_count 100 %}">
+                    <img class="icon time_of_day_icon" src="{{ user2.avatar }}">
+                    {{ user2.nick }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+        
+        <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
+        <br>
+        <br>
+
+
+        <!-- 
+        Top URLs
+        -->    
+        <h3>
+            URL Tracking
+        </h3>
+        <span class="subtext">
+            
+        </span>
+        <table cellspacing="1" cellpadding="2" class="default_table tiny_table">
+        <thead>
+            <th></th>
+            <th>URL</th>
+            <th>Count</th>
+            <th>Often posted by</th>
+        </thead>
+        <tbody>
+            {% for URL, count in top_URLs %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    <a href="{{ URL }}" target="_blank">{{ URL }}</a>
+                </td>
+                <td>
+                    {{ count }}
+                </td>
+                <td>
+                    
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+
+        <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
+        <br>
+        <br>
+
+
+        <!-- 
+        Channels
+        -->    
+        <h3>Top Channels</h3>
+        <table cellspacing="1" cellpadding="2" class="default_table tiny_table">
+            <thead>
+                <th class="blankheader"></th>
+                <th>Channel</th>
+                <th>Messages</th>
+                <th colspan="5">Top Contributors</th>
+            </thead>
+            <tbody>
+                {% for channel, count, userlist in channel_counts %}
+                <tr>
+                    <td><b>{{ forloop.counter }}</b></td>
+                    <td>#{{ channel.name }} </td>
+                    <td>
+                        {{ count }}
+                        <br>
+                        <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio count channel_counts.0.1 180 %}">
+                    </td>
+                    {% for user in userlist %}
+                        <td>
+                            <img class="icon time_of_day_icon" src="{{ user.avatar }}">
+                            {{ user.nick }}
+                        {% endfor %}
+                        </td>
+                    {% endfor %}
+                </tr>
+
+            </tbody>
         </table>
     </center>
   </body>

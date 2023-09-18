@@ -1,4 +1,6 @@
 from django.db import models
+import heapq
+import timeit
 
 class Guild(models.Model):
 
@@ -22,7 +24,7 @@ class User_Manager(models.Manager):
         return self.all().aggregate(models.Sum('messages'))['messages__sum']
     
     def top_user_message_count(self) -> int:
-        return self.filter(blacklist=True).order_by('-messages').first().messages
+        return self.filter(blacklist=False).order_by('-messages').first().messages
     
     def top_n_user_curse_proportion(self, n):
         top_100_users = self.filter(blacklist=False).order_by('-messages')[:100]
@@ -97,7 +99,16 @@ class UserStat(models.Model):
 
 class Channel_Count_Manager(models.Manager):
     def sorted_channels(self):
-        pass
+        #optimized
+        sorted_channels = dict()
+        for channel_count in self.all():
+            if channel_count.channel_id in sorted_channels:
+                sorted_channels[channel_count.channel_id] += channel_count.count
+            else:
+                sorted_channels[channel_count.channel_id] = channel_count.count
+        
+        sortedver = sorted(sorted_channels, key=lambda c: sorted_channels[c], reverse=True)
+        return tuple((Channel.objects.get(id=key), sorted_channels[key], [channel_count.user for channel_count in self.filter(channel=key).order_by('-count')[:5]]) for key in sortedver)
 
 class Channel_Count(UserStat):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
@@ -106,31 +117,47 @@ class Channel_Count(UserStat):
 
 class Mention_Count_Manager(models.Manager):
     def top_n_mention_pairs(self, n):
-        # put together the pairs list
-        pairs = dict()
-        for mention_count in self.all():
-            id_pair = frozenset({mention_count.user.id, mention_count.mentioned_user_id})
-            if len(id_pair) == 1:
-                continue
-            if id_pair in pairs:
-                pairs[id_pair] += mention_count.count
-            else:
-                pairs[id_pair] = mention_count.count
-        top_n_keys = sorted(pairs, key=lambda key: pairs[key], reverse=True)[:n]
+        '''
+        Returns a list of four-element tuples containing info about the top n pairs of users who mention each other:
+        (user1, user2, user1count, user2count)
+        where the fourth and fifth ints represent the number of times that one user has mentioned the other 
+        The algorithm uses a heap to find the top n elements in optimized time 
+        '''
+        # optimized
         top_n_tuples = list()
-
-        # assemble the top n tuples
-        for key in top_n_keys:
-            user_id_1, user_id_2 = key
-            user_1 = User.objects.get(id=user_id_1)
-            user_2 = User.objects.get(id=user_id_2)
-            top_n_tuples.append((
-                user_1,
-                user_2,
-                self.get(user=user_1, mentioned_user_id=user_id_2).count,
-                self.get(user=user_2, mentioned_user_id=user_id_1).count
+        pairdict = dict()
+        for mention_count in self.all():
+            userpair = frozenset({mention_count.user_id, mention_count.mentioned_user_id})
+            if userpair not in pairdict:
+                pairdict[userpair] = mention_count
+            else:
+                other_mention_count = pairdict[userpair]
+                logged_count = other_mention_count.count
+                total = mention_count.count + logged_count
+                n_tuple = (
+                    total,
+                    hash((mention_count.user_id, mention_count.mentioned_user_id)),
+                    mention_count,
+                    pairdict[userpair]
+                )
+                if len(top_n_tuples) < n:
+                    heapq.heappush(top_n_tuples, n_tuple)
+                elif total > top_n_tuples[0][0]:
+                    heapq.heappushpop(top_n_tuples, n_tuple)
+        top_n_tuples_result = list()
+        for n_tuple in sorted(top_n_tuples, key=lambda t: t[0], reverse=True):
+            total, _, mention_count_1, mention_count_2 = n_tuple
+            top_n_tuples_result.append((
+                mention_count_1.user,
+                mention_count_2.user,
+                mention_count_1.count,
+                mention_count_2.count,
             ))
-        return top_n_tuples
+        return top_n_tuples_result
+
+
+
+
 
 
 class Mention_Count(UserStat):
@@ -150,10 +177,11 @@ class Hour_Count_Manager(models.Manager):
         return max(self.total_hour_counts().values())
     
     def user_hour_count_range(self, user: User, start: int, end: int):
+        # optimized
         total = 0
-        for hour in range(start, end+1):
-            if self.filter(user=user, hour=hour).exists():
-                total += self.get(user=user, hour=hour).count
+        for hour_count in self.filter(user=user):
+            if start <= hour_count.hour <= end:
+                total += hour_count.count
         return total
     
     def top_n_users_in_range(self, n: int, start: int, end: int):
@@ -219,9 +247,22 @@ class Date_Count(UserStat):
 
     objects = Date_Count_Manager()
     
+class URL_Count_Manager(models.Manager):
+    def top_n_URLs(self, n):
+        #optimized (i think)
+        urls = dict()
+        for url_count in self.all():
+            if url_count.URL in urls:
+                urls[url_count.URL] += 1
+            else:
+                urls[url_count.URL] = 1
+        return heapq.nlargest(n, urls.items(), key=lambda x: x[1])
+
 
 class URL_Count(UserStat):
     URL = models.URLField()
+
+    objects = URL_Count_Manager()
 
 
 class Default_Emoji_Count_Manager(models.Manager):
@@ -245,6 +286,8 @@ class Custom_Emoji_Count(UserStat):
 
 
 class Unique_Word_Count_Manager(models.Manager):
+    def top_n_unqiue_words(self):
+        pass
     def sorted_unique_user_words(self, user: User):
         return [obj.word for obj in self.filter(user=user).order_by('-count')]
     

@@ -54,9 +54,20 @@ def index(request):
     return render(request, "index.html", context)
 
 def details(request):
+    top_mention_pairs = models.Mention_Count.objects.top_n_mention_pairs(15)
+
+    # god forgive me for this line
+    # it finds the maximum message count among the top mention pairs
+    max_mention_count = max([elem for sublist in [tup[2:] for tup in top_mention_pairs] for elem in sublist])
+
     context = {
-        'guild': models.Guild.objects.get(id=GUILD_ID),
+        'guild': models.Guild.objects.all().first(),
         'top_curse_users': models.User.objects.top_n_user_curse_proportion(10),
+        'channel_counts': models.Channel_Count.objects.sorted_channels(),
+        'top_mention_pairs': top_mention_pairs,
+        'max_mention_count': max_mention_count,
+
+        'top_URLs': models.URL_Count.objects.top_n_URLs(15)
     }
     return render(request, "details.html", context)
 
