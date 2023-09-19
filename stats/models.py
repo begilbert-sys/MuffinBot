@@ -17,9 +17,6 @@ class Channel(models.Model):
 
 
 class User_Manager(models.Manager):
-    def number_of_users(self):
-        return len(self.all())
-    
     def total_messages(self):
         return self.all().aggregate(models.Sum('messages'))['messages__sum']
     
@@ -28,7 +25,7 @@ class User_Manager(models.Manager):
     
     def top_n_user_curse_proportion(self, n):
         top_100_users = self.filter(blacklist=False).order_by('-messages')[:100]
-        return sorted(top_100_users, key = lambda user: user.curse_word_count / user.messages, reverse=True)[:n]
+        return heapq.nlargest(n, top_100_users, key = lambda user: user.curse_word_count / user.messages)
 
 class User(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
@@ -36,8 +33,11 @@ class User(models.Model):
     tag = models.CharField(max_length=32)
     nick = models.CharField(max_length=32)
     avatar = models.URLField()
-    messages = models.PositiveIntegerField(default=0)
+    messages = models.PositiveIntegerField(default=0, db_index=True)
+
     curse_word_count = models.PositiveIntegerField(default=0)
+    ALL_CAPS_count = models.PositiveIntegerField(default=0)
+    total_chars = models.PositiveBigIntegerField(default=0)
 
     blacklist = models.BooleanField(default=False)
 
@@ -156,10 +156,6 @@ class Mention_Count_Manager(models.Manager):
         return top_n_tuples_result
 
 
-
-
-
-
 class Mention_Count(UserStat):
     mentioned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mentioned_user')
 
@@ -169,7 +165,7 @@ class Hour_Count_Manager(models.Manager):
     def total_hour_counts(self) -> dict:
         hour_count_dict = dict()
         for hour in range(24):
-            hour_objs =  self.filter(hour=hour)
+            hour_objs = self.filter(hour=hour)
             hour_count_dict[hour] = hour_objs.aggregate(models.Sum('count'))['count__sum']
         return hour_count_dict
     
@@ -233,9 +229,11 @@ class Date_Count_Manager(models.Manager):
         return (self.last_user_message_date(user) - self.first_user_message_date(user)).days + 1
     
     def date_counts(self, past_n_days: int = None) -> dict:
+        # needs optimizing
         '''returns a dictionary of how many messages were sent on every date
         past_n_days: allows the dict to be limited to the past n days. If None, returns all.'''
         dates_dict = dict()
+
         for obj in Date_Count.objects.all().order_by('-date')[:past_n_days]:
             filtered_objs = Date_Count.objects.filter(date=obj.date)
             dates_dict[obj.date] = filtered_objs.aggregate(models.Sum('count'))['count__sum']
@@ -286,8 +284,15 @@ class Custom_Emoji_Count(UserStat):
 
 
 class Unique_Word_Count_Manager(models.Manager):
-    def top_n_unqiue_words(self):
-        pass
+    def top_n_unqiue_words(self, n):
+        words = dict()
+        for word_count in self.all():
+            if word_count.word in words:
+                words[word_count.word] += 1
+            else:
+                words[word_count.word] = 1
+        return heapq.nlargest(n, words.items(), key=lambda x: x[1])
+    
     def sorted_unique_user_words(self, user: User):
         return [obj.word for obj in self.filter(user=user).order_by('-count')]
     

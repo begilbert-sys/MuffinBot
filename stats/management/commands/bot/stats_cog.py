@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 
 import datetime
 import logging
+import os
 import pytz
 import timeit
 import traceback
@@ -12,7 +13,11 @@ from .presets import MSG_LIMIT, GUILD_ID
 from .data_processor import Data_Processor
 
 
-DELETED_USER_ID = 456226577798135808
+DELETED_USER_ID = 45622657779813580
+
+channel_blacklist_path = os.path.join(os.path.dirname(__file__), 'channel_blacklist.txt')
+with open(channel_blacklist_path) as f:
+    CHANNEL_BLACKLIST = set(int(line.split()[0]) for line in f.read().split('\n'))
 
 def get_datetime_from_snowflake(snowflake: int) -> datetime.datetime:
     '''given a discord ID (a snowflake), performs a calculation on the ID to retreieve its creation datetime in UTC'''
@@ -22,13 +27,8 @@ def get_datetime_from_snowflake(snowflake: int) -> datetime.datetime:
 class Processor_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-        self.messages_scraped = 0
-        self.db_processor = Data_Processor()
         
         self.process_data.start()
-
-    
 
     async def _read_history(self, channel, kwargs):
         self._last_message = None
@@ -54,7 +54,7 @@ class Processor_Cog(commands.Cog):
                 self.db_processor.process_message(message, reply_message)
             elif message.type is discord.MessageType.default:
                 self.db_processor.process_message(message)
-                
+
             self._last_message = message
                 
             ### progress update
@@ -64,6 +64,9 @@ class Processor_Cog(commands.Cog):
 
     @tasks.loop(count=1)
     async def process_data(self):
+        self.db_processor = Data_Processor()
+        self.messages_scraped = 0
+
         self.guild = self.bot.get_guild(GUILD_ID)
         await self.db_processor.process_guild(self.guild)
 
@@ -71,6 +74,9 @@ class Processor_Cog(commands.Cog):
         for channel in self.guild.channels:
             perms = channel.permissions_for(self.guild.me)
             if not (type(channel) is discord.channel.TextChannel and perms.read_message_history):
+                continue
+
+            if channel.id in CHANNEL_BLACKLIST:
                 continue
 
             last_processed_message_datetime = await self.db_processor.handle_channel(channel)
@@ -110,30 +116,35 @@ class Processor_Cog(commands.Cog):
         if self.messages_scraped: 
             logging.info('Time per message: ' + str(time_elapsed / self.messages_scraped))
 
+        # save all the info to DB
+        logging.info('Saving. . . ')
+        start_time = timeit.default_timer()
+        try:
+            await self.db_processor.save()
+            end_time = timeit.default_timer()
+            time_elapsed = end_time - start_time
+            logging.info('Database save complete! Took ' + str(time_elapsed) + ' seconds.')
+        except:
+            traceback.print_exc()
+
     @process_data.before_loop
     async def before_process(self):
         await self.bot.wait_until_ready()
     
     @process_data.after_loop
     async def after_process(self):
-        logging.info('Saving. . . ')
-        start_time = timeit.default_timer()
-        try:
-            await self.db_processor.save()
-            end_time = timeit.default_timer()
-            time_elapsed = end_time - start_time 
-            logging.info('Database save complete! Took ' + str(time_elapsed) + ' seconds.')
-        except:
-            traceback.print_exc()
-        finally:
-            await self.bot.close()
+        await self.bot.close()
 
     ### Bot Commands Start Here
-
+    '''
     @commands.command()
     async def stats(self, ctx):
         await ctx.send("https://bengilbert.net/stats/statsindex")
-
+    
+    @commands.command()
+    async def mystats(self, ctx):
+        await ctx.send("https://bengilbert.net/stats/" + ctx.author.name)
+    
     @commands.command()
     async def source(self, ctx):
         await ctx.send("https://github.com/begilbert-sys/MuffinBot")
@@ -147,6 +158,6 @@ class Processor_Cog(commands.Cog):
     async def whitelist(self, ctx):
         status = await self.db_processor.whitelist(ctx.author)
         await ctx.send(status)
-
+    '''
 async def setup(bot):
     await bot.add_cog(Processor_Cog(bot))

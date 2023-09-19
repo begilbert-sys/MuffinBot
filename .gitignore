@@ -3,7 +3,8 @@ __pycache__
 db.sqlite3
 presets.py
 migrations
-blacklists
 tablesorter
 curse_words.txt
 words.txt
+channel_blacklist.txt
+debug.log

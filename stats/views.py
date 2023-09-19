@@ -31,7 +31,7 @@ def index(request):
         'last_message_date': models.Date_Count.objects.last_message_date(),
         'total_days': models.Date_Count.objects.total_days(),
 
-        'number_of_users': models.User.objects.number_of_users(),
+        'number_of_users': models.User.objects.count(),
         'total_messages': models.User.objects.total_messages(),
         'most_messages': models.User.objects.top_user_message_count(),
 
@@ -70,6 +70,19 @@ def details(request):
         'top_URLs': models.URL_Count.objects.top_n_URLs(15)
     }
     return render(request, "details.html", context)
+
+
+def users(request, tag):
+    try:
+        user = models.User.objects.get(tag=tag)
+    except models.User.DoesNotExist:
+        return HttpResponseNotFound()
+    
+    context = {
+        'user': user
+    }
+    return render(request, "details.html", context)
+
 
 def ajax_get_date_data(request):
     '''this is for javascript. it provides all of the dates to be put into a chart'''

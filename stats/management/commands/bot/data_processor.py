@@ -10,7 +10,7 @@ import re
 from stats import models
 
 with open('stats/words/words.txt') as f:
-    WORDS = {w.lower() for w in f.read().split('\n')}
+    WORDS = set(f.read().split('\n'))
     
 with open('stats/words/curse_words.txt') as f:
     CURSE_WORDS = set(f.read().split('\n'))
@@ -110,6 +110,13 @@ class Data_Processor:
         user_model_obj = self._get_or_add_user(message.author)
         user_model_obj.messages += 1
 
+        ### TOTAL CHARS
+        user_model_obj.total_chars += len(message.content)
+
+        ### ALL CAPS
+        if message.content.isupper():
+             user_model_obj.ALL_CAPS_count += 1
+    
         ### CHANNEL
         channel_id = message.channel.id
         self._create_or_increment(models.Channel_Count, user_model_obj, self.current_channel_model_obj)

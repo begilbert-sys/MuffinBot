@@ -6,5 +6,6 @@ app_name = 'stats'
 urlpatterns = [
     path("", views.index, name="index"),
     path("details/", views.details, name="details"),
+    path("users/<str:tag>", views.users, name="users"),
     path("date_data/", views.ajax_get_date_data, name="ajax_get_date_data")
     ]

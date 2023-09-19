@@ -1,12 +1,21 @@
 import discord
 from discord.ext import commands
-import asyncio
+
 import logging
+import sys
 
 from .presets import TOKEN
 
 from .stats_cog import Processor_Cog
-logging.basicConfig(level=logging.DEBUG, format='%(message)s')
+
+logging.basicConfig(
+    level=logging.DEBUG, 
+    format='%(message)s',
+    handlers = [
+        logging.FileHandler("debug.log", mode='w'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 class Stats_Bot(commands.Bot):
     async def setup_hook(self):

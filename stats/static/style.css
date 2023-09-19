@@ -150,3 +150,11 @@ table {
 .hours {
   font-size: 10px;
 }
+
+.user_table {
+  width: 90%;
+}
+
+.user_icon {
+  width: 30px;
+}
