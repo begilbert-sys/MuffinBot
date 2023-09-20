@@ -187,15 +187,16 @@ class Hour_Count_Manager(models.Manager):
         return total
     
     def top_n_users_in_range(self, n: int, start: int, end: int):
+        # optimized
         user_dict = dict()
-        for hour in range(start, end+1):
-            for hour_count_obj in self.filter(hour=hour, user__blacklist=False):
-                user = hour_count_obj.user
-                if user in user_dict:
-                    user_dict[user] += hour_count_obj.count
-                else:
-                    user_dict[user] = hour_count_obj.count
-        return sorted(user_dict.items(), key=lambda k: user_dict[k[0]], reverse=True)[:n]
+        for hour_count in self.filter(hour__range=(start, end), user__blacklist=False):
+            user_id = hour_count.user_id
+            if user_id in user_dict:
+                user_dict[user_id][1] += hour_count.count
+            else:
+                user_dict[user_id] = [hour_count, hour_count.count]
+        n_largest_users = heapq.nlargest(n, user_dict, key=lambda key: user_dict[key][1])
+        return [(user_dict[key][0].user, user_dict[key][1]) for key in n_largest_users]
     
     def top_user_in_range_message_count(self, start, end):
         user, count = self.top_n_users_in_range(1, start, end)[0]

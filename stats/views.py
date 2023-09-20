@@ -23,7 +23,9 @@ def index(request):
             'evening_hour_count': models.Hour_Count.objects.user_hour_count_range(user_model_object, 18, 23)
         }
         top_100_users_display.append(user_display_chunk)
+    total_hour_counts = models.Hour_Count.objects.total_hour_counts()
 
+    # set up context 
     context = {
         'guild': models.Guild.objects.all().first(),
 
@@ -36,7 +38,7 @@ def index(request):
         'most_messages': models.User.objects.top_user_message_count(),
 
         'total_hour_counts': models.Hour_Count.objects.total_hour_counts(),
-        'total_hour_count_max': models.Hour_Count.objects.total_hour_count_max(),
+        'total_hour_count_max': max(total_hour_counts.values()),
 
         'top_100_users_display': top_100_users_display,
 
