@@ -13,7 +13,7 @@ from .presets import MSG_LIMIT, GUILD_ID
 from .data_processor import Data_Processor
 
 
-DELETED_USER_ID = 45622657779813580
+DELETED_USER_ID = 456226577798135808
 
 channel_blacklist_path = os.path.join(os.path.dirname(__file__), 'channel_blacklist.txt')
 with open(channel_blacklist_path) as f:
@@ -34,8 +34,6 @@ class Processor_Cog(commands.Cog):
         self._last_message = None
         async for message in channel.history(**kwargs):
             if message.author.bot:
-                continue
-            if message.author.id == DELETED_USER_ID:
                 continue
             if message.type is discord.MessageType.reply:
                 reply_message = message.reference.resolved
@@ -62,7 +60,7 @@ class Processor_Cog(commands.Cog):
             if self.messages_scraped % 500 == 0:
                 logging.debug('Message #: ' + str(self.messages_scraped))
 
-    @tasks.loop(count=1)
+    @tasks.loop(count=20)
     async def process_data(self):
         self.db_processor = Data_Processor()
         self.messages_scraped = 0

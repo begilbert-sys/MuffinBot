@@ -141,7 +141,7 @@
             <td class="nick">
               <img src="{{ user_dict.user.avatar }}" class="icon">
               &nbsp;
-              {{ user_dict.user.tag }}
+              <a href="/stats/users/{{ user_dict.user.tag }}" class="userlink">{{ user_dict.user.tag }}</a>
             </td>
 
             <td class="line_count">
@@ -192,7 +192,7 @@
           <td>{{ forloop.counter }} </td>
           {% for user, count in zip_packet %}
           <td>
-            {{ user.tag }} - {{ count }}
+            <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.tag }}</a> - {{ count }}
             <br>
             {% cycle 'assets/pipe1v.png' 'assets/pipe2v.png' 'assets/pipe3v.png' 'assets/pipe4v.png' as pipev_png silent %}
             {% cycle most_night_messages most_morning_messages most_afternoon_messages most_evening_messages as current_time_most_messages silent %}

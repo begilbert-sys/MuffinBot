@@ -35,6 +35,7 @@ table {
 }
 
 
+
 .txt1 {
   font-family: "Verdana";
   color: #FFFFFF;
@@ -68,6 +69,15 @@ table {
   vertical-align: bottom;
   text-align: center;
 }
+
+.userlink:link, .userlink:visited {
+  color: rgb(0, 0, 0);
+  text-decoration: none;
+}
+.userlink:hover {
+  text-decoration: underline;
+}
+
 
 .icon {
   border-radius: 50%;
@@ -156,5 +166,54 @@ table {
 }
 
 .user_icon {
-  width: 30px;
+  width: 50px;
+  border-radius: 50%;
+  vertical-align: middle;
+  padding-right: 10px;
+}
+
+.user_header {
+  display:flex;
+  text-align: left;
+  width: 70%;
+  padding: 12px 0px;
+  border-style: solid;
+  border-width: 5px 0px;
+  border-color: #7289DA;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.user_column {
+  flex: 100%;
+}
+
+.user_display {
+  margin-left: 5px;
+}
+
+.user_rank {
+  background-color:#7289DA;
+  flex: 0 0 42px;
+  padding: 2px;
+  margin-right: 5px;
+  font-family: "Arial";
+  font-size: 32px; 
+  text-align: center; 
+  border-style: solid; 
+  border-width: 4px; 
+  border-color: #ffffff #000000 #000000 #ffffff; 
+}
+.user_info_table {
+  width: 70%;
+  padding: 3px;
+}
+.user_hour_table tr {
+  vertical-align: bottom;
+}
+.user_hour_counter {
+  background-color: #7289DA;
+  font-size: 9px;
+  text-align: center;
+  vertical-align: bottom;
 }

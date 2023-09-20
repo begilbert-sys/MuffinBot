@@ -78,7 +78,7 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td style="text-align: right;">
-                    {{ user1.nick }}
+                    <a href="/stats/users/{{ user1.tag }}" class="userlink">{{ user1.tag }}</a>
                     <img class="icon time_of_day_icon" src="{{ user1.avatar }}">
                     <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user1count max_mention_count 100 %}">
                     {{ user1count }}
@@ -87,7 +87,7 @@
                     {{ user2count }}
                     <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user2count max_mention_count 100 %}">
                     <img class="icon time_of_day_icon" src="{{ user2.avatar }}">
-                    {{ user2.nick }}
+                    <a href="/stats/users/{{ user2.tag }}" class="userlink">{{ user2.tag }}</a>
                 </td>
             </tr>
             {% endfor %}
@@ -126,7 +126,7 @@
                     {{ count }}
                 </td>
                 <td>
-                    
+
                 </td>
             </tr>
             {% endfor %}
@@ -162,7 +162,7 @@
                     {% for user in userlist %}
                         <td>
                             <img class="icon time_of_day_icon" src="{{ user.avatar }}">
-                            {{ user.nick }}
+                            <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
                         {% endfor %}
                         </td>
                     {% endfor %}

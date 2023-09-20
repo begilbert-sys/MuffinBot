@@ -21,10 +21,60 @@
 
 <body>
   <center>
-    <table class="user_table" cellspacing="0" cellpadding="3">
+    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
+    <br>
+    <br>
+    <h3>Personal Stats</h3>
+    <div class="user_header">
+      <div class="user_column user_display">
+      <img src="{{ user.avatar }}" class="user_icon">
+      {{ user.nick }}
+      </div>
+      <div class="user_column user_rank">
+      {{ rank }}
+      </div>
+    </div>
+    <table class="user_info_table">
       <tbody>
         <tr>
-          <td></td>
+          <td>
+            Messages: {{ user.messages|intcomma }}
+          </td>
+          <td>
+            Average messages per day: {{ avg_messages|floatformat:2 }}
+          </td>
+          <td>
+            Average letters per message: {{ avg_letters|floatformat:2 }}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Curse word ratio: {{ curse_word_ratio|floatformat:2 }}%
+          </td>
+          <td>
+            CAPS ratio: {{ CAPS_ratio|floatformat:2 }}%
+          </td>
+          <td>
+            Active Days: {{ total_user_active_days }} / {{ total_user_days }} ({{ total_user_active_days_percentage|floatformat:2 }}%)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <table class="user_hour_table">
+      <tbody>
+        <tr>
+          <td colspan="24" class="subtext">Hourly Activity</td>
+        </tr>
+        <tr>
+          {% for hour_count in user_hour_counts %}
+            <td><img src="{% static forloop.counter0|set_hour_png %}" height="{% widthratio hour_count max_hour_count 64 %}" width="5"></td>
+          {% endfor %}
+        </tr>
+        <tr class="user_hour_counter">
+          <td colspan="6">12AM-5AM</td>
+          <td colspan="6">6AM-11AM</td>
+          <td colspan="6">12PM-5PM</td>
+          <td colspan="6">6PM-11PM</td>
         </tr>
       </tbody>
     </table>

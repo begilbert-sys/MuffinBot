@@ -26,6 +26,8 @@ class User_Manager(models.Manager):
     def top_n_user_curse_proportion(self, n):
         top_100_users = self.filter(blacklist=False).order_by('-messages')[:100]
         return heapq.nlargest(n, top_100_users, key = lambda user: user.curse_word_count / user.messages)
+    def get_rank(self, user):
+        return self.filter(blacklist=False, messages__gt=user.messages).count() + 1
 
 class User(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
@@ -37,6 +39,7 @@ class User(models.Model):
 
     curse_word_count = models.PositiveIntegerField(default=0)
     ALL_CAPS_count = models.PositiveIntegerField(default=0)
+    #laugh_count = models.PositiveIntegerField(default=0)
     total_chars = models.PositiveBigIntegerField(default=0)
 
     blacklist = models.BooleanField(default=False)
@@ -108,7 +111,7 @@ class Channel_Count_Manager(models.Manager):
                 sorted_channels[channel_count.channel_id] = channel_count.count
         
         sortedver = sorted(sorted_channels, key=lambda c: sorted_channels[c], reverse=True)
-        return tuple((Channel.objects.get(id=key), sorted_channels[key], [channel_count.user for channel_count in self.filter(channel=key).order_by('-count')[:5]]) for key in sortedver)
+        return tuple((Channel.objects.get(id=key), sorted_channels[key], [channel_count.user for channel_count in self.filter(channel=key, user__blacklist=False).order_by('-count')[:5]]) for key in sortedver)
 
 class Channel_Count(UserStat):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
@@ -126,7 +129,7 @@ class Mention_Count_Manager(models.Manager):
         # optimized
         top_n_tuples = list()
         pairdict = dict()
-        for mention_count in self.all():
+        for mention_count in self.filter(user__blacklist=False):
             userpair = frozenset({mention_count.user_id, mention_count.mentioned_user_id})
             if userpair not in pairdict:
                 pairdict[userpair] = mention_count
@@ -154,6 +157,9 @@ class Mention_Count_Manager(models.Manager):
                 mention_count_2.count,
             ))
         return top_n_tuples_result
+    def top_n_user_mentions(self, user, n):
+        return [(mention_count.mentioned_user, mention_count.count) for mention_count in self.filter(user=user, mentioned_user__blacklist=False).order_by('-count')[:n]]
+
 
 
 class Mention_Count(UserStat):
@@ -194,6 +200,13 @@ class Hour_Count_Manager(models.Manager):
     def top_user_in_range_message_count(self, start, end):
         user, count = self.top_n_users_in_range(1, start, end)[0]
         return count
+    
+    def user_hour_counts(self, user):
+        hour_counts = [0 for _ in range(24)]
+        for hour_count in self.filter(user=user):
+            hour_counts[hour_count.hour] = hour_count.count
+        return hour_counts
+
         
 
 class Hour_Count(UserStat):
@@ -228,6 +241,8 @@ class Date_Count_Manager(models.Manager):
     def total_user_days(self, user: User):
         return (self.last_user_message_date(user) - self.first_user_message_date(user)).days + 1
     
+    def total_user_active_days(self, user: User):
+        return self.filter(user=user).count()
     def date_counts(self, past_n_days: int = None) -> dict:
         # needs optimizing
         '''returns a dictionary of how many messages were sent on every date

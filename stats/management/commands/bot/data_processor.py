@@ -24,6 +24,13 @@ def convert_to_pacific_time(dt: datetime.datetime) -> datetime.datetime:
     PST_PDT = pytz.timezone('America/Los_Angeles')
     return dt.astimezone(PST_PDT)
 
+def downsize_avatar_link(URL: str):
+    '''sets the size of a user's avatar link to be 128px. this speeds up website loading times'''
+    if '?size=' not in URL:
+        return URL + '?size=128'
+    else:
+        return re.sub('\?size=[\d]+', '?size=128', URL)
+
 def get_custom_emoji_URLs(string: str) -> list[str]:
     '''Returns a list of the URLs of all the custom emojis in a discord message'''
     EMOJI_URL = 'https://cdn.discordapp.com/emojis/'
@@ -68,7 +75,7 @@ class Data_Processor:
                 id=user.id,
                 tag=user.name,
                 nick = user.display_name,
-                avatar = str(user.display_avatar)
+                avatar = downsize_avatar_link(str(user.display_avatar))
             )
             self.cached_model_objects[models.User][user.id] = user_model_obj
         return user_model_obj
@@ -96,7 +103,7 @@ class Data_Processor:
         '''
         mentions_list = list()
         if reply_message:
-            mentions_list.append(self._get_or_add_user(message.author))
+            mentions_list.append(self._get_or_add_user(reply_message.author))
         mentions_list += [self._get_or_add_user(user) for user in message.mentions]
         return mentions_list
 
