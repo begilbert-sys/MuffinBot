@@ -11,6 +11,7 @@ class Guild(models.Model):
 
 class Channel(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
+    #guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
 
     name = models.CharField(max_length=100)
     last_processed_message_datetime = models.DateTimeField(null=True)
@@ -31,11 +32,12 @@ class User_Manager(models.Manager):
 
 class User(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
+    #guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
 
-    tag = models.CharField(max_length=32)
+    tag = models.CharField(max_length=32, unique=True)
     nick = models.CharField(max_length=32)
     avatar = models.URLField()
-    messages = models.PositiveIntegerField(default=0, db_index=True)
+    messages = models.PositiveIntegerField(default=0)
 
     curse_word_count = models.PositiveIntegerField(default=0)
     ALL_CAPS_count = models.PositiveIntegerField(default=0)
@@ -66,6 +68,8 @@ class User(models.Model):
 
         self.messages += other.messages
         self.curse_word_count += other.curse_word_count
+        self.ALL_CAPS_count += other.ALL_CAPS_count
+        self.total_chars += other.total_chars
 
 class UserStat(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

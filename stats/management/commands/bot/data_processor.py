@@ -9,6 +9,8 @@ import re
 
 from stats import models
 
+from .presets import GUILD_ID
+
 with open('stats/words/words.txt') as f:
     WORDS = set(f.read().split('\n'))
     
@@ -231,7 +233,7 @@ class Data_Processor:
         logging.debug(Model_Class.__name__ + ' saving. . .')
         await self._update_model_objects(Model_Class)
         if Model_Class is models.User:
-            update_fields = ['messages', 'curse_word_count', 'avatar']
+            update_fields = ['messages', 'curse_word_count', 'avatar', 'ALL_CAPS_count', 'total_chars']
         else:
             update_fields = ['count']
         await Model_Class.objects.abulk_create(

@@ -25,6 +25,12 @@ def index(request):
         top_100_users_display.append(user_display_chunk)
     total_hour_counts = models.Hour_Count.objects.total_hour_counts()
 
+    top_user_time_counts = {
+        'night': models.Hour_Count.objects.top_n_users_in_range(10, 0, 5), # night (0)
+        'morning': models.Hour_Count.objects.top_n_users_in_range(10, 6, 11), # morning (1)
+        'afternoon': models.Hour_Count.objects.top_n_users_in_range(10, 12, 17), # afternoon (2)
+        'evening': models.Hour_Count.objects.top_n_users_in_range(10, 18, 23) #evening (3)
+    }
     # set up context 
     context = {
         'guild': models.Guild.objects.all().first(),
@@ -43,25 +49,27 @@ def index(request):
         'top_100_users_display': top_100_users_display,
 
         'top_10_hour_users': list(zip(
-            models.Hour_Count.objects.top_n_users_in_range(10, 0, 5), # night (0)
-            models.Hour_Count.objects.top_n_users_in_range(10, 6, 11), # morning (1)
-            models.Hour_Count.objects.top_n_users_in_range(10, 12, 17), # afternoon (2)
-            models.Hour_Count.objects.top_n_users_in_range(10, 18, 23) #evening (3)
+            top_user_time_counts['night'], # night (0)
+            top_user_time_counts['morning'], # morning (1)
+            top_user_time_counts['afternoon'], # afternoon (2)
+            top_user_time_counts['evening'] #evening (3)
         )),
-        'most_night_messages': models.Hour_Count.objects.top_user_in_range_message_count(0, 5),
-        'most_morning_messages': models.Hour_Count.objects.top_user_in_range_message_count(6, 11),
-        'most_afternoon_messages': models.Hour_Count.objects.top_user_in_range_message_count(12, 17),
-        'most_evening_messages': models.Hour_Count.objects.top_user_in_range_message_count(18, 23)
+        'most_night_messages': top_user_time_counts['night'][0][1],
+        'most_morning_messages': top_user_time_counts['morning'][0][1],
+        'most_afternoon_messages': top_user_time_counts['afternoon'][0][1],
+        'most_evening_messages': top_user_time_counts['evening'][0][1]
     }
     return render(request, "index.html", context)
 
 def details(request):
+    # prep variables
     top_mention_pairs = models.Mention_Count.objects.top_n_mention_pairs(20)
 
     # god forgive me for this line
     # it finds the maximum message count among the top mention pairs
     max_mention_count = max([elem for sublist in [tup[2:] for tup in top_mention_pairs] for elem in sublist])
 
+    
     context = {
         'guild': models.Guild.objects.all().first(),
         'top_curse_users': models.User.objects.top_n_user_curse_proportion(10),
@@ -84,6 +92,11 @@ def users(request, tag):
     total_user_days = models.Date_Count.objects.total_user_days(user)
 
     user_hour_counts =  models.Hour_Count.objects.user_hour_counts(user)
+
+    _talking_partners = models.Mention_Count.objects.top_n_user_mentions(user, 10)
+    #talking_partners = list(zip(_talking_partners[::2], _talking_partners[1::2]))
+    talking_partners = list(zip(_talking_partners[:5], _talking_partners[5:]))
+    talking_partner_max = max(_talking_partners, key=lambda pair: pair[1])
     # set up context 
     context = {
         'user': user,
@@ -96,7 +109,9 @@ def users(request, tag):
         'total_user_days': total_user_days,
         'total_user_active_days_percentage': (total_user_active_days / total_user_days) * 100,
         'user_hour_counts' : user_hour_counts,
-        'max_hour_count': max(user_hour_counts)
+        'max_hour_count': max(user_hour_counts),
+        'talking_partners': talking_partners,
+        'talking_partner_max': talking_partner_max[1]
 
     }
     return render(request, "user.html", context)

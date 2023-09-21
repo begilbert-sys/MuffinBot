@@ -44,6 +44,7 @@ table {
 }
 
 .subtext {
+  font-weight: normal;
   font-family: "Verdana";
   color: #99AAB5;
   font-size: 12px;
@@ -216,4 +217,23 @@ table {
   font-size: 9px;
   text-align: center;
   vertical-align: bottom;
+}
+
+.user_mini_table {
+  border-collapse: seperate;
+  display:inline-block;
+  height: 250px;
+  margin: 10px;
+}
+
+.user_mini_table th {
+  padding-bottom: 3px;
+}
+
+.user_mention_table {
+  font-size: 12px;
+  
+}
+.user_mention_table td.pipe {
+  padding-right: 10px;
 }

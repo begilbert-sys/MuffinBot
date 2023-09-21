@@ -60,14 +60,17 @@
         </tr>
       </tbody>
     </table>
-    <table class="user_hour_table">
+
+
+
+    <table class="user_mini_table user_hour_table">
+      <thead>
+        <th colspan="24" class="subtext">Hourly Activity</th>
+      </thead>
       <tbody>
         <tr>
-          <td colspan="24" class="subtext">Hourly Activity</td>
-        </tr>
-        <tr>
           {% for hour_count in user_hour_counts %}
-            <td><img src="{% static forloop.counter0|set_hour_png %}" height="{% widthratio hour_count max_hour_count 64 %}" width="5"></td>
+            <td><img src="{% static forloop.counter0|set_hour_png %}" height="{% widthratio hour_count max_hour_count 65 %}" width="5"></td>
           {% endfor %}
         </tr>
         <tr class="user_hour_counter">
@@ -75,6 +78,29 @@
           <td colspan="6">6AM-11AM</td>
           <td colspan="6">12PM-5PM</td>
           <td colspan="6">6PM-11PM</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="user_mini_table user_mention_table">
+      <thead>
+        <th colspan="2" class="subtext">Likes chatting with</th>
+      </thead>
+      <tbody>
+          {% for pair in talking_partners %}
+            <tr>
+              {% for mention in pair %}
+                  {% with user=mention.0 count=mention.1 %}
+                    <td>
+                      {{ forloop.counter0|mul:5|add:forloop.parentloop.counter }}.&nbsp;{{ user.tag }}
+                    </td>
+                    <td class="pipe">
+                      <img src="{% static 'assets/pipedv.png' %}" height="8" width="{% widthratio count talking_partner_max 80 %}">
+                    </td>
+                  {% endwith %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
         </tr>
       </tbody>
     </table>
