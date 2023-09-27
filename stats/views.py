@@ -1,13 +1,13 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseNotFound
-
-from . import models
+from stats import models
 
 def index(request):
     # dict of values to be passed to the HTML template
     # I generate these values on an as-needed basis, so it's kind of a mess
 
-    # precalculated variables 
+    # precalculated variables
+
     top_100_users_display = []
     for user_model_object in models.User.objects.filter(blacklist=False).order_by('-messages')[:100]:
         user_display_chunk = {
@@ -73,6 +73,7 @@ def details(request):
     context = {
         'guild': models.Guild.objects.all().first(),
         'top_curse_users': models.User.objects.top_n_user_curse_proportion(10),
+        'top_ALL_CAPS_users': models.User.objects.top_n_user_ALL_CAPS_proportion(10),
         'channel_counts': models.Channel_Count.objects.sorted_channels(),
         'top_mention_pairs': top_mention_pairs,
         'max_mention_count': max_mention_count,
@@ -85,7 +86,7 @@ def details(request):
 def users(request, tag):
     try:
         user = models.User.objects.get(tag=tag)
-    except models.User.DoesNotExist:
+    except models.Model.DoesNotExist:
         return HttpResponseNotFound()
     # predefine variables
     total_user_active_days = models.Date_Count.objects.total_user_active_days(user)
@@ -96,7 +97,7 @@ def users(request, tag):
     _talking_partners = models.Mention_Count.objects.top_n_user_mentions(user, 10)
     #talking_partners = list(zip(_talking_partners[::2], _talking_partners[1::2]))
     talking_partners = list(zip(_talking_partners[:5], _talking_partners[5:]))
-    talking_partner_max = max(_talking_partners, key=lambda pair: pair[1])
+    talking_partner_max = max(_talking_partners, key=lambda pair: pair[1]) if _talking_partners else [0, 0]
     # set up context 
     context = {
         'user': user,
@@ -119,13 +120,10 @@ def users(request, tag):
 
 def ajax_get_date_data(request):
     '''this is for javascript. it provides all of the dates to be put into a chart'''
-    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
-        return HttpResponseNotFound()
+    #if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        #return HttpResponseNotFound()
     #past_n_days = int(request.headers.get('volume'))
-    unserialized_data = models.Date_Count.objects.date_counts(31)
-    serialized_data = dict() # data needs to be sorted
-    for date in unserialized_data.keys():
-        serialized_data[date.isoformat()] = unserialized_data[date] # {date: count}
+    date_data = models.Date_Count.objects.date_counts_as_str()
 
-    return JsonResponse(serialized_data)
+    return JsonResponse({'date_data': date_data})
 

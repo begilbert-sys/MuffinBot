@@ -27,7 +27,7 @@
     <h3>Personal Stats</h3>
     <div class="user_header">
       <div class="user_column user_display">
-      <img src="{{ user.avatar }}" class="user_icon">
+      <img src="{{ user.avatar|icon_size:128 }}" class="user_icon">
       {{ user.nick }}
       </div>
       <div class="user_column user_rank">
@@ -65,7 +65,7 @@
 
     <table class="user_mini_table user_hour_table">
       <thead>
-        <th colspan="24" class="subtext">Hourly Activity</th>
+        <th colspan="24" class="subtext" style="padding-bottom: 18px;">Hourly Activity</th>
       </thead>
       <tbody>
         <tr>
@@ -82,7 +82,7 @@
       </tbody>
     </table>
 
-    <table class="user_mini_table user_mention_table">
+    <table class="user_mini_table tiny_table">
       <thead>
         <th colspan="2" class="subtext">Likes chatting with</th>
       </thead>
@@ -92,7 +92,9 @@
               {% for mention in pair %}
                   {% with user=mention.0 count=mention.1 %}
                     <td>
-                      {{ forloop.counter0|mul:5|add:forloop.parentloop.counter }}.&nbsp;{{ user.tag }}
+                      {{ forloop.counter0|mul:5|add:forloop.parentloop.counter }}.&nbsp;
+                      <img class="icon time_of_day_icon" height="15" style="vertical-align: middle" src="{{ user.avatar }}">
+                      <a href="/stats/users/{{ user.tag }}" class="userlink" style="color: white">{{ user.nick }}&nbsp;</a>
                     </td>
                     <td class="pipe">
                       <img src="{% static 'assets/pipedv.png' %}" height="8" width="{% widthratio count talking_partner_max 80 %}">

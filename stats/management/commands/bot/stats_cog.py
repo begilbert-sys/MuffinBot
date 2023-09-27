@@ -5,13 +5,14 @@ import datetime
 import logging
 import os
 import pytz
+import sys
 import timeit
 import traceback
 
-from .presets import MSG_LIMIT, GUILD_ID
+from .presets import MSG_LIMIT, GUILD_ID, REPEATS
 
 from .data_processor import Data_Processor
-
+logger = logging.getLogger(__package__)
 
 DELETED_USER_ID = 456226577798135808
 
@@ -37,18 +38,17 @@ class Processor_Cog(commands.Cog):
                 continue
             if message.type is discord.MessageType.reply:
                 reply_message = message.reference.resolved
-                if not reply_message: # either the message is deleted or just wasn't resolved
-                    logging.debug('Reply message wasn\'t resolved. Offending message:\n' + str(message.content))
-                    logging.debug('Reference info:' + str({k: getattr(message.reference, k) for k in message.reference.__slots__})) # print all attrs for debugging purposes
-                    if type(reply_message) is not discord.DeletedReferencedMessage:
-                        try:
-                            reply_message = await channel.fetch_message(message.reference.message_id)
-                            logging.debug("Message was found")
-                        except discord.NotFound:
-                            reply_message = None
-                            logging.debug("Message was deleted")
-                    else:
+                if type(reply_message) is discord.DeletedReferencedMessage:
+                    reply_message = None
+                elif reply_message == None: # either the message is deleted or just wasn't resolved
+                    logger.debug('Reply message wasn\'t resolved. Offending message:\n' + str(message.content))
+                    logger.debug('Reference info:' + str({k: getattr(message.reference, k) for k in message.reference.__slots__})) # print all attrs for debugging purposes
+                    try:
+                        reply_message = await channel.fetch_message(message.reference.message_id)
+                        logger.debug("Message was found")
+                    except discord.NotFound:
                         reply_message = None
+                        logger.debug("Message was deleted")
                 self.db_processor.process_message(message, reply_message)
             elif message.type is discord.MessageType.default:
                 self.db_processor.process_message(message)
@@ -58,14 +58,17 @@ class Processor_Cog(commands.Cog):
             ### progress update
             self.messages_scraped += 1
             if self.messages_scraped % 500 == 0:
-                logging.debug('Message #: ' + str(self.messages_scraped))
+                logger.debug('Message #: ' + str(self.messages_scraped))
 
-    @tasks.loop(count=20)
+    @tasks.loop(count=REPEATS)
     async def process_data(self):
         self.db_processor = Data_Processor()
         self.messages_scraped = 0
 
         self.guild = self.bot.get_guild(GUILD_ID)
+        print(self.guild)
+        print(self.guild.id)
+        print(self.guild.icon.url)
         await self.db_processor.process_guild(self.guild)
 
         start_time = timeit.default_timer()
@@ -98,32 +101,34 @@ class Processor_Cog(commands.Cog):
             
             try:
                 await self._read_history(channel, kwargs)
-            except:
-                traceback.print_exc()
+            #except:
+                #traceback.print_exc()
+                #logging.exception('Error occurred during message processing', exc_info=sys.exc_info())
             finally:
                 if self._last_message:
                     await self.db_processor.update_channel_last_message(channel, self._last_message)
-                    logging.info(channel.name + ' saved')
+                    logger.info(channel.name + ' saved')
                 else:
-                    logging.info(channel.name + ' skipped')
+                    logger.info(channel.name + ' skipped')
 
         end_time = timeit.default_timer()
         time_elapsed = end_time - start_time
-        logging.info('Time elapsed: ' + str(end_time - start_time))
-        logging.info('Messages scraped: ' +  str(self.messages_scraped))
+        logger.info('Time elapsed: ' + str(end_time - start_time))
+        logger.info('Messages scraped: ' +  str(self.messages_scraped))
         if self.messages_scraped: 
-            logging.info('Time per message: ' + str(time_elapsed / self.messages_scraped))
+            logger.info('Time per message: ' + str(time_elapsed / self.messages_scraped))
 
         # save all the info to DB
-        logging.info('Saving. . . ')
+        logger.info('Saving. . . ')
         start_time = timeit.default_timer()
-        try:
-            await self.db_processor.save()
-            end_time = timeit.default_timer()
-            time_elapsed = end_time - start_time
-            logging.info('Database save complete! Took ' + str(time_elapsed) + ' seconds.')
-        except:
-            traceback.print_exc()
+        #try:
+        await self.db_processor.save()
+        end_time = timeit.default_timer()
+        time_elapsed = end_time - start_time
+        logger.info('Database save complete! Took ' + str(time_elapsed) + ' seconds.')
+        #except:
+            #traceback.print_exc()
+            #logging.exception('Error occurred during database save', exc_info=sys.exc_info())
 
     @process_data.before_loop
     async def before_process(self):

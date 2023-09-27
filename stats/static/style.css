@@ -35,12 +35,40 @@ table {
 }
 
 
+.greybar {
+  width: 90%;
+  height: 3px;
+  margin-top: 1em;
+  margin-bottom: 1.8em;
+  background-color: #c0bcb4;
+}
 
-.txt1 {
-  font-family: "Verdana";
-  color: #FFFFFF;
-  font-size: 12px;
-  text-align: left;
+.bluebar {
+  background-color: #8e8ee1;
+  float: left;
+}
+.greenbar {
+  background-color: #90e48c;
+  float: left;
+}
+.yellowbar {
+  background-color: #e8e48c;
+  float: left;
+}
+.redbar {
+  background-color: #e18e8e;
+  float: left;
+}
+
+.time_of_day_bar {
+  float:right; 
+  margin-top:7px;
+}
+
+.keybar {
+  height:15px; 
+  width: 30px; 
+  margin-right:4px;
 }
 
 .subtext {
@@ -51,7 +79,36 @@ table {
   text-align: left;
 }
 
-.s1 {
+.tablink {
+  background-color: #2C2F33;
+  float: left;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  width: 25%;
+  text-decoration: underline;
+}
+
+.selectedTablink {
+  background-color: #2C2F33;
+  float: left;
+  border: none;
+  font-size: 12px;
+  font-weight: bold;
+  width: 25%;
+}
+
+.tablink:hover {
+}
+
+.txt1 {
+  font-family: "Verdana";
+  color: #FFFFFF;
+  font-size: 12px;
+  text-align: left;
+}
+
+.hour_percentage {
   font-family: "Arial";
   color: #99AAB5;
   font-size: 9px;
@@ -153,7 +210,7 @@ table {
 }
 
 
-.time_of_day_icon {
+.mini_icon {
   height: 15px;
   vertical-align: middle;
 }

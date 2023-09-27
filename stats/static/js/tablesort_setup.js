@@ -11,15 +11,15 @@ $.tablesorter.addParser({
     }, 
     // set type, either numeric or text 
     type: 'numeric' 
-  });
+});
   
   
   // the inner function ensures that the "rank" column remains static even after being sorted
-  $(function() {
+$(function() {
     $("#user_rankings").tablesorter().on("sortEnd", function () {
         $(this).find('tbody td:first-child').text(function (i) {
             return i + 1;
         });
     });
-  });
+});
   

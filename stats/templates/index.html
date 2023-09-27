@@ -12,18 +12,14 @@
   <title>{{ guild.name }} Stats</title>
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
-  <link rel="stylesheet" href="{% static 'js/tablesorter/css/theme.custom.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'js/tablesorter/css/theme.custom.min.css' %}" type="text/css" />
   <link rel="icon" href="{{ guild.icon }}">
 
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-  <script type="text/javascript" src="{% static 'js/tablesorter/js/jquery.tablesorter.js' %}"></script>
-
-  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
-
-  <script type="text/javascript" src="{% static 'js/chart_setup.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/tablesorter/js/jquery.tablesorter.min.js' %}"></script>
   <script type="text/javascript" src="{% static 'js/tablesort_setup.js' %}"></script>
-
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  {{ date_data|json_script:"dateData" }}
 </head>
 
 <body>
@@ -36,12 +32,12 @@
     </span>
     <br>
     <span class="subtext">
-      {{ number_of_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
+      {{ total_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
     </span>
-    
-    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
-    <br>
-    <br>
+
+
+    <div class="greybar"></div>
+
 
     <!-- 
       When's the best time to chat?
@@ -50,29 +46,23 @@
     <h3>When's the best time to chat?</h3>
     <table cellspacing="1" cellpadding="2">
       <tbody>
-        <tr class="s1" valign="bottom">
+        <tr class="hour_percentage" valign="bottom">
           {% for hour, value in total_hour_counts.items %}
             <td class="tgr">
               <!-- hour percentage value -->
               {{ value|div:total_messages|mul:100|floatformat:1 }}%
               <br>
-              <!-- changes color of png based on time of day -->
-              <img src='{% static hour|set_hour_png %}' width="18" height="{% widthratio value total_hour_count_max 120 %}">
+              <!-- changes color of bar based on time of day -->
+              <div class='{{ hour|set_hour_class }}' style="width:18px; height:{% widthratio value max_hour_count 120 %}px;">
             </td>
           {% endfor %}
         </tr>
 
         <!-- lists out every hour from 12AM to 11PM -->
         <tr class="s3">
-          {% with 'AM PM' as mlist %}
-            {% for meridem in mlist.split %}
-              {% with '12 1 2 3 4 5 6 7 8 9 10 11' as hourlist %}
-                {% for hour in hourlist.split %}
-                  <td class="cd">{{ hour }}{{ meridem }}</td>
-                {% endfor %}
-              {% endwith %}
-            {% endfor %}
-          {% endwith %}
+          {% for hourstr in hour_strings %}
+            <td class="cd">{{ hourstr }}</td>
+          {% endfor %}
         </tr>
       </tbody>
     </table>
@@ -84,39 +74,49 @@
       <tbody>
         <tr>
           <td class="tinv">
-            <img src="{% static 'assets/pipe1v.png' %}" height="15" width="30" align="top" title="0-6">
+            <div class="bluebar keybar" title="12AM-5AM"></div>
             Night
           </td>
           <td class="tinv" width="20"></td>
           <td class="tinv">
-            <img src="{% static 'assets/pipe2v.png' %}" height="15" width="30" align="top" title="6-12">
+            <div class="greenbar keybar" title="6AM-11AM"></div>
             Morning
           </td>
           <td class="tinv" width="20"></td>
           <td class="tinv">
-            <img src="{% static 'assets/pipe3v.png' %}" height="15" width="30" align="top" title="12-18">
+            <div class="yellowbar keybar" title="12PM-5PM"></div>
             Afternoon
           </td>
           <td class="tinv" width="20"></td>
           <td class="tinv">
-            <img src="{% static 'assets/pipe4v.png' %}" height="15" width="30" align="top" title="18-24">
+            <div class="redbar keybar" title="6PM-11PM"></div>
             Evening
           </td>
         </tr>
       </tbody>
     </table>
 
-    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
-    <br>
-    <br>
+    <div class="greybar"></div>
+
     <!-- 
       Day-by-day server load
     -->
     <h3>Day-by-day server load</h3>
-    <div id="chart_div"></div>
-    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
     <br>
-    <br>
+    <div style="width: 50%; margin-left: 8.7%;">
+      <button class="subtext selectedTablink" onclick="openPage('topWeekly', this)">Weekly</button>
+      <button class="subtext tablink" onclick="openPage('topMonthly', this)">Monthly</button>
+      <button class="subtext tablink" onclick="openPage('topYearly', this)">Yearly</button>
+      <button class="subtext tablink" onclick="openPage('topAllTime', this)">All Time</button>
+    </div>
+    <br><br>
+    <div id="topWeekly" class="tabcontent" style="width: 70%;"></div>
+    <div id="topMonthly" class="tabcontent" style="width: 70%;"></div>
+    <div id="topYearly" class="tabcontent" style="width: 70%;"></div>
+    <div id="topAllTime" class="tabcontent" style="width: 70%;"></div>
+
+
+    <div class="greybar"></div>
     <!-- 
       100 Most Talkative Users
     -->
@@ -130,10 +130,10 @@
           <th data-sorter="false">Nick</th>
           <th data-lockedorder="desc" class="sorter-bignumber">Line Count</th>
           <th data-lockedorder="desc">Lines Per Day</th>
-          <th data-sorter="false">Interesting Vocabulary</th>
+          <th data-sorter="false">Peculiar Words</th>
           <th data-sorter="false">Favorite Emojis</th>
         </thead>
-        {% for user_dict in top_100_users_display %}
+        {% for user_dict in user_messages_table %}
           <tr>
             <td class="rank">
               {{ forloop.counter }}
@@ -141,38 +141,47 @@
             <td class="nick">
               <img src="{{ user_dict.user.avatar }}" class="icon">
               &nbsp;
-              <a href="/stats/users/{{ user_dict.user.tag }}" class="userlink">{{ user_dict.user.tag }}</a>
+              <a href="/stats/users/{{ user_dict.user.tag }}" class="userlink">{{ user_dict.user.nick }}</a>
             </td>
 
             <td class="line_count">
-              <img src="{% static 'assets/pipe1v.png' %}" height="15" width="{% widthratio user_dict.night_hour_count most_messages 100 %}"><!--
-              --><img src="{% static 'assets/pipe2v.png' %}" height="15" width="{% widthratio user_dict.morning_hour_count most_messages 100 %}"><!--
-              --><img src="{% static 'assets/pipe3v.png' %}" height="15" width="{% widthratio user_dict.afternoon_hour_count most_messages 100 %}"><!--
-              --><img src="{% static 'assets/pipe4v.png' %}" height="15" width="{% widthratio user_dict.evening_hour_count most_messages 100 %}">
+              <div class="bluebar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.night most_messages 100 %}px"></div>
+              <div class="greenbar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.morning most_messages 100 %}px"></div>
+              <div class="yellowbar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.afternoon most_messages 100 %}px"></div>
+              <div class="redbar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.evening most_messages 100 %}px; margin-right:3px;"></div>
+              <!--<img src="{% static 'assets/pipe1v.png' %}" height="15" width="{% widthratio user_dict.time_of_day_counts.night most_messages 100 %}">
+              <img src="{% static 'assets/pipe2v.png' %}" height="15" width="{% widthratio user_dict.time_of_day_counts.morning most_messages 100 %}">
+              <img src="{% static 'assets/pipe3v.png' %}" height="15" width="{% widthratio user_dict.time_of_day_counts.afternoon most_messages 100 %}">
+              <img src="{% static 'assets/pipe4v.png' %}" height="15" width="{% widthratio user_dict.time_of_day_counts.evening most_messages 100 %}">
+              -->
               {{ user_dict.user.messages|intcomma }}
             </td>
 
             <td>
-              {{ user_dict.average_daily_messages|floatformat:1 }}
+              {{ user_dict.lines_per_day|floatformat:1 }}
             </td>
 
             <td class="words">
-              {{ user_dict.favorite_words |join:", " }}
+              {{ user_dict.special_words|join:", " }}
             </td>
 
             <td>
-              {% for emoji_URL in user_dict.favorite_custom_emojis %}
-                <img src="{{ emoji_URL }}.png" height="15">
-              {% endfor %}
-              <font size="+1">{{ user_dict.favorite_default_emojis |join:" " }}</font>
+              <font size="+1">
+                {% for emoji in user_dict.emojis %}
+                  {% if emoji.custom %}
+                    <img src="{{ emoji.custom_emoji }}" height="15">
+                  {% else %}
+                    {{ emoji.default_emoji }}
+                  {% endif %}
+                {% endfor %}
+              </font>
             </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
-    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
-    <br>
-    <br>
+
+    <div class="greybar"></div>
 
     <!-- 
       Time of Day Stats
@@ -187,24 +196,24 @@
         <th>Evening chatters<br> <span class="hours">(6PM - 12AM)</span></th>
       </thead>
       <tbody>
-        {% for zip_packet in top_10_hour_users %}
-        <tr>
-          <td>{{ forloop.counter }} </td>
-          {% for user, count in zip_packet %}
-          <td>
-            <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.tag }}</a> - {{ count }}
-            <br>
-            {% cycle 'assets/pipe1v.png' 'assets/pipe2v.png' 'assets/pipe3v.png' 'assets/pipe4v.png' as pipev_png silent %}
-            {% cycle most_night_messages most_morning_messages most_afternoon_messages most_evening_messages as current_time_most_messages silent %}
-            <img class="icon time_of_day_icon" src="{{ user.avatar }}"><!--
-            --><img src="{% static pipev_png %}" height="5" width="{% widthratio count current_time_most_messages 100 %}">
-          </td>
-          {% endfor %}
-        </tr>
+        {% for zip_packet in time_of_day_table %}
+          <tr>
+            <td>{{ forloop.counter }} </td>
+            {% for user, count in zip_packet %}
+              <td>
+                <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a> - {{ count }}
+                <br>
+                {% cycle 'bluebar' 'greenbar' 'yellowbar' 'redbar' as bar_class silent %}
+                {% cycle time_of_day_maxes.0 time_of_day_maxes.1 time_of_day_maxes.2 time_of_day_maxes.3 as current_time_most_messages silent %}
+                <img class="icon mini_icon" src="{{ user.avatar }}"><!--
+                --><div class="{{ bar_class }} time_of_day_bar" style="height:5px; width:{% widthratio count current_time_most_messages 100 %}px;"></div>
+              </td>
+            {% endfor %}
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </center>
+  <script type="text/javascript" src="{% static 'js/chart_setup.js' %}"></script>
 </body>
-
 </html>

@@ -1,50 +1,133 @@
 /*
 display date data
 */
+const dateData = JSON.parse(document.getElementById('dateData').textContent);
 
-// util function for getting the data from views.py
-function getDateData(url, number_of_days) {
-  return $.ajax({
-    url: url,
-    type: 'GET',
-    dataType: "json",
-    async: false,
-    headers: {'X-Requested-With': 'XMLHttpRequest'},
-    success: function(data) {return data}
-  }).responseJSON;
+const options = {
+  legend: {
+    textStyle: {color: 'white'}
+  },
+  hAxis: {
+    title: 'Time',
+    format: 'MMM d',
+    textStyle: {color: 'white'},
+    titleTextStyle: {
+      color: 'white'
+    }
+  },
+  vAxis: {
+    title: 'Number of Messages',
+    textStyle: {color: 'white'},
+    titleTextStyle: {
+      color: 'white'
+    }
+  },
+  backgroundColor: '#2C2F33', 
 };
+
+function openPage(pageName,elmnt) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  selected = document.getElementsByClassName("selectedTablink");
+  for (i = 0; i < selected.length; i++) {
+    selected[i].classList.replace("selectedTablink", "tablink");
+  }
+  document.getElementById(pageName).style.display = "block";
+  elmnt.classList.replace("tablink", "selectedTablink");
+}
 
 
 // chart 
 google.charts.load('current', {packages: ['corechart', 'line']});
-google.charts.setOnLoadCallback(drawBasic);
+google.charts.setOnLoadCallback(topWeekly);
+google.charts.setOnLoadCallback(topMonthly);
+google.charts.setOnLoadCallback(topYearly);
+google.charts.setOnLoadCallback(topAllTime);
 
-function drawBasic() {
-  var date_data = getDateData("date_data/", 100);
 
-  var data = new google.visualization.DataTable();
-  data.addColumn('date', 'Year');
-  data.addColumn('number', 'Msgs');
+function topWeekly() {
+  var dataTable = new google.visualization.DataTable();
+  dataTable.addColumn('date', 'Year');
+  dataTable.addColumn('number', 'Msgs');
 
-  var sorted_keys = Object.keys(date_data).sort();
-  for (let i = 0; i < sorted_keys.length; i++) {
-    var dateiso = sorted_keys[i];
-    var value = date_data[dateiso];
-    data.addRow([new Date(dateiso), value]);
+  for (let i = dateData.length - 7; i < dateData.length; i++) {
+    dataTable.addRow([new Date(dateData[i][0]), dateData[i][1]]);
   };
-  
-  var options = {
-    hAxis: {
-      title: 'Time'
-    },
-    vAxis: {
-      title: 'Number of Messages'
-    },
-    backgroundColor: '#2C2F33'
-  };
-  
-  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
 
-  chart.draw(data, options);
-
+  var ticks = [];
+  for (let i = 0; i < dataTable.getNumberOfRows(); i++) {
+    ticks.push(dataTable.getValue(i, 0));
+  }
+  
+  var chart = new google.visualization.LineChart(document.getElementById('topWeekly'));
+  options.ticks = ticks;
+  chart.draw(dataTable, options);
 }
+
+function topMonthly() {
+  var dataTable = new google.visualization.DataTable();
+  dataTable.addColumn('date', 'Year');
+  dataTable.addColumn('number', 'Msgs');
+
+  for (let i = dateData.length - 31; i < dateData.length; i++) {
+    dataTable.addRow([new Date(dateData[i][0]), dateData[i][1]]);
+  };
+
+  var ticks = [];
+  for (var i = 0; i < dataTable.getNumberOfRows(); i++) {
+    ticks.push(dataTable.getValue(i, 0));
+  }
+  
+  var chart = new google.visualization.LineChart(document.getElementById('topMonthly'));
+  google.visualization.events.addListener(chart, 'ready', function () {
+    document.getElementById('topMonthly').style.display = 'none';
+  });
+  options.ticks = ticks;
+  chart.draw(dataTable, options);
+}
+
+function topYearly() {
+  var dataTable = new google.visualization.DataTable();
+  dataTable.addColumn('date', 'Year');
+  dataTable.addColumn('number', 'Msgs');
+
+  for (let i = dateData.length - 365; i < dateData.length; i++) {
+    dataTable.addRow([new Date(dateData[i][0]), dateData[i][1]]);
+  };
+
+  var ticks = [];
+  for (var i = 0; i < dataTable.getNumberOfRows(); i++) {
+    ticks.push(dataTable.getValue(i, 0));
+  }
+  
+  var chart = new google.visualization.LineChart(document.getElementById('topYearly'));
+  google.visualization.events.addListener(chart, 'ready', function () {
+    document.getElementById('topYearly').style.display = 'none';
+  });
+  chart.draw(dataTable, options);
+}
+
+function topAllTime() {
+  var dataTable = new google.visualization.DataTable();
+  dataTable.addColumn('date', 'Year');
+  dataTable.addColumn('number', 'Msgs');
+
+  for (let i = 0; i < dateData.length; i++) {
+    dataTable.addRow([new Date(dateData[i][0]), dateData[i][1]]);
+  };
+
+  var ticks = [];
+  for (var i = 0; i < dataTable.getNumberOfRows(); i++) {
+    ticks.push(dataTable.getValue(i, 0));
+  }
+  
+  var chart = new google.visualization.LineChart(document.getElementById('topAllTime'));
+  google.visualization.events.addListener(chart, 'ready', function () {
+    document.getElementById('topAllTime').style.display = 'none';
+  });
+  chart.draw(dataTable, options);
+}
+

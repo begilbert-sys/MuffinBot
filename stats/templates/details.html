@@ -28,7 +28,7 @@
             Top Swearers
         </h3>
         <span class="subtext">
-            These users had the mouths of a sailor
+            These users have the mouths of a sailor
         </span>
         <table cellspacing="1" cellpadding="2" class="default_table tiny_table">
         <thead>
@@ -41,12 +41,48 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>
-                    <img class="icon time_of_day_icon" src="{{ user.avatar }}">
-                    {{ user.nick }}
+                    <img class="icon mini_icon" src="{{ user.avatar }}">
+                    <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
                 </td>
                 <td>
                     <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user.curse_word_count|div:user.messages top_curse_users.0.curse_word_count|div:top_curse_users.0.messages 100 %}">
                     {{ user.curse_word_count|div:user.messages|mul:100|floatformat:2 }}%
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+
+        <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
+        <br>
+        <br>
+
+        <!-- 
+        ALL CAPS
+        -->    
+        <h3>
+            Top Shouters
+        </h3>
+        <span class="subtext">
+            THESE USERS LOVE SPEAKING IN ALL CAPS!!!
+        </span>
+        <table cellspacing="1" cellpadding="2" class="default_table tiny_table">
+        <thead>
+            <th></th>
+            <th>Nick</th>
+            <th>Percentage</th>
+        </thead>
+        <tbody>
+            {% for user in top_ALL_CAPS_users %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    <img class="icon mini_icon" src="{{ user.avatar }}">
+                    <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                </td>
+                <td>
+                    <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user.ALL_CAPS_count|div:user.messages top_ALL_CAPS_users.0.APP_CAPS_count|div:top_ALL_CAPS_users.0.messages 100 %}">
+                    {{ user.ALL_CAPS_count|div:user.messages|mul:100|floatformat:2 }}%
                 </td>
             </tr>
             {% endfor %}
@@ -78,16 +114,16 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td style="text-align: right;">
-                    <a href="/stats/users/{{ user1.tag }}" class="userlink">{{ user1.tag }}</a>
-                    <img class="icon time_of_day_icon" src="{{ user1.avatar }}">
+                    <a href="/stats/users/{{ user1.tag }}" class="userlink">{{ user1.nick }}</a>
+                    <img class="icon mini_icon" src="{{ user1.avatar }}">
                     <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user1count max_mention_count 100 %}">
                     {{ user1count }}
                 </td>
                 <td>
                     {{ user2count }}
                     <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user2count max_mention_count 100 %}">
-                    <img class="icon time_of_day_icon" src="{{ user2.avatar }}">
-                    <a href="/stats/users/{{ user2.tag }}" class="userlink">{{ user2.tag }}</a>
+                    <img class="icon mini_icon" src="{{ user2.avatar }}">
+                    <a href="/stats/users/{{ user2.tag }}" class="userlink">{{ user2.nick }}</a>
                 </td>
             </tr>
             {% endfor %}
@@ -161,7 +197,7 @@
                     </td>
                     {% for user in userlist %}
                         <td>
-                            <img class="icon time_of_day_icon" src="{{ user.avatar }}">
+                            <img class="icon mini_icon" src="{{ user.avatar }}">
                             <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
                         {% endfor %}
                         </td>

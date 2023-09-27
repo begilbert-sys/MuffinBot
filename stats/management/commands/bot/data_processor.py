@@ -9,7 +9,8 @@ import re
 
 from stats import models
 
-from .presets import GUILD_ID
+
+logger = logging.getLogger(__package__)
 
 with open('stats/words/words.txt') as f:
     WORDS = set(f.read().split('\n'))
@@ -26,12 +27,12 @@ def convert_to_pacific_time(dt: datetime.datetime) -> datetime.datetime:
     PST_PDT = pytz.timezone('America/Los_Angeles')
     return dt.astimezone(PST_PDT)
 
-def downsize_avatar_link(URL: str):
-    '''sets the size of a user's avatar link to be 128px. this speeds up website loading times'''
+def downsize_img_link(URL: str):
+    '''sets the size of a user's avatar link to be 64px. this speeds up website loading times'''
     if '?size=' not in URL:
-        return URL + '?size=128'
+        return URL + '?size=64'
     else:
-        return re.sub('\?size=[\d]+', '?size=128', URL)
+        return re.sub('\?size=[\d]+', '?size=64', URL)
 
 def get_custom_emoji_URLs(string: str) -> list[str]:
     '''Returns a list of the URLs of all the custom emojis in a discord message'''
@@ -73,11 +74,15 @@ class Data_Processor:
         if user.id in self.cached_model_objects[models.User]:
             user_model_obj = self.cached_model_objects[models.User][user.id]
         else:
+            if user.discriminator == '0':
+                tag = user.name
+            else:
+                tag = user.name + '＃' + user.discriminator 
             user_model_obj = models.User(
-                id=user.id,
-                tag=user.name,
+                id = user.id,
+                tag = tag,
                 nick = user.display_name,
-                avatar = downsize_avatar_link(str(user.display_avatar))
+                avatar = downsize_img_link(str(user.display_avatar))
             )
             self.cached_model_objects[models.User][user.id] = user_model_obj
         return user_model_obj
@@ -147,7 +152,7 @@ class Data_Processor:
         
         ### CUSTOM EMOJI
         for e in get_custom_emoji_URLs(message.content):
-            self._create_or_increment(models.Custom_Emoji_Count, user_model_obj, e)
+            self._create_or_increment(models.Custom_Emoji_Count, user_model_obj, downsize_img_link(e))
         
         ### URL
         for URL in get_URLs(message.content):
@@ -200,11 +205,8 @@ class Data_Processor:
         '''
         Save all of the cached channel model objects to the DB
         '''
-        await models.Channel.objects.abulk_create(
-            self.cached_channels.values(),
-            update_conflicts = True,
-            update_fields = ['last_processed_message_datetime'],
-            unique_fields = ['id']
+        await models.Channel.objects.abulk_create_or_update(
+            self.cached_channels.values()
         )
 
     async def _update_model_objects(self, Model_Class):
@@ -230,19 +232,13 @@ class Data_Processor:
         '''
         Updates all model objects for a specific model, and saves them to the DB
         '''
-        logging.debug(Model_Class.__name__ + ' saving. . .')
+        logger.debug(Model_Class.__name__ + ' saving. . .')
         await self._update_model_objects(Model_Class)
-        if Model_Class is models.User:
-            update_fields = ['messages', 'curse_word_count', 'avatar', 'ALL_CAPS_count', 'total_chars']
-        else:
-            update_fields = ['count']
-        await Model_Class.objects.abulk_create(
+        await Model_Class.objects.abulk_create_or_update(
             self.cached_model_objects[Model_Class].values(),
-            update_conflicts = True,
-            update_fields = update_fields,
-            unique_fields = ['id']
         )
-        logging.debug(Model_Class.__name__ + ' saved to DB')
+
+        logger.debug(Model_Class.__name__ + ' saved to DB')
 
     async def save(self):
         '''
