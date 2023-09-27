@@ -1,6 +1,3 @@
-/*
-display date data
-*/
 const dateData = JSON.parse(document.getElementById('dateData').textContent);
 
 const options = {
