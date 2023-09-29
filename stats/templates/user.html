@@ -21,9 +21,12 @@
 
 <body>
   <center>
-    <img src="{% static 'assets/pipeltv.png' %}" height="3" width="90%" alt="">
-    <br>
-    <br>
+    <div class="greybar" style="margin-bottom:15px;"></div>
+    <div class="headerlinks">
+      <a href="/stats/">1. Main page</a> | <a href="/stats/details/">2. Detailed info</a> | <a href="/stats/FAQ/">3. FAQ</a>
+    </div>
+    <div class="greybar"></div>
+
     <h3>Personal Stats</h3>
     <div class="user_header">
       <div class="user_column user_display">
@@ -70,7 +73,9 @@
       <tbody>
         <tr>
           {% for hour_count in user_hour_counts %}
-            <td><img src="{% static forloop.counter0|set_hour_png %}" height="{% widthratio hour_count max_hour_count 65 %}" width="5"></td>
+            <td>
+              <div class="{{ forloop.counter0|set_hour_class }}" style="height:{% widthratio hour_count max_hour_count 65 %}px; width:5px"></div>
+            </td>
           {% endfor %}
         </tr>
         <tr class="user_hour_counter">
@@ -97,7 +102,7 @@
                       <a href="/stats/users/{{ user.tag }}" class="userlink" style="color: white">{{ user.nick }}&nbsp;</a>
                     </td>
                     <td class="pipe">
-                      <img src="{% static 'assets/pipedv.png' %}" height="8" width="{% widthratio count talking_partner_max 80 %}">
+                      <div class="defaultbar" style="height:8px; width:{% widthratio count talking_partner_max 80 %}px"></div>
                     </td>
                   {% endwith %}
               {% endfor %}

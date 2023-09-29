@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 import heapq
 import timeit
 import datetime
@@ -55,9 +56,9 @@ class User_Manager(models.Manager):
         top_100_users = self.all()[:100]
         return heapq.nlargest(n, top_100_users, key = lambda user: user.ALL_CAPS_count / user.messages)
     
-    def top_n_longest_lines_users(self, n):
+    def top_n_verbose_users(self, n):
         top_100_users = self.all()[:100]
-        return heapq.nlargest(n, top_100_users, key = lambda user: user.ALL_CAPS_count / user.messages)
+        return heapq.nlargest(n, top_100_users, key = lambda user: user.total_chars / user.messages)
     
     def get_rank(self, user):
         return self.filter(messages__gt=user.messages).count() + 1
@@ -235,11 +236,7 @@ class Hour_Count_Manager(UserStat_Manager):
     
     def user_hour_count_range(self, user: User, start: int, end: int):
         # optimized
-        total = 0
-        for hour_count in self.filter(user=user):
-            if start <= hour_count.hour <= end:
-                total += hour_count.count
-        return total
+        return Hour_Count.objects.filter(user=user, hour__range=(start,end)).aggregate(Sum('count'))['count__sum']
     
     def top_n_users_in_range(self, n: int, start: int, end: int):
         '''
@@ -300,20 +297,22 @@ class Date_Count_Manager(UserStat_Manager):
         return self.filter(user=user).count()
     
     def date_counts_as_str(self) -> dict:
-        # needs optimizing
+        # optimized-ish
         '''returns a dictionary of how many messages were sent on every date
         past_n_days: allows the dict to be limited to the past n days. If None, returns all.'''
-        dates = list()
+        start = timeit.default_timer()
+        date_strs = list()
+        date_sums = list(self.values_list('date').order_by('-date').annotate(Sum('count')))
         date = self.earliest().date
-        timespan  = (self.latest().date - date).days
-        for _ in range(timespan):
-            filtered_objs = Date_Count.objects.filter(date=date)
-            sum_result = filtered_objs.aggregate(models.Sum('count'))['count__sum']
-            num = sum_result if sum_result else 0 # add 0 if the sum returns None
-            dates.append((date.strftime("%m/%d/%Y"), num))
+        while date_sums:
+            if date == date_sums[-1][0]:
+                date_pair = date_sums.pop()
+                date_strs.append((date_pair[0].strftime("%m/%d/%Y"), date_pair[1]))
+            else:
+                date_strs.append((date.strftime("%m/%d/%Y"), 0))
             date += datetime.timedelta(days=1)
-        return dates
-
+        print('date retrieval', (timeit.default_timer()-start))
+        return date_strs
     
 class Date_Count(UserStat):
     date = models.DateField()

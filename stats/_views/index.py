@@ -4,18 +4,20 @@ from stats import models
 
 from .utils import * 
 
+import timeit
+
 def get_messages_table():
     '''
     Return a list of dictionaries to populate the top messages table
     Each list element is a row, and each dictionary entry is a column
     '''
     user_table = list()
-    for user in models.User.whitelist.all()[:100]:
+    for user in models.User.whitelist.all()[:100].iterator():
         user_table.append({
             'user': user,
             'time_of_day_counts': get_time_of_day_counts(user),
             'lines_per_day': user.messages / models.Date_Count.objects.total_user_days(user),
-            'special_words': [obj.word for obj in models.Unique_Word_Count.objects.top_n_user_objs(user, 5)],
+            'special_words': list(models.Unique_Word_Count.objects.filter(user=user)[:5].values_list('word', flat=True)),
             'emojis': get_top_n_emojis(user, 10)
         })
     return user_table
@@ -36,15 +38,17 @@ def get_hour_strings():
             '6PM', '7PM', '8PM', '9PM', '10PM', '11PM']
 
 def index(request):
-
     total_hour_counts = models.Hour_Count.objects.total_hour_counts()
+
     time_of_day_table = get_time_of_day_table()
+
     time_of_day_maxes = tuple(item[1] for item in time_of_day_table[0])
+
     context = {
         'guild': models.Guild.objects.all().first(),
 
-        'first_message_date': models.Date_Count.objects.earliest(),
-        'last_message_date': models.Date_Count.objects.latest(),
+        'first_message_date': models.Date_Count.objects.earliest().date,
+        'last_message_date': models.Date_Count.objects.latest().date,
         'total_days': models.Date_Count.objects.total_days(),
 
         'total_users': models.User.objects.count(),

@@ -6,7 +6,8 @@ migrations
 tablesorter
 curse_words.txt
 words.txt
+laughsalot.txt
 channel_blacklist.txt
 debug.log
 discord.log
-laughsalot.txt
+requirements.txt

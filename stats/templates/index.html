@@ -34,7 +34,11 @@
     <span class="subtext">
       {{ total_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
     </span>
-
+    <br>
+    <br>
+    <div class="headerlinks">
+    1. Main page | <a href="details/">2. Detailed info</a> | <a href="FAQ/">3. FAQ</a>
+    </div>
 
     <div class="greybar"></div>
 
@@ -110,10 +114,10 @@
       <button class="subtext tablink" onclick="openPage('topAllTime', this)">All Time</button>
     </div>
     <br><br>
-    <div id="topWeekly" class="tabcontent" style="width: 70%;"></div>
-    <div id="topMonthly" class="tabcontent" style="width: 70%;"></div>
-    <div id="topYearly" class="tabcontent" style="width: 70%;"></div>
-    <div id="topAllTime" class="tabcontent" style="width: 70%;"></div>
+    <div id="topWeekly" class="tabcontent"></div>
+    <div id="topMonthly" class="tabcontent"></div>
+    <div id="topYearly" class="tabcontent"></div>
+    <div id="topAllTime" class="tabcontent"></div>
 
 
     <div class="greybar"></div>
@@ -149,11 +153,6 @@
               <div class="greenbar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.morning most_messages 100 %}px"></div>
               <div class="yellowbar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.afternoon most_messages 100 %}px"></div>
               <div class="redbar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.evening most_messages 100 %}px; margin-right:3px;"></div>
-              <!--<img src="{% static 'assets/pipe1v.png' %}" height="15" width="{% widthratio user_dict.time_of_day_counts.night most_messages 100 %}">
-              <img src="{% static 'assets/pipe2v.png' %}" height="15" width="{% widthratio user_dict.time_of_day_counts.morning most_messages 100 %}">
-              <img src="{% static 'assets/pipe3v.png' %}" height="15" width="{% widthratio user_dict.time_of_day_counts.afternoon most_messages 100 %}">
-              <img src="{% static 'assets/pipe4v.png' %}" height="15" width="{% widthratio user_dict.time_of_day_counts.evening most_messages 100 %}">
-              -->
               {{ user_dict.user.messages|intcomma }}
             </td>
 
