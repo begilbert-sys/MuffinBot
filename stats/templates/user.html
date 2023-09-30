@@ -16,7 +16,8 @@
 
   <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
   <script type="text/javascript" src="{% static 'js/tablesorter/js/jquery.tablesorter.js' %}"></script>
-
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  {{ date_data|json_script:"dateData" }}
 </head>
 
 <body>
@@ -31,7 +32,7 @@
     <div class="user_header">
       <div class="user_column user_display">
       <img src="{{ user.avatar|icon_size:128 }}" class="user_icon">
-      {{ user.nick }}
+      &nbsp;{{ user.nick }}
       </div>
       <div class="user_column user_rank">
       {{ rank }}
@@ -63,8 +64,37 @@
         </tr>
       </tbody>
     </table>
+    <br>
+    <br>
 
 
+    <table cellspacing="0" cellpadding="0" class="user_mini_table weekday_table" >
+      <thead>
+        <th colspan="7" class="subtext" style="padding-bottom: 18px;">Weekly Activity</th>
+      </thead>
+      <tbody>
+        <tr class="hour_percentage" valign="bottom">
+          {% for value in weekday_dist %}
+            <td class="tgr" align="center">
+              <!-- hour percentage value -->
+              {{ value|div:user.messages|mul:100|floatformat:1 }}%
+              <!-- changes color of bar based on time of day -->
+              <div class='defaultbar' style="height:{% widthratio value max_weekday 65 %}px;">
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr class="user_hour_counter">
+            <td class="cd">Mon</td>
+            <td class="cd">Tue</td>
+            <td class="cd">Wed</td>
+            <td class="cd">Thu</td>
+            <td class="cd">Fri</td>
+            <td class="cd">Sat</td>
+            <td class="cd">Sun</td>
+        </tr>
+      </tbody>
+    </table>
 
     <table class="user_mini_table user_hour_table">
       <thead>
@@ -74,7 +104,7 @@
         <tr>
           {% for hour_count in user_hour_counts %}
             <td>
-              <div class="{{ forloop.counter0|set_hour_class }}" style="height:{% widthratio hour_count max_hour_count 65 %}px; width:5px"></div>
+              <div class="{{ forloop.counter0|set_hour_class }}" style="height:{% widthratio hour_count max_hour_count 71 %}px; width:6px"></div>
             </td>
           {% endfor %}
         </tr>
@@ -111,5 +141,20 @@
         </tr>
       </tbody>
     </table>
+    <div class="greybar"></div>
+
+    <div style="width: 50%; margin-left: 8.7%;">
+      <button class="subtext selectedTablink" onclick="openPage('topWeekly', this)">Weekly</button>
+      <button class="subtext tablink" onclick="openPage('topMonthly', this)">Monthly</button>
+      <button class="subtext tablink" onclick="openPage('topYearly', this)">Yearly</button>
+      <button class="subtext tablink" onclick="openPage('topAllTime', this)">All Time</button>
+    </div>
+    <br>
+    <div id="topWeekly" class="tabcontent"></div>
+    <div id="topMonthly" class="tabcontent"></div>
+    <div id="topYearly" class="tabcontent"></div>
+    <div id="topAllTime" class="tabcontent"></div>
   </center>
+  <script type="text/javascript" src="{% static 'js/chart_setup.js' %}"></script>
 </body>
+</html>

@@ -63,6 +63,9 @@ function topWeekly() {
   var options = defaultOptions()
   options.hAxis.ticks = ticks;
   options.hAxis.format = 'MMM d';
+  if (dataTable.getColumnRange(1).max == 0) {
+    options.vAxis.ticks = [0, 1, 2];
+  }
   chart.draw(dataTable, options);
 }
 
@@ -85,6 +88,9 @@ function topMonthly() {
   var options = defaultOptions();
   options.hAxis.ticks = ticks;
   options.hAxis.format = 'M-d';
+  if (dataTable.getColumnRange(1).max == 0) {
+    options.vAxis.ticks = [0, 1, 2];
+  }
   chart.draw(dataTable, options);
 }
 
@@ -110,6 +116,9 @@ function topYearly() {
   var options = defaultOptions();
   options.hAxis.ticks = ticks;
   options.hAxis.format = 'MMM';
+  if (dataTable.getColumnRange(1).max == 0) {
+    options.vAxis.ticks = [0, 1, 2];
+  }
   chart.draw(dataTable, options);
 }
 

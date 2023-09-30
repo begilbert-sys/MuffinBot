@@ -18,7 +18,7 @@ def get_messages_table():
             'time_of_day_counts': get_time_of_day_counts(user),
             'lines_per_day': user.messages / models.Date_Count.objects.total_user_days(user),
             'special_words': list(models.Unique_Word_Count.objects.filter(user=user)[:5].values_list('word', flat=True)),
-            'emojis': get_top_n_emojis(user, 10)
+            'emojis': list(models.Emoji_Count.objects.filter(user=user)[:10].values_list('emoji', flat=True))
         })
     return user_table
 
@@ -29,7 +29,7 @@ def get_time_of_day_table():
         models.Hour_Count.objects.top_n_users_in_range(10, 12, 17),
         models.Hour_Count.objects.top_n_users_in_range(10, 18, 23),
     ))
-
+    
 def get_hour_strings():
     # I was gonna make this a for loop but. . this is more optimal ¯\_(ツ)_/¯
     return ['12AM', '1AM', '2AM', '3AM', '4AM', '5AM', 
@@ -37,12 +37,27 @@ def get_hour_strings():
             '12PM', '1PM', '2PM', '3PM', '4PM', '5PM', 
             '6PM', '7PM', '8PM', '9PM', '10PM', '11PM']
 
+def get_unique_word_table():
+    ROWS = 10
+    COLS = 10
+    words = models.Unique_Word_Count.objects.top_n_words(ROWS * COLS)
+    return [words[i*COLS:i*COLS+COLS] for i in range(10)]
+
+def get_emoji_table():
+    ROWS = 7
+    COLS = 15
+    emojis = models.Emoji_Count.objects.top_n_emojis(ROWS * COLS)
+    return [emojis[i*COLS:i*COLS+COLS] for i in range(ROWS)]
+
 def index(request):
     total_hour_counts = models.Hour_Count.objects.total_hour_counts()
 
     time_of_day_table = get_time_of_day_table()
 
     time_of_day_maxes = tuple(item[1] for item in time_of_day_table[0])
+
+    weekday_dist = models.Date_Count.objects.weekday_distribution()
+    max_weekday = max(weekday_dist)
 
     context = {
         'guild': models.Guild.objects.all().first(),
@@ -63,5 +78,12 @@ def index(request):
         'time_of_day_table': time_of_day_table,
         'time_of_day_maxes': time_of_day_maxes,
         'date_data': models.Date_Count.objects.date_counts_as_str(),
+
+        'weekday_dist': weekday_dist,
+        'max_weekday': max_weekday,
+        'days of the week': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+
+        'unique_words_table': get_unique_word_table(),
+        'emoji_table': get_emoji_table()
     }
     return render(request, "index.html", context)

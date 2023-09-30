@@ -125,7 +125,7 @@ table {
 
 
 .tabcontent {
-  width: 70%;
+  width: 80%;
 }
 
 .txt1 {
@@ -150,9 +150,26 @@ table {
 .s3 {
   font-family: "Arial";
   color: #ffffff;
+  background-color:#7289DA;
   font-size: 9px;
   vertical-align: bottom;
   text-align: center;
+}
+
+.weekday_table {
+  width: 30%;
+}
+.weekday_table td {
+  width: 10%;
+}
+.weekday_table td.tgr {
+  line-height: 0px;
+}
+.weekday_table .defaultbar {
+  float:none;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
 }
 
 .userlink:link, .userlink:visited {
@@ -242,7 +259,6 @@ table {
   width: 50px;
   border-radius: 50%;
   vertical-align: middle;
-  padding-right: 10px;
 }
 
 .user_header {
@@ -292,9 +308,7 @@ table {
 }
 
 .user_mini_table {
-  border-collapse: seperate;
-  display:inline-block;
-  height: 250px;
+  display:inline;
   margin: 10px;
 }
 

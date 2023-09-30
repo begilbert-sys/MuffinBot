@@ -28,22 +28,26 @@ def convert_to_pacific_time(dt: datetime.datetime) -> datetime.datetime:
     return dt.astimezone(PST_PDT)
 
 def downsize_img_link(URL: str):
-    '''sets the size of a user's avatar link to be 64px. this speeds up website loading times'''
+    '''sets the size of an image URL to be 64px. this speeds up website loading times'''
     if '?size=' not in URL:
         return URL + '?size=64'
     else:
         return re.sub('\?size=[\d]+', '?size=64', URL)
 
+def get_twemoji_url(emoji_str: str) -> str:
+    '''Given an emoji as a str, return the corresponding twemoji URL'''
+    emoji_hex_id = ord(emoji_str[0])
+    return f'https://twemoji.maxcdn.com/v/latest/72x72/{emoji_hex_id:x}.png'
+
 def get_custom_emoji_URLs(string: str) -> list[str]:
-    '''Returns a list of the URLs of all the custom emojis in a discord message'''
+    '''Return a list of the URLs of all the custom emojis in a discord message'''
     EMOJI_URL = 'https://cdn.discordapp.com/emojis/'
     custom_emoji_id_list = re.findall(r'<:\w*:(\d*)>', string)
     return [EMOJI_URL + emoji_id for emoji_id in custom_emoji_id_list]
 
 def get_URLs(string: str) -> list[str]:
-    '''Extracts all the URLs from a string'''
+    '''Extract all the URLs from a string'''
     URL_REGEX = 'https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)'
-
     return re.findall(URL_REGEX, string)
 
 def _get_special_field(Count_Class: type) -> str:
@@ -147,12 +151,13 @@ class Data_Processor:
         self._create_or_increment(models.Date_Count, user_model_obj, msg_date)
 
         ### DEFAULT EMOJI
-        for e in emoji.distinct_emoji_list(message.content):
-            self._create_or_increment(models.Default_Emoji_Count, user_model_obj, e)
+        for emoji_str in emoji.distinct_emoji_list(message.content):
+            emoji_url = get_twemoji_url(emoji_str)
+            self._create_or_increment(models.Emoji_Count, user_model_obj, emoji_url) # twemojis don't need to be downsized, imo
         
         ### CUSTOM EMOJI
-        for e in get_custom_emoji_URLs(message.content):
-            self._create_or_increment(models.Custom_Emoji_Count, user_model_obj, downsize_img_link(e))
+        for emoji_url in get_custom_emoji_URLs(message.content):
+            self._create_or_increment(models.Emoji_Count, user_model_obj, downsize_img_link(emoji_url))
         
         ### URL
         for URL in get_URLs(message.content):

@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Sum
 import heapq
+from collections import Counter
 import timeit
 import datetime
 
@@ -263,7 +264,7 @@ class Hour_Count_Manager(UserStat_Manager):
         for hour_count in self.filter(user=user):
             hour_counts[hour_count.hour] = hour_count.count
         return hour_counts
-
+    
         
 
 class Hour_Count(UserStat):
@@ -296,16 +297,20 @@ class Date_Count_Manager(UserStat_Manager):
     def total_user_active_days(self, user: User):
         return self.filter(user=user).count()
     
-    def date_counts_as_str(self) -> dict:
+    def date_counts_as_str(self, user: User = None) -> dict:
         # optimized-ish
         '''returns a dictionary of how many messages were sent on every date
         past_n_days: allows the dict to be limited to the past n days. If None, returns all.'''
         start = timeit.default_timer()
         date_strs = list()
-        date_sums = list(self.values_list('date').order_by('-date').annotate(Sum('count')))
+        if user:
+            date_sums = list(self.filter(user=user).values_list('date').order_by('-date').annotate(Sum('count')))
+        else:
+            date_sums = list(self.values_list('date').order_by('-date').annotate(Sum('count')))
         date = self.earliest().date
-        while date_sums:
-            if date == date_sums[-1][0]:
+        last = self.latest().date
+        while date <= last:
+            if len(date_sums) != 0 and date == date_sums[-1][0]:
                 date_pair = date_sums.pop()
                 date_strs.append((date_pair[0].strftime("%m/%d/%Y"), date_pair[1]))
             else:
@@ -313,6 +318,21 @@ class Date_Count_Manager(UserStat_Manager):
             date += datetime.timedelta(days=1)
         print('date retrieval', (timeit.default_timer()-start))
         return date_strs
+    
+    def weekday_distribution(self):
+        start = timeit.default_timer()
+        weekdays = [0] * 7
+        for date_obj in self.all().iterator():
+            weekdays[date_obj.date.weekday()] += date_obj.count
+        print(timeit.default_timer() - start)
+        return weekdays
+    def weekday_distribution_user(self, user):
+        start = timeit.default_timer()
+        weekdays = [0] * 7
+        for date_obj in self.filter(user=user).iterator():
+            weekdays[date_obj.date.weekday()] += date_obj.count
+        print(timeit.default_timer() - start)
+        return weekdays
     
 class Date_Count(UserStat):
     date = models.DateField()
@@ -341,38 +361,31 @@ class URL_Count(UserStat):
     objects = URL_Count_Manager()
 
 
-class Default_Emoji_Count_Manager(UserStat_Manager):
-    def sorted_user_default_emojis(self, user: User):
-        return [obj.default_emoji for obj in self.filter(user=user).order_by('-count')]
+class Emoji_Count_Manager(UserStat_Manager):
+    def top_n_emojis(self, n):
+        emojis = Counter()
+        for emoji, count in self.values_list('emoji', 'count'):
+            emojis[emoji] += count
+        return emojis.most_common(n)
     
-class Default_Emoji_Count(UserStat):
-    default_emoji = models.CharField(max_length=1)
-
-    objects = Default_Emoji_Count_Manager()
-
-
-class Custom_Emoji_Count_Manager(UserStat_Manager):
-    def sorted_user_custom_emojis(self, user: User):
-        return [obj.custom_emoji for obj in self.filter(user=user).order_by('-count')]
+    def sorted_user_emojis(self, user: User):
+        return [obj.emoji for obj in self.filter(user=user).order_by('-count')]
     
-class Custom_Emoji_Count(UserStat):
-    custom_emoji = models.URLField()
+class Emoji_Count(UserStat):
+    emoji = models.URLField()
 
-    objects = Custom_Emoji_Count_Manager()
+    objects = Emoji_Count_Manager()
 
 
 class Unique_Word_Count_Manager(UserStat_Manager):
-    def top_n_unqiue_words(self, n):
-        words = dict()
-        for word_count in self.all():
-            if word_count.word in words:
-                words[word_count.word] += 1
-            else:
-                words[word_count.word] = 1
-        return heapq.nlargest(n, words.items(), key=lambda x: x[1])
+    def top_n_words(self, n):
+        words = Counter()
+        for word, count in self.values_list('word', 'count'):
+            words[word] += count
+        return words.most_common(n)
 
-    def sorted_unique_user_words(self, user: User):
-        return [obj.word for obj in self.filter(user=user).order_by('-count')]
+    def top_n_user_words(self, user: User, n):
+        return list(self.filter(user=user)[:n].values_list('word', 'count'))
     
 class Unique_Word_Count(UserStat):
     word = models.CharField(max_length=18) 

@@ -50,14 +50,14 @@
     <h3>When's the best time to chat?</h3>
     <table cellspacing="1" cellpadding="2">
       <tbody>
-        <tr class="hour_percentage" valign="bottom">
+        <tr class="hour_percentage" valign="bottom" align="center">
           {% for hour, value in total_hour_counts.items %}
             <td class="tgr">
               <!-- hour percentage value -->
               {{ value|div:total_messages|mul:100|floatformat:1 }}%
               <br>
               <!-- changes color of bar based on time of day -->
-              <div class='{{ hour|set_hour_class }}' style="width:18px; height:{% widthratio value max_hour_count 120 %}px;">
+              <div class='{{ hour|set_hour_class }}' style="margin-left: 2px;width:18px; height:{% widthratio value max_hour_count 120 %}px;">
             </td>
           {% endfor %}
         </tr>
@@ -96,6 +96,37 @@
             <div class="redbar keybar" title="6PM-11PM"></div>
             Evening
           </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="greybar"></div>
+    <!-- 
+      Weekdays
+    -->
+    <h3>Activity by days of the week</h3>
+    <br>
+    <table cellspacing="0" cellpadding="0" class="weekday_table">
+      <tbody>
+        <tr class="hour_percentage" valign="bottom">
+          {% for value in weekday_dist %}
+            <td class="tgr" align="center">
+              <!-- hour percentage value -->
+              {{ value|div:total_messages|mul:100|floatformat:1 }}%
+              <!-- changes color of bar based on time of day -->
+              <div class='defaultbar' style="height:{% widthratio value max_weekday 120 %}px;">
+            </td>
+          {% endfor %}
+        </tr>
+
+        <tr class="user_hour_counter">
+            <td class="cd">Mon</td>
+            <td class="cd">Tue</td>
+            <td class="cd">Wed</td>
+            <td class="cd">Thu</td>
+            <td class="cd">Fri</td>
+            <td class="cd">Sat</td>
+            <td class="cd">Sun</td>
         </tr>
       </tbody>
     </table>
@@ -165,15 +196,9 @@
             </td>
 
             <td>
-              <font size="+1">
-                {% for emoji in user_dict.emojis %}
-                  {% if emoji.custom %}
-                    <img src="{{ emoji.custom_emoji }}" height="15">
-                  {% else %}
-                    {{ emoji.default_emoji }}
-                  {% endif %}
-                {% endfor %}
-              </font>
+              {% for emoji_url in user_dict.emojis %}
+                <img src="{{ emoji_url }}" height="15">
+              {% endfor %}
             </td>
           </tr>
         {% endfor %}
@@ -209,6 +234,43 @@
               </td>
             {% endfor %}
           </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="greybar"></div>
+
+    <!-- 
+      Peculiar Words
+    -->
+    <h3>Peculiar Words</h3>
+    <table cellspacing="1" cellpadding="2" class="default_table tiny_table">
+      <tbody>
+        {% for row in unique_words_table %}
+        <tr style="line-height:25px">
+          {% for word, count in row %}
+            <td><i>{{ word }}</i> ({{ count }})</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="greybar"></div>
+
+    <!-- 
+      Emojis 
+    -->
+    <h3>Top Emojis</h3>
+    <table cellspacing="1" cellpadding="2" class="default_table tiny_table" style="width: 65%;">
+      <tbody>
+        {% for row in emoji_table %}
+        <tr>
+          {% for emoji_url, count in row %}
+          <td style="font-size:30px;text-align:center; width:45px">
+            <img src="{{ emoji_url }}" height="30" style="vertical-align: middle;">
+            <div style="font-size:12px; margin-top:6px; margin-bottom:1px;"> <b>{{ count }}</b></div>
+          </td>
+          {% endfor %}
+        </tr>
         {% endfor %}
       </tbody>
     </table>
