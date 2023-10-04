@@ -102,9 +102,9 @@
       </thead>
       <tbody>
         <tr>
-          {% for hour_count in user_hour_counts %}
+          {% for hour_count, hour_string in user_hour_counts %}
             <td>
-              <div class="{{ forloop.counter0|set_hour_class }}" style="height:{% widthratio hour_count max_hour_count 71 %}px; width:6px"></div>
+              <div class="{{ forloop.counter0|set_hour_class }}" title="{{ hour_string }}" style="height:{% widthratio hour_count max_hour_count 71 %}px; width:6px"></div>
             </td>
           {% endfor %}
         </tr>

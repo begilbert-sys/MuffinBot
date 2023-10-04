@@ -345,3 +345,18 @@ table {
   display:block;
   margin: 5px 0px;
 }
+
+.emoji_table td {
+  height: 27px;
+}
+.emoji_table div {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.emoji_table img {
+  width: 25px;
+  display: inline;
+  vertical-align: middle;
+}

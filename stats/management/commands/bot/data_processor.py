@@ -7,6 +7,8 @@ import logging
 import pytz
 import re
 
+from itertools import chain 
+
 from stats import models
 
 
@@ -34,30 +36,26 @@ def downsize_img_link(URL: str):
     else:
         return re.sub('\?size=[\d]+', '?size=64', URL)
 
-def get_twemoji_url(emoji_str: str) -> str:
-    '''Given an emoji as a str, return the corresponding twemoji URL'''
-    emoji_hex_id = ord(emoji_str[0])
-    return f'https://twemoji.maxcdn.com/v/latest/72x72/{emoji_hex_id:x}.png'
-
-def get_custom_emoji_URLs(string: str) -> list[str]:
-    '''Return a list of the URLs of all the custom emojis in a discord message'''
-    EMOJI_URL = 'https://cdn.discordapp.com/emojis/'
-    custom_emoji_id_list = re.findall(r'<:\w*:(\d*)>', string)
-    return [EMOJI_URL + emoji_id for emoji_id in custom_emoji_id_list]
-
 def get_URLs(string: str) -> list[str]:
     '''Extract all the URLs from a string'''
     URL_REGEX = 'https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)'
     return re.findall(URL_REGEX, string)
 
-def _get_special_field(Count_Class: type) -> str:
+def get_twemoji_URL(emoji_str: str) -> str:
     '''
-    Given a count class, returns the field unique to that count class
-    for example, Hour_Counts would return 'hour'
+    Given an emoji, return the corresponding twemoji URL
+    Ref: https://github.com/twitter/twemoji/blob/master/scripts/build.js#L344
     '''
-    INHERITED_FIELDS = ['id', 'user', 'count']
-    [special_field] = [field.name for field in Count_Class._meta.fields if field.name not in INHERITED_FIELDS]
-    return special_field
+    # from Twemoji source code:
+    # remove all variants (0xfe0f)
+    # UNLESS there is a zero width joiner (0x200d)
+    VS16 = 0xfe0f
+    ZWJ = 0x200d
+    hex_ints = [ord(unichar) for unichar in emoji_str]
+    if ZWJ not in hex_ints:
+        hex_ints = [hex_int for hex_int in hex_ints if hex_int != VS16]
+    codepoint = '-'.join([format(hex_int, 'x') for hex_int in hex_ints])
+    return f'https://raw.githubusercontent.com/twitter/twemoji/d94f4cf793e6d5ca592aa00f58a88f6a4229ad43/assets/svg/{codepoint}.svg'
 
 # list of all the count model classes
 COUNT_MODELS = models.UserStat.__subclasses__()
@@ -68,9 +66,11 @@ class Data_Processor:
             Model_Class: dict() for Model_Class in COUNT_MODELS
         }
         self.cached_model_objects[models.User] = dict()
+        self.cached_model_objects[models.Emoji] = dict()
 
         self.cached_channels = dict()
-    def _get_or_add_user(self, user: discord.User) -> models.User:
+
+    def _get_user(self, user: discord.User) -> models.User:
         '''
         Return a user model object from the cache dict or, if one does not exist, then add one and return it
         The cache dict key is the user's ID
@@ -90,34 +90,65 @@ class Data_Processor:
             )
             self.cached_model_objects[models.User][user.id] = user_model_obj
         return user_model_obj
+
+    def _get_message_mentions(self, message: discord.message, reply_message: discord.message = None) -> list[models.User]:
+        '''
+        A message's mentions consist of: the author of the message that's being replied to (if
+        applicable), as well as all users pinged in the message 
+        returns a generator of the User model objects
+        '''
+        if reply_message:
+            yield self._get_user(reply_message.author)
+        for user in message.mentions:
+            yield self._get_user(user)
     
-    def _create_or_increment(self, Count_Class: type, user: models.User, object):
+    def _get_default_emojis(self, message: discord.Message):
+        '''
+        Yield the default emojis objects from a discord message
+        '''
+        for emoji_str in emoji.distinct_emoji_list(message.content):
+            url = get_twemoji_URL(emoji_str)
+            key = hash(url)
+            if key in self.cached_model_objects[models.Emoji]:
+                yield self.cached_model_objects[models.Emoji][key]
+            else:
+                name = emoji.demojize(emoji_str, delimiters=('', ''))
+                emoji_model_obj = models.Emoji(
+                    URL = url,
+                    name = name
+                )
+                self.cached_model_objects[models.Emoji][key] = emoji_model_obj
+                yield emoji_model_obj
+
+    def _get_custom_emojis(self, message: discord.Message):
+        EMOJI_CODE_REGEX = r'<a?:(\w+):(\d+)>'
+        for name, id in re.findall(EMOJI_CODE_REGEX, message.content):
+            url = downsize_img_link(f'https://cdn.discordapp.com/emojis/{id}')
+            key = hash(url)
+            if key in self.cached_model_objects[models.Emoji]:
+                yield self.cached_model_objects[models.Emoji][key]
+            else:
+                emoji_model_obj = models.Emoji(
+                    URL = url,
+                    name = name
+                )
+                self.cached_model_objects[models.Emoji][key] = emoji_model_obj
+                yield emoji_model_obj
+
+    def _increment_count(self, Count_Class: type, user: models.User, object):
         '''
         Increment a count object from the cache dict or, if one does not exist, create one and add it to the cache
         The cache dict key is a hashed tuple consisting of the user's ID and a unique object associated with the model object
         '''
-        special_field = _get_special_field(Count_Class)
 
         key = hash((user.id, object))
         if key in self.cached_model_objects[Count_Class]:
             count_model_obj = self.cached_model_objects[Count_Class][key]
         else:
-            count_model_obj = Count_Class(**{special_field: object, 'user': user})
+            count_model_obj = Count_Class(**{'obj': object, 'user': user})
             self.cached_model_objects[Count_Class][key] = count_model_obj
         count_model_obj.count += 1
-
-    def _message_mentions(self, message: discord.message, reply_message: discord.message = None) -> list[models.User]:
-        '''
-        A message's mentions consist of: the author of the message that's being replied to (if
-        applicable), as well as all users pinged in the message 
-        returns a list of the User model objects
-        '''
-        mentions_list = list()
-        if reply_message:
-            mentions_list.append(self._get_or_add_user(reply_message.author))
-        mentions_list += [self._get_or_add_user(user) for user in message.mentions]
-        return mentions_list
-
+    
     def process_message(self, message: discord.Message, reply_message: discord.Message = None):
         '''
         Given a message, increment all of the cached models accordingly 
@@ -125,7 +156,7 @@ class Data_Processor:
         user_id = message.author.id
 
         ### USER 
-        user_model_obj = self._get_or_add_user(message.author)
+        user_model_obj = self._get_user(message.author)
         user_model_obj.messages += 1
 
         ### TOTAL CHARS
@@ -136,32 +167,27 @@ class Data_Processor:
              user_model_obj.ALL_CAPS_count += 1
     
         ### CHANNEL
-        channel_id = message.channel.id
-        self._create_or_increment(models.Channel_Count, user_model_obj, self.current_channel_model_obj)
-
+        self._increment_count(models.Channel_Count, user_model_obj, self.current_channel_model_obj)
         # convert to PST/PDT
         message_creation_dt = convert_to_pacific_time(message.created_at)
 
         ### HOUR
         msg_hour = message_creation_dt.hour
-        self._create_or_increment(models.Hour_Count, user_model_obj, msg_hour)
+        self._increment_count(models.Hour_Count, user_model_obj, msg_hour)
 
         ### DATE 
         msg_date = message_creation_dt.date()
-        self._create_or_increment(models.Date_Count, user_model_obj, msg_date)
+        self._increment_count(models.Date_Count, user_model_obj, msg_date)
 
-        ### DEFAULT EMOJI
-        for emoji_str in emoji.distinct_emoji_list(message.content):
-            emoji_url = get_twemoji_url(emoji_str)
-            self._create_or_increment(models.Emoji_Count, user_model_obj, emoji_url) # twemojis don't need to be downsized, imo
-        
-        ### CUSTOM EMOJI
-        for emoji_url in get_custom_emoji_URLs(message.content):
-            self._create_or_increment(models.Emoji_Count, user_model_obj, downsize_img_link(emoji_url))
+        ### EMOJIS
+        all_emojis = chain(self._get_default_emojis(message), self._get_custom_emojis(message))
+        for emoji_model_obj in all_emojis:
+            emoji_model_obj.count += 1
+            self._increment_count(models.Emoji_Count, user_model_obj, emoji_model_obj)
         
         ### URL
         for URL in get_URLs(message.content):
-            self._create_or_increment(models.URL_Count, user_model_obj, URL)
+            self._increment_count(models.URL_Count, user_model_obj, URL)
         
         ### UNIQUE WORDS AND CURSE WORDS
         for word in message.content.split():
@@ -169,14 +195,14 @@ class Data_Processor:
             if word.isalpha() and len(word) in range(3,19):
                 word = word.lower()
                 if word not in WORDS:
-                    self._create_or_increment(models.Unique_Word_Count, user_model_obj, word)
+                    self._increment_count(models.Unique_Word_Count, user_model_obj, word)
                 if word in CURSE_WORDS:
                     user_model_obj.curse_word_count += 1
 
         ### MENTIONS
-        mentions_list = self._message_mentions(message, reply_message)
-        for user in mentions_list:
-            self._create_or_increment(models.Mention_Count, user_model_obj, user)
+        all_mentions = self._get_message_mentions(message, reply_message)
+        for user in all_mentions:
+            self._increment_count(models.Mention_Count, user_model_obj, user)
 
     async def process_guild(self, guild: discord.guild):
         '''
@@ -214,23 +240,22 @@ class Data_Processor:
             self.cached_channels.values()
         )
 
-    async def _update_model_objects(self, Model_Class):
+    async def _merge_model_objects(self, Model_Class):
         '''
         For a specific model: update all of the DB models with data from the cached models
         '''
         for hash_val, dummy_model_obj in self.cached_model_objects[Model_Class].items():
             if Model_Class is models.User:
                 kwargs = {'id': dummy_model_obj.id}
-            elif Model_Class is models.Mention_Count: # mention counts are special because the field is a user
-                kwargs = {'user': dummy_model_obj.user, 'mentioned_user': await models.User.objects.aget(id=dummy_model_obj.mentioned_user.id)}
+            elif Model_Class is models.Emoji:
+                kwargs = {'URL': dummy_model_obj.URL}
             else:
                 assert issubclass(Model_Class, models.UserStat)
-                special_field = _get_special_field(Model_Class)
-                kwargs = {'user': dummy_model_obj.user, special_field: getattr(dummy_model_obj, special_field)}
+                kwargs = {'user': dummy_model_obj.user, 'obj': dummy_model_obj.obj}
 
             if await Model_Class.objects.filter(**kwargs).aexists():
                 real_model_obj = await Model_Class.objects.aget(**kwargs)
-                real_model_obj.update(dummy_model_obj)
+                real_model_obj.merge(dummy_model_obj)
                 self.cached_model_objects[Model_Class][hash_val] = real_model_obj
 
     async def _update_and_save_model_objects(self, Model_Class):
@@ -238,7 +263,7 @@ class Data_Processor:
         Updates all model objects for a specific model, and saves them to the DB
         '''
         logger.debug(Model_Class.__name__ + ' saving. . .')
-        await self._update_model_objects(Model_Class)
+        await self._merge_model_objects(Model_Class)
         await Model_Class.objects.abulk_create_or_update(
             self.cached_model_objects[Model_Class].values(),
         )
@@ -251,6 +276,7 @@ class Data_Processor:
         '''
         # save User objects first, to avoid foreign key conflicts (you dummy)
         await self._update_and_save_model_objects(models.User)
+        await self._update_and_save_model_objects(models.Emoji)
         # save the rest asynchronously
         gather_list = []
         gather_list.append(self._save_channels())
@@ -265,7 +291,7 @@ class Data_Processor:
             if user_model_obj.blacklist:
                 return 'You are already blacklisted.'
         else:
-            user_model_obj = self._get_or_add_user(user)
+            user_model_obj = self._get_user(user)
         user_model_obj.blacklist = True
         await user_model_obj.asave()
         return 'You have been blacklisted.'

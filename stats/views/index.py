@@ -17,8 +17,8 @@ def get_messages_table():
             'user': user,
             'time_of_day_counts': get_time_of_day_counts(user),
             'lines_per_day': user.messages / models.Date_Count.objects.total_user_days(user),
-            'special_words': list(models.Unique_Word_Count.objects.filter(user=user)[:5].values_list('word', flat=True)),
-            'emojis': list(models.Emoji_Count.objects.filter(user=user)[:10].values_list('emoji', flat=True))
+            'special_words': list(models.Unique_Word_Count.objects.filter(user=user)[:5].values_list('obj', flat=True)),
+            'emojis': list(models.Emoji_Count.objects.filter(user=user)[:10])
         })
     return user_table
 
@@ -44,9 +44,9 @@ def get_unique_word_table():
     return [words[i*COLS:i*COLS+COLS] for i in range(10)]
 
 def get_emoji_table():
-    ROWS = 7
-    COLS = 15
-    emojis = models.Emoji_Count.objects.top_n_emojis(ROWS * COLS)
+    ROWS = 10
+    COLS = 12
+    emojis = models.Emoji.objects.all()[:ROWS * COLS]
     return [emojis[i*COLS:i*COLS+COLS] for i in range(ROWS)]
 
 def index(request):
@@ -62,8 +62,8 @@ def index(request):
     context = {
         'guild': models.Guild.objects.all().first(),
 
-        'first_message_date': models.Date_Count.objects.earliest().date,
-        'last_message_date': models.Date_Count.objects.latest().date,
+        'first_message_date': models.Date_Count.objects.earliest().obj,
+        'last_message_date': models.Date_Count.objects.latest().obj,
         'total_days': models.Date_Count.objects.total_days(),
 
         'total_users': models.User.objects.count(),
@@ -84,6 +84,6 @@ def index(request):
         'days of the week': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
 
         'unique_words_table': get_unique_word_table(),
-        'emoji_table': get_emoji_table()
+        'emoji_table': get_emoji_table(),
     }
     return render(request, "index.html", context)

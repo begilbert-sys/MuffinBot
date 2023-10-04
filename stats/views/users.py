@@ -2,10 +2,16 @@ from django.shortcuts import render
 from django.http import HttpResponseNotFound
 from stats import models
 
+def get_hour_strings():
+    return ['12AM', '1AM', '2AM', '3AM', '4AM', '5AM', 
+            '6AM', '7AM', '8AM', '9AM', '10AM', '11AM', 
+            '12PM', '1PM', '2PM', '3PM', '4PM', '5PM', 
+            '6PM', '7PM', '8PM', '9PM', '10PM', '11PM']
+
 def users(request, tag):
     try:
-        user = models.User.objects.get(tag=tag)
-    except models.Model.DoesNotExist:
+        user = models.User.whitelist.get(tag=tag)
+    except models.User.DoesNotExist:
         return HttpResponseNotFound()
     # predefine variables
     total_user_active_days = models.Date_Count.objects.total_user_active_days(user)
@@ -31,14 +37,15 @@ def users(request, tag):
         'total_user_active_days': total_user_active_days,
         'total_user_days': total_user_days,
         'total_user_active_days_percentage': (total_user_active_days / total_user_days) * 100,
-        'user_hour_counts' : user_hour_counts,
+        'user_hour_counts' : zip(user_hour_counts, get_hour_strings()),
         'max_hour_count': max(user_hour_counts),
         'talking_partners': talking_partners,
         'talking_partner_max': talking_partner_max[1],
         'weekday_dist': weekday_dist,
         'max_weekday': max_weekday,
         'days of the week': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        'date_data': models.Date_Count.objects.date_counts_as_str(user)
+        'date_data': models.Date_Count.objects.date_counts_as_str(user),
+        'hour_strings': get_hour_strings()
 
     }
     return render(request, "user.html", context)

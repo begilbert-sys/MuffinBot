@@ -29,6 +29,34 @@ class Channel(models.Model):
     last_processed_message_datetime = models.DateTimeField(null=True)
     objects = Channel_Manager()
 
+class Emoji_Manager(models.Manager):
+    async def abulk_create_or_update(self, objs):
+        await self.abulk_create(
+            objs,
+            update_conflicts = True,
+            update_fields = ['name', 'count'],
+            unique_fields = ['URL']
+        )
+class Emoji(models.Model):
+    URL = models.URLField(primary_key=True)
+    name = models.CharField(max_length=32)
+    count = models.PositiveIntegerField(default=0)
+
+    objects = Emoji_Manager()
+    
+    def merge(self, other):
+        '''
+        Update the count of one model with the counts of another, with the equivalent 
+        Args:
+            other (UserStat) - a model of the same type 
+        '''
+        self.name = other.name
+        self.count += other.count
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        ordering = ['-count']
 
 class User_Manager(models.Manager):
     async def abulk_create_or_update(self, objs):
@@ -79,7 +107,6 @@ class User(models.Model):
 
     curse_word_count = models.PositiveIntegerField(default=0)
     ALL_CAPS_count = models.PositiveIntegerField(default=0)
-    #laugh_count = models.PositiveIntegerField(default=0)
     total_chars = models.PositiveBigIntegerField(default=0)
 
     blacklist = models.BooleanField(default=False)
@@ -90,7 +117,7 @@ class User(models.Model):
     def __str__(self):
         return self.tag
     
-    def update(self, other):
+    def merge(self, other):
         '''
         Update the counts of one User with the counts of another, with the equivalent 
         Args:
@@ -110,9 +137,6 @@ class User(models.Model):
     class Meta:
         ordering = ['-messages']
 
-
-
-
 class UserStat_Manager(models.Manager):
     async def abulk_create_or_update(self, objs):
         update_fields = ['count']
@@ -123,13 +147,15 @@ class UserStat_Manager(models.Manager):
             unique_fields = ['id']
         )
 
+    def top_n_objs(self, n: int):
+        objs = Counter()
+        for obj, count in self.values_list('obj', 'count'):
+            objs[obj] += count
+        return objs.most_common(n)
+    
     def top_n_user_objs(self, user: User, n: int):
         return self.filter(user=user)[:n]
 
-class UserStat_Whitelist_Manager(UserStat_Manager):
-    def get_queryset(self):
-        return super().get_queryset().filter(user__blacklist=False)
-    
 
 
 class UserStat(models.Model):
@@ -137,13 +163,12 @@ class UserStat(models.Model):
     count = models.PositiveIntegerField(default=0)
 
     objects = UserStat_Manager()
-    whitelist = UserStat_Whitelist_Manager()
 
     def __str__(self):
         return f"{self.user.tag} / count: {self.count}"
     
     
-    def update(self, other):
+    def merge(self, other):
         '''
         Update the count of one model with the counts of another, with the equivalent 
         Args:
@@ -164,16 +189,16 @@ class Channel_Count_Manager(UserStat_Manager):
         #optimized
         sorted_channels = dict()
         for channel_count in self.all():
-            if channel_count.channel_id in sorted_channels:
-                sorted_channels[channel_count.channel_id] += channel_count.count
+            if channel_count.obj_id in sorted_channels:
+                sorted_channels[channel_count.obj_id] += channel_count.count
             else:
-                sorted_channels[channel_count.channel_id] = channel_count.count
+                sorted_channels[channel_count.obj_id] = channel_count.count
         
         sortedver = sorted(sorted_channels, key=lambda c: sorted_channels[c], reverse=True)
-        return tuple((Channel.objects.get(id=key), sorted_channels[key], [channel_count.user for channel_count in self.filter(channel=key, user__blacklist=False).order_by('-count')[:5]]) for key in sortedver)
+        return tuple((Channel.objects.get(id=key), sorted_channels[key], [channel_count.user for channel_count in self.filter(obj=key, user__blacklist=False).order_by('-count')[:5]]) for key in sortedver)
 
 class Channel_Count(UserStat):
-    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    obj = models.ForeignKey(Channel, on_delete=models.CASCADE)
 
     objects = Channel_Count_Manager()
 
@@ -189,7 +214,7 @@ class Mention_Count_Manager(UserStat_Manager):
         top_n_tuples = list()
         pairdict = dict()
         for mention_count in self.filter(user__blacklist=False):
-            userpair = frozenset({mention_count.user_id, mention_count.mentioned_user_id})
+            userpair = frozenset({mention_count.user_id, mention_count.obj_id})
             if userpair not in pairdict:
                 pairdict[userpair] = mention_count
             else:
@@ -198,7 +223,7 @@ class Mention_Count_Manager(UserStat_Manager):
                 total = mention_count.count + logged_count
                 n_tuple = (
                     total,
-                    hash((mention_count.user_id, mention_count.mentioned_user_id)),
+                    hash((mention_count.user_id, mention_count.obj_id)),
                     mention_count,
                     pairdict[userpair]
                 )
@@ -216,28 +241,28 @@ class Mention_Count_Manager(UserStat_Manager):
                 mention_count_2.count,
             ))
         return top_n_tuples_result
+    
     def top_n_user_mentions(self, user, n):
-        return [(mention_count.mentioned_user, mention_count.count) for mention_count in self.filter(user=user, mentioned_user__blacklist=False).order_by('-count')[:n]]
+        return [(mention_count.obj, mention_count.count) for mention_count in self.filter(user=user, obj__blacklist=False).order_by('-count')[:n]]
 
 
 
 class Mention_Count(UserStat):
-    mentioned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mentioned_user')
+    obj = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mentioned_user')
 
     objects = Mention_Count_Manager()
 
 class Hour_Count_Manager(UserStat_Manager):
-
     def total_hour_counts(self) -> dict:
         hour_count_dict = dict()
         for hour in range(24):
-            hour_objs = self.filter(hour=hour)
+            hour_objs = self.filter(obj=hour)
             hour_count_dict[hour] = hour_objs.aggregate(models.Sum('count'))['count__sum']
         return hour_count_dict
     
     def user_hour_count_range(self, user: User, start: int, end: int):
         # optimized
-        return Hour_Count.objects.filter(user=user, hour__range=(start,end)).aggregate(Sum('count'))['count__sum']
+        return Hour_Count.objects.filter(user=user, obj__range=(start,end)).aggregate(Sum('count'))['count__sum']
     
     def top_n_users_in_range(self, n: int, start: int, end: int):
         '''
@@ -245,13 +270,9 @@ class Hour_Count_Manager(UserStat_Manager):
         and the total count for the range
         '''
         # optimized
-        user_dict = dict()
-        for hour_count in self.filter(hour__range=(start, end), user__blacklist=False).select_related("user"):
-            user = hour_count.user
-            if user in user_dict:
-                user_dict[user] += hour_count.count
-            else:
-                user_dict[user] = hour_count.count
+        user_dict = Counter()
+        for hour_count in self.filter(obj__range=(start, end), user__blacklist=False).select_related("user"):
+            user_dict[hour_count.user] += hour_count.count
         n_largest_users = heapq.nlargest(n, user_dict.items(), key=lambda item: item[1])
         return n_largest_users
     
@@ -262,7 +283,7 @@ class Hour_Count_Manager(UserStat_Manager):
     def user_hour_counts(self, user):
         hour_counts = [0 for _ in range(24)]
         for hour_count in self.filter(user=user):
-            hour_counts[hour_count.hour] = hour_count.count
+            hour_counts[hour_count.obj] = hour_count.count
         return hour_counts
     
         
@@ -273,9 +294,9 @@ class Hour_Count(UserStat):
         '12PM 1AM 2AM 3AM 4AM 5AM 6AM 7AM 8AM 9AM 10AM 11AM\
          12AM 1PM 2PM 3PM 4PM 5PM 6PM 7PM 8PM 9PM 10PM 11PM',
          start=0
-         )
+    )
     
-    hour = models.IntegerField(choices=Hours.choices)
+    obj = models.IntegerField(choices=Hours.choices)
 
     objects = Hour_Count_Manager()
 
@@ -283,13 +304,13 @@ class Hour_Count(UserStat):
 
 class Date_Count_Manager(UserStat_Manager):
     def total_days(self):
-        return (self.latest().date - self.earliest().date).days + 1
+        return (self.latest().obj - self.earliest().obj).days + 1
     
     def first_user_message_date(self, user: User):
-        return self.filter(user=user).earliest().date
+        return self.filter(user=user).earliest().obj
     
     def last_user_message_date(self, user: User):
-        return self.filter(user=user).latest().date
+        return self.filter(user=user).latest().obj
     
     def total_user_days(self, user: User):
         return (self.last_user_message_date(user) - self.first_user_message_date(user)).days + 1
@@ -304,11 +325,11 @@ class Date_Count_Manager(UserStat_Manager):
         start = timeit.default_timer()
         date_strs = list()
         if user:
-            date_sums = list(self.filter(user=user).values_list('date').order_by('-date').annotate(Sum('count')))
+            date_sums = list(self.filter(user=user).values_list('obj').order_by('-obj').annotate(Sum('count')))
         else:
-            date_sums = list(self.values_list('date').order_by('-date').annotate(Sum('count')))
-        date = self.earliest().date
-        last = self.latest().date
+            date_sums = list(self.values_list('obj').order_by('-obj').annotate(Sum('count')))
+        date = self.earliest().obj
+        last = self.latest().obj
         while date <= last:
             if len(date_sums) != 0 and date == date_sums[-1][0]:
                 date_pair = date_sums.pop()
@@ -323,40 +344,40 @@ class Date_Count_Manager(UserStat_Manager):
         start = timeit.default_timer()
         weekdays = [0] * 7
         for date_obj in self.all().iterator():
-            weekdays[date_obj.date.weekday()] += date_obj.count
+            weekdays[date_obj.obj.weekday()] += date_obj.count
         print(timeit.default_timer() - start)
         return weekdays
     def weekday_distribution_user(self, user):
         start = timeit.default_timer()
         weekdays = [0] * 7
         for date_obj in self.filter(user=user).iterator():
-            weekdays[date_obj.date.weekday()] += date_obj.count
+            weekdays[date_obj.obj.weekday()] += date_obj.count
         print(timeit.default_timer() - start)
         return weekdays
     
 class Date_Count(UserStat):
-    date = models.DateField()
+    obj = models.DateField()
 
     objects = Date_Count_Manager()
 
     class Meta:
-        ordering = ['-date']
-        get_latest_by = ['date']
+        ordering = ['-obj']
+        get_latest_by = ['obj']
     
 class URL_Count_Manager(UserStat_Manager):
     def top_n_URLs(self, n):
         #optimized (i think)
         urls = dict()
         for url_count in self.all():
-            if url_count.URL in urls:
-                urls[url_count.URL] += 1
+            if url_count.obj in urls:
+                urls[url_count.obj] += 1
             else:
-                urls[url_count.URL] = 1
+                urls[url_count.obj] = 1
         return heapq.nlargest(n, urls.items(), key=lambda x: x[1])
 
 
 class URL_Count(UserStat):
-    URL = models.URLField()
+    obj = models.URLField()
 
     objects = URL_Count_Manager()
 
@@ -364,7 +385,7 @@ class URL_Count(UserStat):
 class Emoji_Count_Manager(UserStat_Manager):
     def top_n_emojis(self, n):
         emojis = Counter()
-        for emoji, count in self.values_list('emoji', 'count'):
+        for emoji, count in self.values_list('obj', 'count'):
             emojis[emoji] += count
         return emojis.most_common(n)
     
@@ -372,7 +393,7 @@ class Emoji_Count_Manager(UserStat_Manager):
         return [obj.emoji for obj in self.filter(user=user).order_by('-count')]
     
 class Emoji_Count(UserStat):
-    emoji = models.URLField()
+    obj = models.ForeignKey(Emoji, on_delete=models.CASCADE)
 
     objects = Emoji_Count_Manager()
 
@@ -380,14 +401,19 @@ class Emoji_Count(UserStat):
 class Unique_Word_Count_Manager(UserStat_Manager):
     def top_n_words(self, n):
         words = Counter()
-        for word, count in self.values_list('word', 'count'):
+        for word, count in self.values_list('obj', 'count'):
             words[word] += count
         return words.most_common(n)
 
     def top_n_user_words(self, user: User, n):
-        return list(self.filter(user=user)[:n].values_list('word', 'count'))
-    
+        return list(self.filter(user=user)[:n].values_list('obj', 'count'))
+    def speedtest(self):
+        start = timeit.default_timer()
+        for obj in self.all().select_related("user").iterator():
+            pass
+        print(timeit.default_timer() - start)
+
 class Unique_Word_Count(UserStat):
-    word = models.CharField(max_length=18) 
+    obj = models.CharField(max_length=18) 
 
     objects = Unique_Word_Count_Manager()

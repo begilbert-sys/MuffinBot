@@ -166,7 +166,7 @@
           <th data-lockedorder="desc" class="sorter-bignumber">Line Count</th>
           <th data-lockedorder="desc">Lines Per Day</th>
           <th data-sorter="false">Peculiar Words</th>
-          <th data-sorter="false">Favorite Emojis</th>
+          <th data-sorter="false" style="width: 22%">Favorite Emojis</th>
         </thead>
         {% for user_dict in user_messages_table %}
           <tr>
@@ -196,9 +196,11 @@
             </td>
 
             <td>
-              {% for emoji_url in user_dict.emojis %}
-                <img src="{{ emoji_url }}" height="15">
+              <div style="display: flex; align-items: center;justify-content: space-around;">
+              {% for emoji in user_dict.emojis %}
+                <img src="{{ emoji.obj.URL }}" title="{{ emoji.obj.name }}" height="15">
               {% endfor %}
+              </div>
             </td>
           </tr>
         {% endfor %}
@@ -260,20 +262,23 @@
       Emojis 
     -->
     <h3>Top Emojis</h3>
-    <table cellspacing="1" cellpadding="2" class="default_table tiny_table" style="width: 65%;">
+    <table cellspacing="1" cellpadding="2" class="default_table emoji_table" style="width: 55%;">
       <tbody>
         {% for row in emoji_table %}
         <tr>
-          {% for emoji_url, count in row %}
-          <td style="font-size:30px;text-align:center; width:45px">
-            <img src="{{ emoji_url }}" height="30" style="vertical-align: middle;">
-            <div style="font-size:12px; margin-top:6px; margin-bottom:1px;"> <b>{{ count }}</b></div>
+          {% for emoji in row %}
+          <td>
+            <div>
+              <img src="{{ emoji.URL }}" title="{{ emoji.name }}">
+              <b>{{ emoji.count|intcomma }}</b>
+            </div>
           </td>
           {% endfor %}
         </tr>
         {% endfor %}
       </tbody>
     </table>
+    
   </center>
   <script type="text/javascript" src="{% static 'js/chart_setup.js' %}"></script>
 </body>
