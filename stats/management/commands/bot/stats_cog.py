@@ -24,7 +24,7 @@ class Processor_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         
-        self.processor_loop.start()
+        #self.processor_loop.start()
 
     async def _read_history(self, channel, kwargs):
         self._last_message = None
@@ -66,8 +66,6 @@ class Processor_Cog(commands.Cog):
                 continue
 
             if channel.id in CHANNEL_BLACKLIST:
-                continue
-            if channel.id != 559158922590552064:
                 continue
 
             last_processed_message_datetime = await self.db_processor.handle_channel(channel)
@@ -127,14 +125,19 @@ class Processor_Cog(commands.Cog):
     
 
     ### Bot Commands Start Here
-    '''
+
     @commands.command()
     async def stats(self, ctx):
-        await ctx.send("https://bengilbert.net/stats/statsindex")
+        await ctx.send("http://muffinstats.net/stats/")
     
     @commands.command()
     async def mystats(self, ctx):
-        await ctx.send("https://bengilbert.net/stats/" + ctx.author.name)
+        user = ctx.author
+        if user.discriminator == '0':
+            tag = user.name
+        else:
+            tag = user.name + '＃' + user.discriminator 
+        await ctx.send("http://muffinstats.net/stats/users/" + tag)
     
     @commands.command()
     async def source(self, ctx):
@@ -149,7 +152,7 @@ class Processor_Cog(commands.Cog):
     async def whitelist(self, ctx):
         status = await self.db_processor.whitelist(ctx.author)
         await ctx.send(status)
-    '''
+    
     
 async def setup(bot):
     await bot.add_cog(Processor_Cog(bot))

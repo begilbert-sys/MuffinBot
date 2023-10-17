@@ -322,7 +322,6 @@ class Date_Count_Manager(UserStat_Manager):
         # optimized-ish
         '''returns a dictionary of how many messages were sent on every date
         past_n_days: allows the dict to be limited to the past n days. If None, returns all.'''
-        start = timeit.default_timer()
         date_strs = list()
         if user:
             date_sums = list(self.filter(user=user).values_list('obj').order_by('-obj').annotate(Sum('count')))
@@ -337,7 +336,6 @@ class Date_Count_Manager(UserStat_Manager):
             else:
                 date_strs.append((date.strftime("%m/%d/%Y"), 0))
             date += datetime.timedelta(days=1)
-        print('date retrieval', (timeit.default_timer()-start))
         return date_strs
     
     def weekday_distribution(self):
@@ -345,14 +343,12 @@ class Date_Count_Manager(UserStat_Manager):
         weekdays = [0] * 7
         for date_obj in self.all().iterator():
             weekdays[date_obj.obj.weekday()] += date_obj.count
-        print(timeit.default_timer() - start)
         return weekdays
     def weekday_distribution_user(self, user):
         start = timeit.default_timer()
         weekdays = [0] * 7
         for date_obj in self.filter(user=user).iterator():
             weekdays[date_obj.obj.weekday()] += date_obj.count
-        print(timeit.default_timer() - start)
         return weekdays
     
 class Date_Count(UserStat):
@@ -411,7 +407,6 @@ class Unique_Word_Count_Manager(UserStat_Manager):
         start = timeit.default_timer()
         for obj in self.all().select_related("user").iterator():
             pass
-        print(timeit.default_timer() - start)
 
 class Unique_Word_Count(UserStat):
     obj = models.CharField(max_length=18) 

@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-r*%oomxomz&&$v5^k1s9$z@o8-(mr=28rhew-j%q(%bn49oi^j
 SECRET_KEY_FALLBACKS = ['django-insecure-3a%#z(xcw8bi))%ss(n77f@ubabg%6gxi#1ih+ie-dbz06v0+h']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -119,9 +119,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+
+STATIC_URL = 'http://staticfiles-bucket.s3-website-us-west-1.amazonaws.com/static/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "my_cache_table",
+    }
+}

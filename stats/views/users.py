@@ -29,7 +29,7 @@ def users(request, tag):
     # set up context 
     context = {
         'user': user,
-        'rank': models.User.objects.get_rank(user),
+        'rank': models.User.whitelist.get_rank(user),
         'avg_messages': user.messages / models.Date_Count.objects.total_user_days(user),
         'avg_letters': user.total_chars / user.messages,
         'curse_word_ratio': (user.curse_word_count / user.messages) * 100,

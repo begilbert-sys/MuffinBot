@@ -1,3 +1,5 @@
+from django.views.decorators.cache import cache_page
+
 from django.shortcuts import render
 
 from stats import models
@@ -49,9 +51,9 @@ def get_emoji_table():
     emojis = models.Emoji.objects.all()[:ROWS * COLS]
     return [emojis[i*COLS:i*COLS+COLS] for i in range(ROWS)]
 
+@cache_page(60 * 30)
 def index(request):
     total_hour_counts = models.Hour_Count.objects.total_hour_counts()
-
     time_of_day_table = get_time_of_day_table()
 
     time_of_day_maxes = tuple(item[1] for item in time_of_day_table[0])

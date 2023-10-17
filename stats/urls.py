@@ -4,8 +4,9 @@ from . import views
 
 app_name = 'stats'
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("details/", views.details, name="details"),
-    path("users/<str:tag>", views.users, name="users"),
-    path("FAQ/", views.faq, name="FAQ"),
+    path("stats/", views.index, name="index"),
+    path("stats/details/", views.details, name="details"),
+    path("stats/users/<str:tag>", views.users, name="users"),
+    path("stats/FAQ/", views.faq, name="FAQ"),
+    path("", views.faq)
 ]
