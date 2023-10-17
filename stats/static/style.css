@@ -337,6 +337,10 @@ table {
   color: white;
   text-decoration: underline;
 }
+.questions a:hover {
+  color: #D3D3D3;
+}
+
 .questions p {
   line-height: 150%;
 }
@@ -349,7 +353,7 @@ table {
 .emoji_table td {
   height: 27px;
 }
-.emoji_table div {
+.emoji_display {
   display: flex;
   align-items: center;
   justify-content: space-around;

@@ -1,5 +1,5 @@
 """
-WSGI config for MuffinWeb project.
+WSGI config for MuffinBot project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MuffinWeb.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MuffinBot.settings')
 
 application = get_wsgi_application()

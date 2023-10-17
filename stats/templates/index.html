@@ -166,7 +166,7 @@
           <th data-lockedorder="desc" class="sorter-bignumber">Line Count</th>
           <th data-lockedorder="desc">Lines Per Day</th>
           <th data-sorter="false">Peculiar Words</th>
-          <th data-sorter="false" style="width: 22%">Favorite Emojis</th>
+          <th data-sorter="false" style="width: 21%;">Favorite Emojis</th>
         </thead>
         {% for user_dict in user_messages_table %}
           <tr>
@@ -196,7 +196,7 @@
             </td>
 
             <td>
-              <div style="display: flex; align-items: center;justify-content: space-around;">
+              <div class="emoji_display">
               {% for emoji in user_dict.emojis %}
                 <img src="{{ emoji.obj.URL }}" title="{{ emoji.obj.name }}" height="15">
               {% endfor %}
@@ -227,7 +227,7 @@
             <td>{{ forloop.counter }} </td>
             {% for user, count in zip_packet %}
               <td>
-                <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a> - {{ count }}
+                <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a> - {{ count|intcomma }}
                 <br>
                 {% cycle 'bluebar' 'greenbar' 'yellowbar' 'redbar' as bar_class silent %}
                 {% cycle time_of_day_maxes.0 time_of_day_maxes.1 time_of_day_maxes.2 time_of_day_maxes.3 as current_time_most_messages silent %}
@@ -250,7 +250,7 @@
         {% for row in unique_words_table %}
         <tr style="line-height:25px">
           {% for word, count in row %}
-            <td><i>{{ word }}</i> ({{ count }})</td>
+            <td><i>{{ word }}</i> ({{ count|intcomma }})</td>
           {% endfor %}
         </tr>
         {% endfor %}
@@ -262,13 +262,13 @@
       Emojis 
     -->
     <h3>Top Emojis</h3>
-    <table cellspacing="1" cellpadding="2" class="default_table emoji_table" style="width: 55%;">
+    <table cellspacing="1" cellpadding="2" class="default_table emoji_table" style="width: 65%;">
       <tbody>
         {% for row in emoji_table %}
         <tr>
           {% for emoji in row %}
           <td>
-            <div>
+            <div class="emoji_display">
               <img src="{{ emoji.URL }}" title="{{ emoji.name }}">
               <b>{{ emoji.count|intcomma }}</b>
             </div>

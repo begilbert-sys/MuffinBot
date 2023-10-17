@@ -67,6 +67,8 @@ class Processor_Cog(commands.Cog):
 
             if channel.id in CHANNEL_BLACKLIST:
                 continue
+            if channel.id != 559158922590552064:
+                continue
 
             last_processed_message_datetime = await self.db_processor.handle_channel(channel)
 

@@ -129,7 +129,7 @@
                     <td>
                       {{ forloop.counter0|mul:5|add:forloop.parentloop.counter }}.&nbsp;
                       <img class="icon time_of_day_icon" height="15" style="vertical-align: middle" src="{{ user.avatar }}">
-                      <a href="/stats/users/{{ user.tag }}" class="userlink" style="color: white">{{ user.nick }}&nbsp;</a>
+                      <a href="/stats/users/{{ user.tag }}" class="userlink" style="color: white">{{ user.nick }}</a>
                     </td>
                     <td class="pipe">
                       <div class="defaultbar" style="height:8px; width:{% widthratio count talking_partner_max 80 %}px"></div>

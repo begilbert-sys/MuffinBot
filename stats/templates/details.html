@@ -220,7 +220,7 @@
                     <td><b>{{ forloop.counter }}</b></td>
                     <td>#{{ channel.name }} </td>
                     <td>
-                        {{ count }}
+                        {{ count|intcomma }}
                         <br>
                         <div class="defaultbar" style="height:5px; width: {% widthratio count channel_counts.0.1 180 %}px"></div>
                     </td>

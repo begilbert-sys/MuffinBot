@@ -8,7 +8,7 @@ from .presets import TOKEN
 from .stats_cog import Processor_Cog
 
 
-TERMINAL_LOG_LEVEL = logging.DEBUG
+TERMINAL_LOG_LEVEL = logging.INFO
 
 
 class Stats_Bot(commands.Bot):
@@ -19,7 +19,7 @@ class Stats_Bot(commands.Bot):
 intents = discord.Intents.default()
 intents.message_content = True
 description = '''A stats bot'''
-bot = Stats_Bot(command_prefix='giveme ', description=description, intents=intents)
+bot = Stats_Bot(command_prefix='$', description=description, intents=intents)
 
 
 @bot.event

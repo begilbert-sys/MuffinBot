@@ -68,7 +68,7 @@ def index(request):
 
         'total_users': models.User.objects.count(),
         'total_messages': models.User.objects.total_messages(),
-        'most_messages': models.User.objects.top_user_message_count(),
+        'most_messages': models.User.whitelist.top_user_message_count(),
 
         'total_hour_counts': total_hour_counts,
         'max_hour_count': max(total_hour_counts.values()),
