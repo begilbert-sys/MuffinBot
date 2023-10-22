@@ -24,11 +24,12 @@ class Processor_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         
-        #self.processor_loop.start()
+        self.processor_loop.start()
 
     async def _read_history(self, channel, kwargs):
         self._last_message = None
-        async for message in channel.history(**kwargs):
+        messages = [message async for message in channel.history(**kwargs)]
+        for message in messages:
             if message.author.bot:
                 continue
             if message.type is discord.MessageType.reply:
@@ -105,7 +106,7 @@ class Processor_Cog(commands.Cog):
             logger.info('Time elapsed: ' + str(time_elapsed))
             logger.info('Messages scraped: ' +  str(self.messages_scraped))
             if self.messages_scraped: 
-                logger.info('Time per message: ' + str(time_elapsed / self.messages_scraped))
+                logger.info('Messages per second: ' + str(self.messages_scraped / time_elapsed))
             logger.info('Saving. . . ')
 
 

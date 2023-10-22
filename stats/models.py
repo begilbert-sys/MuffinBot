@@ -5,6 +5,7 @@ from collections import Counter
 import timeit
 import datetime
 
+
 class Guild(models.Model):
 
     id = models.PositiveBigIntegerField(primary_key=True)
@@ -39,7 +40,7 @@ class Emoji_Manager(models.Manager):
         )
 class Emoji(models.Model):
     URL = models.URLField(primary_key=True)
-    name = models.CharField(max_length=32)
+    name = models.CharField(max_length=76) # length of the longest emoji name I could find
     count = models.PositiveIntegerField(default=0)
 
     objects = Emoji_Manager()
@@ -373,7 +374,7 @@ class URL_Count_Manager(UserStat_Manager):
 
 
 class URL_Count(UserStat):
-    obj = models.URLField()
+    obj = models.URLField(max_length=255)
 
     objects = URL_Count_Manager()
 
