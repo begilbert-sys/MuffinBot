@@ -4,7 +4,7 @@ from django.shortcuts import render
 
 from stats import models
 
-@cache_page(60 * 30)
+#@cache_page(60 * 30)
 def details(request):
     # prep variables
     top_mention_pairs = models.Mention_Count.objects.top_n_mention_pairs(20)

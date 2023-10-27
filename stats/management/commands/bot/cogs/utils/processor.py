@@ -11,7 +11,6 @@ from itertools import chain
 
 from stats import models
 
-
 logger = logging.getLogger(__package__)
 
 with open('stats/words/words.txt') as f:
@@ -39,7 +38,7 @@ def downsize_img_link(URL: str):
 def get_URLs(string: str) -> list[str]:
     '''Extract all the URLs from a string'''
     URL_REGEX = 'https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)'
-    return re.findall(URL_REGEX, string)
+    return [url for url in re.findall(URL_REGEX, string) if len(url) < 255]
 
 def get_twemoji_URL(emoji_str: str) -> str:
     '''
@@ -60,7 +59,7 @@ def get_twemoji_URL(emoji_str: str) -> str:
 # list of all the count model classes
 COUNT_MODELS = models.UserStat.__subclasses__()
 
-class Data_Processor:
+class Processor:
     def __init__(self):
         self.cached_model_objects = {
             Model_Class: dict() for Model_Class in COUNT_MODELS
@@ -83,7 +82,9 @@ class Data_Processor:
             else:
                 tag = user.name + '＃' + user.discriminator 
             user_model_obj = models.User(
-                id = user.id,
+                id=hash((self.guild_model_obj.id, user.id)),
+                guild=self.guild_model_obj,
+                user_id = user.id,
                 tag = tag,
                 nick = user.display_name,
                 avatar = downsize_img_link(str(user.display_avatar))
@@ -141,7 +142,7 @@ class Data_Processor:
         The cache dict key is a hashed tuple consisting of the user's ID and a unique object associated with the model object
         '''
 
-        key = hash((user.id, object))
+        key = (user, object)
         if key in self.cached_model_objects[Count_Class]:
             count_model_obj = self.cached_model_objects[Count_Class][key]
         else:
@@ -182,7 +183,6 @@ class Data_Processor:
         ### EMOJIS
         all_emojis = chain(self._get_default_emojis(message), self._get_custom_emojis(message))
         for emoji_model_obj in all_emojis:
-            emoji_model_obj.count += 1
             self._increment_count(models.Emoji_Count, user_model_obj, emoji_model_obj)
         
         ### URL
@@ -208,9 +208,16 @@ class Data_Processor:
         '''
         Save a guild's info to the DB if it has not already been added
         '''
-        if not await models.Guild.objects.aexists():
-            guild_model_object = await models.Guild.objects.acreate(id=guild.id, name=guild.name, icon=guild.icon.url)
-            await guild_model_object.asave()
+        self.guild_model_obj, created = await models.Guild.objects.aget_or_create(
+            id=guild.id, 
+            defaults={"name": guild.name, "icon": guild.icon}
+        )
+
+        if not created: # update these values, just in case they change 
+            self.guild_model_obj.name = guild.name
+            self.guild_model_obj.icon = guild.icon
+            await self.guild_model_obj.asave()
+        
 
     async def handle_channel(self, channel: discord.channel) -> datetime.datetime:
         '''
@@ -219,6 +226,7 @@ class Data_Processor:
         '''
         channel_model_object, channel_created = await models.Channel.objects.aget_or_create(
             id=channel.id,
+            guild=self.guild_model_obj,
             defaults={'name': channel.name}
         )
         self.current_channel_model_obj = channel_model_object
@@ -246,7 +254,7 @@ class Data_Processor:
         '''
         for hash_val, dummy_model_obj in self.cached_model_objects[Model_Class].items():
             if Model_Class is models.User:
-                kwargs = {'id': dummy_model_obj.id}
+                kwargs = {'guild': self.guild_model_obj, 'user_id': dummy_model_obj.user_id}
             elif Model_Class is models.Emoji:
                 kwargs = {'URL': dummy_model_obj.URL}
             else:
@@ -284,9 +292,10 @@ class Data_Processor:
             gather_list.append(self._update_and_save_model_objects(Model_Class))
 
         await asyncio.gather(*gather_list)
-    
-    async def blacklist(self, user: discord.User):
-        if await models.User.objects.filter(id=user.id).aexists():
+    '''
+    @staticmethod
+    async def blacklist(guild: discord.Guild, user: discord.User):
+        if await models.User.objects.filter(guild=guild, user_id=user.id).aexists():
             user_model_obj = await models.User.objects.aget(id=user.id)
             if user_model_obj.blacklist:
                 return 'You are already blacklisted.'
@@ -295,7 +304,8 @@ class Data_Processor:
         user_model_obj.blacklist = True
         await user_model_obj.asave()
         return 'You have been blacklisted.'
-
+    
+    @staticmethod
     async def whitelist(self, user: discord.User):
         if await models.User.objects.filter(id=user.id).aexists():
             user_model_obj = await models.User.objects.aget(id=user.id)
@@ -304,3 +314,4 @@ class Data_Processor:
                 await user_model_obj.asave()
                 return 'You have been whitelisted.'
         return 'You are already whitelisted.'
+    '''

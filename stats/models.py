@@ -2,9 +2,20 @@ from django.db import models
 from django.db.models import Sum
 import heapq
 from collections import Counter
-import timeit
+from timeit import default_timer
 import datetime
 
+# wrapper that times function execution. for debugging purposes
+def timed(func):
+    def wrap(*args, **kwargs):
+        start = default_timer()
+        
+        result = func(*args, **kwargs)
+        
+        end = default_timer()
+        print(f'"{func.__name__}" call speed: {end - start}')
+        return result
+    return wrap
 
 class Guild(models.Model):
 
@@ -24,6 +35,7 @@ class Channel_Manager(models.Manager):
         )
 
 class Channel(models.Model):
+    guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
     id = models.PositiveBigIntegerField(primary_key=True)
 
     name = models.CharField(max_length=100)
@@ -35,13 +47,13 @@ class Emoji_Manager(models.Manager):
         await self.abulk_create(
             objs,
             update_conflicts = True,
-            update_fields = ['name', 'count'],
+            update_fields = ['name'],
             unique_fields = ['URL']
         )
+
 class Emoji(models.Model):
     URL = models.URLField(primary_key=True)
     name = models.CharField(max_length=76) # length of the longest emoji name I could find
-    count = models.PositiveIntegerField(default=0)
 
     objects = Emoji_Manager()
     
@@ -52,17 +64,13 @@ class Emoji(models.Model):
             other (UserStat) - a model of the same type 
         '''
         self.name = other.name
-        self.count += other.count
     def __str__(self):
         return self.name
-    
-    class Meta:
-        ordering = ['-count']
 
 class User_Manager(models.Manager):
     async def abulk_create_or_update(self, objs):
         fields = self.model._meta.get_fields()
-        non_update_fields = ['id', 'blacklist']
+        non_update_fields = ['guild', 'id', 'user_id', 'blacklist']
         update_fields = [field.name for field in fields if (not field.is_relation and field.name not in non_update_fields)]
         await self.abulk_create(
             objs,
@@ -70,28 +78,31 @@ class User_Manager(models.Manager):
             update_fields = update_fields,
             unique_fields = ['id']
         )
-
-    def total_messages(self):
+    
+    def total_messages(self, guild: Guild):
         '''Return the total number of messages ever sent for a server'''
-        return self.all().aggregate(models.Sum('messages'))['messages__sum']
+        return self.filter(guild=guild).aggregate(models.Sum('messages'))['messages__sum']
     
-    def top_user_message_count(self) -> int:
-        return self.all().first().messages
+    def total_users(self, guild: Guild):
+        return self.filter(guild=guild).count()
     
-    def top_n_curse_users(self, n):
-        top_100_users = self.all()[:100]
+    def top_user_message_count(self, guild: Guild) -> int:
+        return self.filter(guild=guild).first().messages
+    
+    def top_n_curse_users(self, guild: Guild, n):
+        top_100_users = self.filter(guild=guild)[:100]
         return heapq.nlargest(n, top_100_users, key = lambda user: user.curse_word_count / user.messages)
     
-    def top_n_ALL_CAPS_users(self, n):
-        top_100_users = self.all()[:100]
+    def top_n_ALL_CAPS_users(self, guild: Guild, n):
+        top_100_users = self.filter(guild=guild)[:100]
         return heapq.nlargest(n, top_100_users, key = lambda user: user.ALL_CAPS_count / user.messages)
     
-    def top_n_verbose_users(self, n):
-        top_100_users = self.all()[:100]
+    def top_n_verbose_users(self, guild: Guild, n):
+        top_100_users = self.filter(guild=guild)[:100]
         return heapq.nlargest(n, top_100_users, key = lambda user: user.total_chars / user.messages)
     
-    def get_rank(self, user):
-        return self.filter(messages__gt=user.messages).count() + 1
+    def get_rank(self, guild: Guild, user):
+        return self.filter(guild=guild, messages__gt=user.messages).count() + 1
 
 class User_Whitelist_Manager(User_Manager):
     def get_queryset(self):
@@ -99,9 +110,12 @@ class User_Whitelist_Manager(User_Manager):
 
 
 class User(models.Model):
-    id = models.PositiveBigIntegerField(primary_key=True)
+    id = models.BigIntegerField(primary_key=True)
+    guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
 
-    tag = models.CharField(max_length=32, unique=True)
+    user_id = models.PositiveBigIntegerField()
+
+    tag = models.CharField(max_length=32)
     nick = models.CharField(max_length=32)
     avatar = models.URLField()
     messages = models.PositiveIntegerField(default=0)
@@ -125,7 +139,7 @@ class User(models.Model):
             other (UserStat) - a model of the same type 
         '''
 
-        # check that the objects share the same user attribute, as well as the attribute unique to their class
+        # these variables need to be updated in case the user changes anything
         self.tag = other.tag
         self.nick = other.nick
         self.avatar = other.avatar 
@@ -148,9 +162,9 @@ class UserStat_Manager(models.Manager):
             unique_fields = ['id']
         )
 
-    def top_n_objs(self, n: int):
+    def top_n_objs(self, guild: Guild, n: int):
         objs = Counter()
-        for obj, count in self.values_list('obj', 'count'):
+        for obj, count in self.filter(user__guild=guild).values_list('obj', 'count'):
             objs[obj] += count
         return objs.most_common(n)
     
@@ -167,7 +181,6 @@ class UserStat(models.Model):
 
     def __str__(self):
         return f"{self.user.tag} / count: {self.count}"
-    
     
     def merge(self, other):
         '''
@@ -186,7 +199,6 @@ class UserStat(models.Model):
 
 class Channel_Count_Manager(UserStat_Manager):
     def sorted_channels(self):
-
         #optimized
         sorted_channels = dict()
         for channel_count in self.all():
@@ -204,7 +216,7 @@ class Channel_Count(UserStat):
     objects = Channel_Count_Manager()
 
 class Mention_Count_Manager(UserStat_Manager):
-    def top_n_mention_pairs(self, n):
+    def top_n_mention_pairs(self, guild: Guild, n):
         '''
         Returns a list of four-element tuples containing info about the top n pairs of users who mention each other:
         (user1, user2, user1count, user2count)
@@ -214,7 +226,7 @@ class Mention_Count_Manager(UserStat_Manager):
         # optimized
         top_n_tuples = list()
         pairdict = dict()
-        for mention_count in self.filter(user__blacklist=False):
+        for mention_count in self.filter(user__guild=guild, user__blacklist=False):
             userpair = frozenset({mention_count.user_id, mention_count.obj_id})
             if userpair not in pairdict:
                 pairdict[userpair] = mention_count
@@ -246,33 +258,32 @@ class Mention_Count_Manager(UserStat_Manager):
     def top_n_user_mentions(self, user, n):
         return [(mention_count.obj, mention_count.count) for mention_count in self.filter(user=user, obj__blacklist=False).order_by('-count')[:n]]
 
-
-
 class Mention_Count(UserStat):
     obj = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mentioned_user')
 
     objects = Mention_Count_Manager()
 
 class Hour_Count_Manager(UserStat_Manager):
-    def total_hour_counts(self) -> dict:
+    def total_hour_counts(self, guild: Guild) -> dict:
         hour_count_dict = dict()
         for hour in range(24):
-            hour_objs = self.filter(obj=hour)
-            hour_count_dict[hour] = hour_objs.aggregate(models.Sum('count'))['count__sum']
+            hour_objs = self.filter(user__guild=guild, obj=hour)
+            hour_sum = hour_objs.aggregate(models.Sum('count'))['count__sum']
+            hour_count_dict[hour] = hour_sum if hour_sum is not None else 0
         return hour_count_dict
     
     def user_hour_count_range(self, user: User, start: int, end: int):
         # optimized
         return Hour_Count.objects.filter(user=user, obj__range=(start,end)).aggregate(Sum('count'))['count__sum']
     
-    def top_n_users_in_range(self, n: int, start: int, end: int):
+    def top_n_users_in_range(self, guild: Guild, n: int, start: int, end: int):
         '''
         Return a list of tuples of length 2, with each tuple containing the user obj,
         and the total count for the range
         '''
         # optimized
         user_dict = Counter()
-        for hour_count in self.filter(obj__range=(start, end), user__blacklist=False).select_related("user"):
+        for hour_count in self.filter(user__guild=guild, obj__range=(start, end), user__blacklist=False).select_related("user"):
             user_dict[hour_count.user] += hour_count.count
         n_largest_users = heapq.nlargest(n, user_dict.items(), key=lambda item: item[1])
         return n_largest_users
@@ -304,8 +315,14 @@ class Hour_Count(UserStat):
 
 
 class Date_Count_Manager(UserStat_Manager):
-    def total_days(self):
-        return (self.latest().obj - self.earliest().obj).days + 1
+    def total_days(self, guild: Guild):
+        return (self.last_message_date(guild) - self.first_message_date(guild)).days + 1
+    
+    def first_message_date(self, guild: Guild):
+        return self.filter(user__guild=guild).earliest().obj
+    
+    def last_message_date(self, guild: Guild):
+        return self.filter(user__guild=guild).latest().obj
     
     def first_user_message_date(self, user: User):
         return self.filter(user=user).earliest().obj
@@ -319,7 +336,7 @@ class Date_Count_Manager(UserStat_Manager):
     def total_user_active_days(self, user: User):
         return self.filter(user=user).count()
     
-    def date_counts_as_str(self, user: User = None) -> dict:
+    def date_counts_as_str(self, guild: Guild, user: User = None) -> dict:
         # optimized-ish
         '''returns a dictionary of how many messages were sent on every date
         past_n_days: allows the dict to be limited to the past n days. If None, returns all.'''
@@ -327,7 +344,7 @@ class Date_Count_Manager(UserStat_Manager):
         if user:
             date_sums = list(self.filter(user=user).values_list('obj').order_by('-obj').annotate(Sum('count')))
         else:
-            date_sums = list(self.values_list('obj').order_by('-obj').annotate(Sum('count')))
+            date_sums = list(self.filter(user__guild=guild).values_list('obj').order_by('-obj').annotate(Sum('count')))
         date = self.earliest().obj
         last = self.latest().obj
         while date <= last:
@@ -339,14 +356,13 @@ class Date_Count_Manager(UserStat_Manager):
             date += datetime.timedelta(days=1)
         return date_strs
     
-    def weekday_distribution(self):
-        start = timeit.default_timer()
+    def weekday_distribution(self, guild: Guild):
         weekdays = [0] * 7
-        for date_obj in self.all().iterator():
+        for date_obj in self.filter(user__guild=guild).iterator():
             weekdays[date_obj.obj.weekday()] += date_obj.count
         return weekdays
+    
     def weekday_distribution_user(self, user):
-        start = timeit.default_timer()
         weekdays = [0] * 7
         for date_obj in self.filter(user=user).iterator():
             weekdays[date_obj.obj.weekday()] += date_obj.count
@@ -380,10 +396,11 @@ class URL_Count(UserStat):
 
 
 class Emoji_Count_Manager(UserStat_Manager):
-    def top_n_emojis(self, n):
+    @timed
+    def top_n_emojis(self, guild: Guild, n):
         emojis = Counter()
-        for emoji, count in self.values_list('obj', 'count'):
-            emojis[emoji] += count
+        for emoji_count in self.filter(user__guild=guild):
+            emojis[emoji_count.obj] += emoji_count.count
         return emojis.most_common(n)
     
     def sorted_user_emojis(self, user: User):
@@ -396,20 +413,12 @@ class Emoji_Count(UserStat):
 
 
 class Unique_Word_Count_Manager(UserStat_Manager):
-    def top_n_words(self, n):
-        words = Counter()
-        for word, count in self.values_list('obj', 'count'):
-            words[word] += count
-        return words.most_common(n)
-
     def top_n_user_words(self, user: User, n):
         return list(self.filter(user=user)[:n].values_list('obj', 'count'))
-    def speedtest(self):
-        start = timeit.default_timer()
-        for obj in self.all().select_related("user").iterator():
-            pass
+    
 
 class Unique_Word_Count(UserStat):
     obj = models.CharField(max_length=18) 
 
     objects = Unique_Word_Count_Manager()
+

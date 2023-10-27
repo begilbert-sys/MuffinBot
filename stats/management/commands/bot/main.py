@@ -3,9 +3,7 @@ from discord.ext import commands
 
 import logging
 
-from .presets import TOKEN
-
-from .stats_cog import Processor_Cog
+from .token import TOKEN
 
 
 TERMINAL_LOG_LEVEL = logging.INFO
@@ -13,7 +11,8 @@ TERMINAL_LOG_LEVEL = logging.INFO
 
 class Stats_Bot(commands.Bot):
     async def setup_hook(self):
-        await self.load_extension('.stats_cog', package = __package__)
+        await self.load_extension('.cogs.collection', package = __package__)
+        #await self.load_extension('.cogs.interface', package = __package__)
 
 
 intents = discord.Intents.default()
@@ -26,7 +25,6 @@ bot = Stats_Bot(command_prefix='$', description=description, intents=intents)
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
-
 
 # configure custom logger
 logger = logging.getLogger(__package__)
