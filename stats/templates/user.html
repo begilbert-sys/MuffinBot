@@ -24,7 +24,7 @@
   <center>
     <div class="greybar" style="margin-bottom:15px;"></div>
     <div class="headerlinks">
-      <a href="/stats/">1. Main page</a> | <a href="/stats/details/">2. Detailed info</a> | <a href="/stats/FAQ/">3. FAQ</a>
+      <a href=".././">1. Main page</a> | <a href="../details">2. Detailed info</a> | <a href="/FAQ/">3. FAQ</a>
     </div>
     <div class="greybar"></div>
 
@@ -48,15 +48,15 @@
             Average messages per day: {{ avg_messages|floatformat:2 }}
           </td>
           <td>
-            Average letters per message: {{ avg_letters|floatformat:2 }}
+            Average letters per message: {{ avg_letters|floatformat:2 }} (<b>{{ chars_magnitude }}</b>)
           </td>
         </tr>
         <tr>
           <td>
-            Curse word ratio: {{ curse_word_ratio|floatformat:2 }}%
+            Curse ratio: {{ curse_word_ratio|floatformat:2 }}% (<b>{{ curse_magnitude }}</b>)
           </td>
           <td>
-            CAPS ratio: {{ CAPS_ratio|floatformat:2 }}%
+            CAPS ratio: {{ CAPS_ratio|floatformat:2 }}% (<b>{{ CAPS_magnitude }}</b>)
           </td>
           <td>
             Active Days: {{ total_user_active_days }} / {{ total_user_days }} ({{ total_user_active_days_percentage|floatformat:2 }}%)

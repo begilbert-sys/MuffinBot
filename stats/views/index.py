@@ -5,7 +5,7 @@ from django.shortcuts import render
 from stats import models
 
 from stats.models import timed 
-
+from collections import Counter
 
 hour_strings = ('12AM', '1AM', '2AM', '3AM', '4AM', '5AM', 
             '6AM', '7AM', '8AM', '9AM', '10AM', '11AM', 
@@ -13,6 +13,7 @@ hour_strings = ('12AM', '1AM', '2AM', '3AM', '4AM', '5AM',
             '6PM', '7PM', '8PM', '9PM', '10PM', '11PM')
 
 weekdays = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
+
 def get_time_of_day_counts(user: models.User):
     return {
         'night': models.Hour_Count.objects.user_hour_count_range(user, 0, 5),
@@ -20,7 +21,7 @@ def get_time_of_day_counts(user: models.User):
         'afternoon': models.Hour_Count.objects.user_hour_count_range(user, 12, 17),
         'evening': models.Hour_Count.objects.user_hour_count_range(user, 18, 23)
     }
-
+@timed
 def get_messages_table(guild: models.Guild):
     '''
     Return a list of dictionaries to populate the top messages table
@@ -28,6 +29,8 @@ def get_messages_table(guild: models.Guild):
     '''
     user_table = list()
     for user in models.User.whitelist.filter(guild=guild)[:100].iterator():
+        if user.messages == 0:
+            continue
         user_table.append({
             'user': user,
             'time_of_day_counts': get_time_of_day_counts(user),
@@ -36,7 +39,7 @@ def get_messages_table(guild: models.Guild):
             'emojis': list(models.Emoji_Count.objects.filter(user=user)[:10])
         })
     return user_table
-
+@timed
 def get_time_of_day_table(guild: models.Guild):
     return list(zip(
         models.Hour_Count.objects.top_n_users_in_range(guild, 10, 0, 5),
@@ -44,20 +47,23 @@ def get_time_of_day_table(guild: models.Guild):
         models.Hour_Count.objects.top_n_users_in_range(guild, 10, 12, 17),
         models.Hour_Count.objects.top_n_users_in_range(guild, 10, 18, 23),
     ))
-
+@timed
 def get_unique_word_table(guild: models.Guild):
     ROWS = 10
     COLS = 10
     words = models.Unique_Word_Count.objects.top_n_objs(guild, ROWS * COLS)
     return [words[i*COLS:i*COLS+COLS] for i in range(10)]
-
+@timed
 def get_emoji_table(guild: models.Guild):
     ROWS = 10
     COLS = 12
-    emojis = models.Emoji_Count.objects.top_n_objs(guild, ROWS * COLS)
+    emoji_counts = Counter()
+    for emoji_count in models.Emoji_Count.objects.filter(user__guild=guild).select_related('obj'):
+        emoji_counts[emoji_count.obj] += emoji_count.count
+    emojis = emoji_counts.most_common(ROWS * COLS)
     return [emojis[i*COLS:i*COLS+COLS] for i in range(ROWS)]
 
-#@cache_page(60 * 30)
+@cache_page(60 * 30)
 def index(request, guild_id):
     guild = models.Guild.objects.get(id=guild_id)
     total_hour_counts = models.Hour_Count.objects.total_hour_counts(guild)

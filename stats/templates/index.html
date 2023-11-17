@@ -266,11 +266,11 @@
       <tbody>
         {% for row in emoji_table %}
         <tr>
-          {% for emoji in row %}
+          {% for emoji, count in row %}
           <td>
             <div class="emoji_display">
               <img src="{{ emoji.URL }}" title="{{ emoji.name }}">
-              <b>{{ emoji.count|intcomma }}</b>
+              <b>{{ count|intcomma }}</b>
             </div>
           </td>
           {% endfor %}

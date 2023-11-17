@@ -20,7 +20,7 @@
     <center>
         <div class="greybar" style="margin-bottom:15px;"></div>
         <div class="headerlinks">
-            <a href="/stats/">1. Main page</a> | 2. Detailed info | <a href="/stats/FAQ/">3. FAQ</a>
+            <a href="../">1. Main page</a> | 2. Detailed info | <a href="/FAQ/">3. FAQ</a>
         </div>
         <div class="greybar"></div>
         <!-- 
@@ -45,11 +45,11 @@
                 <td>{{ forloop.counter }}</td>
                 <td>
                     <img class="icon mini_icon" src="{{ user.avatar }}">
-                    <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                    <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
                 </td>
                 <td>
-                    <div class="defaultbar" style="height:5px; width: {% widthratio user.curse_word_count|div:user.messages top_curse_users.0.curse_word_count|div:top_curse_users.0.messages 100 %}px"></div>
-                    {{ user.curse_word_count|div:user.messages|mul:100|floatformat:2 }}%
+                    <div class="defaultbar" style="height:5px; width: {% widthratio user.curse_ratio top_curse_users.0.curse_ratio 100 %}px"></div>
+                    {{ user.curse_ratio|floatformat:2 }}%
                 </td>
             </tr>
             {% endfor %}
@@ -79,11 +79,11 @@
                 <td>{{ forloop.counter }}</td>
                 <td>
                     <img class="icon mini_icon" src="{{ user.avatar }}">
-                    <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                    <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
                 </td>
                 <td>
-                    <div class="defaultbar" style="height:5px; width: {% widthratio user.ALL_CAPS_count|div:user.messages top_ALL_CAPS_users.0.ALL_CAPS_count|div:top_ALL_CAPS_users.0.messages 100 %}px"></div>
-                    {{ user.ALL_CAPS_count|div:user.messages|mul:100|floatformat:2 }}%
+                    <div class="defaultbar" style="height:5px; width: {% widthratio user.CAPS_ratio top_ALL_CAPS_users.0.CAPS_ratio 100 %}px"></div>
+                    {{ user.CAPS_ratio|floatformat:2 }}%
                 </td>
             </tr>
             {% endfor %}
@@ -114,11 +114,11 @@
                 <td>{{ forloop.counter }}</td>
                 <td>
                     <img class="icon mini_icon" src="{{ user.avatar }}">
-                    <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                    <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
                 </td>
                 <td>
-                    <div class="defaultbar" style="height:5px; width: {% widthratio user.total_chars|div:user.messages top_verbose_users.0.total_chars|div:top_verbose_users.0.messages 100 %}px"></div>
-                    {{ user.total_chars|div:user.messages|floatformat:2 }}
+                    <div class="defaultbar" style="height:5px; width: {% widthratio user.average_chars top_verbose_users.0.average_chars 100 %}px"></div>
+                    {{ user.average_chars|floatformat:2 }}
                 </td>
             </tr>
             {% endfor %}
@@ -147,7 +147,7 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td style="text-align: right;">
-                    <a href="/stats/users/{{ user1.tag }}" class="userlink">{{ user1.nick }}</a>
+                    <a href="../users/{{ user1.tag }}" class="userlink">{{ user1.nick }}</a>
                     <img class="icon mini_icon" src="{{ user1.avatar }}">
                     <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user1count max_mention_count 100 %}">
                     {{ user1count }}
@@ -156,7 +156,7 @@
                     {{ user2count }}
                     <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user2count max_mention_count 100 %}">
                     <img class="icon mini_icon" src="{{ user2.avatar }}">
-                    <a href="/stats/users/{{ user2.tag }}" class="userlink">{{ user2.nick }}</a>
+                    <a href="../users/{{ user2.tag }}" class="userlink">{{ user2.nick }}</a>
                 </td>
             </tr>
             {% endfor %}
@@ -183,7 +183,7 @@
             <th>Often posted by</th>
         </thead>
         <tbody>
-            {% for URL, count in top_URLs %}
+            {% for URL, count, user in top_URLs %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>
@@ -193,7 +193,8 @@
                     {{ count }}
                 </td>
                 <td>
-
+                    <img class="icon mini_icon" src="{{ user.avatar }}">
+                    <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
                 </td>
             </tr>
             {% endfor %}
@@ -227,7 +228,7 @@
                     {% for user in userlist %}
                         <td>
                             <img class="icon mini_icon" src="{{ user.avatar }}">
-                            <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                            <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
                         {% endfor %}
                         </td>
                     {% endfor %}

@@ -18,16 +18,22 @@ class Stats_Bot(commands.Bot):
 intents = discord.Intents.default()
 intents.message_content = True
 description = '''A stats bot'''
-bot = Stats_Bot(command_prefix='$', description=description, intents=intents)
+bot = Stats_Bot(
+    command_prefix='$', 
+    description=description, 
+    intents=intents,
+    max_messages = 2000 # extend the message cache 
+)
 
 
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
+    
 
 # configure custom logger
-logger = logging.getLogger(__package__)
+logger = logging.getLogger('collection')
 logger.setLevel(logging.DEBUG)
 
 fh = logging.FileHandler('debug.log', 'w')

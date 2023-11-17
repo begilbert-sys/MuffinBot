@@ -1,7 +1,11 @@
 from django.core.management.base import BaseCommand
 import unittest
 
+from django.db.models import F
+
 from stats.models import *
+from timeit import default_timer
+from collections import Counter
 
 class Command(BaseCommand):
     help = """
@@ -15,23 +19,7 @@ class Command(BaseCommand):
 
 
 class TestChronology(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def test_emoji_obj_count(self):
-        guild = Guild.objects.get(id=424942639906029568)
-
-        print(list(Emoji_Count.objects.top_n_emojis(guild, 10)))
-    
-    def test_hour_counts(self):
-        user = User.objects.all().first()
-        print(len(Hour_Count.objects.filter(user=user)))
-        print(user.messages)
-        '''
-        print({
-            'night': Hour_Count.objects.user_hour_count_range(user, 0, 5),
-            'morning':  Hour_Count.objects.user_hour_count_range(user, 6, 11),
-            'afternoon': Hour_Count.objects.user_hour_count_range(user, 12, 17),
-            'evening': Hour_Count.objects.user_hour_count_range(user, 18, 23)
-        })
-        '''
+    def test_suite(self):
+        guild_list = list()
+        for i in range(0, 20000):
+            Guild.objects.bulk_update(name="snorf")
