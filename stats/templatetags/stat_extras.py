@@ -10,11 +10,12 @@ def set_hour_class(hour):
     bars = ('bluebar', 'greenbar', 'yellowbar', 'redbar')
     num = int(hour) // 6
     return bars[num]
-
+'''
 @register.filter
 def icon_size(URL, size):
-    '''sets the size of a user's avatar link to be . this speeds up website loading times'''
+    sets the size of a user's avatar link to be . this speeds up website loading times
     if '?size=' not in URL:
         return URL + '?size=' + str(size)
     else:
-        return re.sub('\?size=[\d]+', '?size=' + str(size), URL)
+        return re.sub(rsize=[d]+', '?size=' + str(size), URL)
+'''

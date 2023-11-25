@@ -9,7 +9,7 @@ from .utils.collector import Collector
 
 logger = logging.getLogger('collection')
 
-class Collection_Cog(commands.Cog):
+class History_Collection_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -18,19 +18,20 @@ class Collection_Cog(commands.Cog):
 
     async def collection_instance(self, guild: discord.Guild):
         if guild.id in self.active_collectors:
-            logging.warning("Collection instance for guild no. " + str(guild.id) + " is already running")
+            logger.warning("Collection instance for guild no. " + str(guild.id) + " is already running")
             return
         
         collector = Collector(self.bot, guild)
         self.active_collectors.add(guild.id)
         try:
             await collector.collect_data()
+
         except Exception as e:
             # for some reason the exception is temporarily swallowed by the event loop
             # so I need to log it explicitly
-            logging.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
+
         finally:
-            
             end_time = default_timer()
             time_elapsed = end_time - collector.start_time
             mps = collector.messages_scraped / time_elapsed
@@ -38,9 +39,10 @@ class Collection_Cog(commands.Cog):
                 f'''
                 - - - 
                 {guild.name}
-                Time elapsed: {time_elapsed}
+                Time elapsed: {time_elapsed:.2f} seconds
                 Messages scraped: {collector.messages_scraped}
                 Messages per second: {mps:.2f}
+                Total processing time: {collector._processing_time:.4f} seconds
                 '''
             ))
             logger.info('Saving. . . ')
@@ -50,7 +52,7 @@ class Collection_Cog(commands.Cog):
             await collector.db_processor.save()
             end_time = default_timer()
             time_elapsed = end_time - start_time
-            logger.info('Database save complete! Took ' + str(time_elapsed) + ' seconds.')
+            logger.info(f'Database save complete! Took {time_elapsed:.4f} seconds.')
         
     @commands.Cog.listener()
     async def on_ready(self):
@@ -61,4 +63,4 @@ class Collection_Cog(commands.Cog):
             #self.bot.loop.create_task(self.collection_instance(guild2))
         
 async def setup(bot):
-    await bot.add_cog(Collection_Cog(bot))
+    await bot.add_cog(History_Collection_Cog(bot))

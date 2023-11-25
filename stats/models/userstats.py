@@ -1,204 +1,12 @@
 from django.db import models
-from django.db.models import Sum
-import heapq
+from . import Channel, Emoji, Guild, User
+
+from .debug import timed
+
 from collections import Counter
-from timeit import default_timer
 import datetime
+import heapq
 
-import json
-# for the emoji class
-with open('stats/data/emoji_ids.json') as f:
-    EMOJI_IDS = json.load(f)
-    EMOJI_DICT = {v: k for k, v in EMOJI_IDS.items()} # {id: emoji}
-
-def get_twemoji_URL(emoji_str: str) -> str:
-    '''
-    Given an emoji, return the corresponding twemoji URL
-    Ref: https://github.com/twitter/twemoji/blob/master/scripts/build.js#L344
-    '''
-    # from Twemoji source code:
-    # remove all variants (0xfe0f)
-    # UNLESS there is a zero width joiner (0x200d)
-    VS16 = 0xfe0f
-    ZWJ = 0x200d
-    hex_ints = [ord(unichar) for unichar in emoji_str]
-    if ZWJ not in hex_ints:
-        hex_ints = [hex_int for hex_int in hex_ints if hex_int != VS16]
-    codepoint = '-'.join([format(hex_int, 'x') for hex_int in hex_ints])
-    return f'https://raw.githubusercontent.com/twitter/twemoji/d94f4cf793e6d5ca592aa00f58a88f6a4229ad43/assets/svg/{codepoint}.svg'
-
-# wrapper that times function execution. for debugging purposes
-def timed(func):
-    def wrap(*args, **kwargs):
-        start = default_timer()
-        
-        result = func(*args, **kwargs)
-        
-        end = default_timer()
-        print(f'"{func.__qualname__}" call speed: {end - start}')
-        return result
-    return wrap
-
-
-
-class Guild(models.Model):
-
-    id = models.PositiveBigIntegerField(primary_key=True)
-
-    name = models.CharField(max_length=100)
-    icon = models.URLField()
-    first_message_dt = models.DateTimeField(null=True)
-    last_message_dt = models.DateTimeField(null=True)
-    #timezone = models.CharField(max_length=32, default='utc')
-
-class Channel(models.Model):
-    guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
-    id = models.PositiveBigIntegerField(primary_key=True)
-
-    name = models.CharField(max_length=100)
-    last_message_dt = models.DateTimeField(null=True)
-
-
-class Emoji_Manager(models.Manager):
-    async def abulk_create_or_update(self, objs):
-        await self.abulk_create(
-            objs,
-            update_conflicts = True,
-            update_fields = ['name'],
-            unique_fields = ['id']
-        )
-
-
-class Emoji(models.Model):
-    id = models.BigIntegerField(primary_key=True)
-    custom = models.BooleanField()
-    name = models.CharField(max_length=76) # length of the longest emoji name I could find
-
-    objects = Emoji_Manager()
-    
-    @property
-    def URL(self):
-        if self.custom:
-            return f'https://cdn.discordapp.com/emojis/{self.id}'
-        else:
-            emoji_str = EMOJI_DICT[self.id]
-            return get_twemoji_URL(emoji_str)
-        
-    def merge(self, other):
-        '''
-        Update name if it changes
-        Args:
-            other (UserStat) - a model of the same type 
-        '''
-        self.name = other.name
-    def __str__(self):
-        return self.name
-
-class User_Manager(models.Manager):
-    async def abulk_create_or_update(self, objs):
-        fields = self.model._meta.get_fields()
-        non_update_fields = ['guild', 'id', 'user_id', 'blacklist']
-        update_fields = [field.name for field in fields if (not field.is_relation and field.name not in non_update_fields)]
-        await self.abulk_create(
-            objs,
-            update_conflicts = True,
-            update_fields = update_fields,
-            unique_fields = ['id']
-        )
-    @timed
-    def total_messages(self, guild: Guild):
-        '''Return the total number of messages ever sent for a server'''
-        return self.filter(guild=guild).aggregate(models.Sum('messages'))['messages__sum']
-    @timed
-    def total_users(self, guild: Guild):
-        return self.filter(guild=guild).count()
-    @timed
-    def top_user_message_count(self, guild: Guild) -> int:
-        return self.filter(guild=guild).first().messages
-    @timed
-    def top_n_curse_users(self, guild: Guild, n):
-        top_100_users = self.filter(guild=guild)[:100]
-        return heapq.nlargest(n, top_100_users, key = lambda user: user.curse_ratio)
-    @timed
-    def top_n_ALL_CAPS_users(self, guild: Guild, n):
-        top_100_users = self.filter(guild=guild)[:100]
-        return heapq.nlargest(n, top_100_users, key = lambda user: user.CAPS_ratio)
-    @timed
-    def top_n_verbose_users(self, guild: Guild, n):
-        top_100_users = self.filter(guild=guild)[:100]
-        return heapq.nlargest(n, top_100_users, key = lambda user: user.average_chars)
-    @timed
-    def get_rank(self, guild: Guild, user):
-        return self.filter(guild=guild, messages__gt=user.messages).count() + 1
-
-class User_Whitelist_Manager(User_Manager):
-    def get_queryset(self):
-        return super().get_queryset().filter(blacklist=False)
-
-
-class User(models.Model):
-    guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
-
-
-    # this is not the primary key b/c the same user can exist
-    # as two different user objs across multiple guilds
-    user_id = models.PositiveBigIntegerField() 
-
-    tag = models.CharField(max_length=32)
-    nick = models.CharField(max_length=32)
-    avatar_id = models.CharField(max_length=34, null=True) # the 'a_' prefix for animated avatars adds two characters
-    messages = models.PositiveIntegerField(default=0)
-
-    curse_word_count = models.PositiveIntegerField(default=0)
-    ALL_CAPS_count = models.PositiveIntegerField(default=0)
-    total_chars = models.PositiveBigIntegerField(default=0)
-
-    blacklist = models.BooleanField(default=False)
-
-    objects = User_Manager()
-    whitelist = User_Whitelist_Manager()
-
-    def __str__(self):
-        return self.tag
-    
-    @property
-    def avatar(self):
-        if self.avatar_id:
-            return f'https://cdn.discordapp.com/avatars/{self.user_id}/{self.avatar_id}.png'
-        else:
-            return 'https://cdn.discordapp.com/embed/avatars/0.png'
-    @property
-    def curse_ratio(self):
-        return (self.curse_word_count / self.messages) * 100
-    
-    @property
-    def CAPS_ratio(self):
-        return (self.ALL_CAPS_count / self.messages) * 100
-
-    @property
-    def average_chars(self):
-        return self.total_chars / self.messages
-    
-    def merge(self, other):
-        '''
-        Update the counts of one User with the counts of another, with the equivalent 
-        Args:
-            other (UserStat) - a model of the same type 
-        '''
-
-        # these variables need to be updated in case the user changes anything
-        self.tag = other.tag
-        self.nick = other.nick
-        self.avatar_id = other.avatar_id
-
-        self.messages += other.messages
-
-        self.curse_word_count += other.curse_word_count
-        self.ALL_CAPS_count += other.ALL_CAPS_count
-        self.total_chars += other.total_chars
-
-    class Meta:
-        ordering = ['-messages']
 
 class UserStat_Manager(models.Manager):
     async def abulk_create_or_update(self, objs):
@@ -226,8 +34,6 @@ class UserStat_Manager(models.Manager):
     @timed
     def top_n_user_objs(self, user: User, n: int):
         return self.filter(user=user)[:n]
-
-
 
 class UserStat(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -331,7 +137,7 @@ class Hour_Count_Manager(UserStat_Manager):
     
     def user_hour_count_range(self, user: User, start: int, end: int):
         # optimized
-        return Hour_Count.objects.filter(user=user, obj__range=(start,end)).aggregate(Sum('count'))['count__sum']
+        return Hour_Count.objects.filter(user=user, obj__range=(start,end)).aggregate(models.Sum('count'))['count__sum']
     @timed
     def top_n_users_in_range(self, guild: Guild, n: int, start: int, end: int):
         '''
@@ -400,9 +206,9 @@ class Date_Count_Manager(UserStat_Manager):
         past_n_days: allows the dict to be limited to the past n days. If None, returns all.'''
         date_strs = list()
         if type(obj) is User:
-            date_sums = list(self.filter(user=obj).values_list('obj').order_by('-obj').annotate(Sum('count')))
+            date_sums = list(self.filter(user=obj).values_list('obj').order_by('-obj').annotate(models.Sum('count')))
         elif type(obj) is Guild:
-            date_sums = list(self.filter(user__guild=obj).values_list('obj').order_by('-obj').annotate(Sum('count')))
+            date_sums = list(self.filter(user__guild=obj).values_list('obj').order_by('-obj').annotate(models.Sum('count')))
         date = self.earliest().obj
         last = self.latest().obj
         while date <= last:

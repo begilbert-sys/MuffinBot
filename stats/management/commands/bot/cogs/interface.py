@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+
+
 class Interface_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -35,15 +37,6 @@ class Interface_Cog(commands.Cog):
     @commands.command()
     async def blacklist(self, ctx):
         pass
-
-    @commands.command()
-    async def test(self, ctx):
-        channel = ctx.channel
-        counter = 0
-        async for message in channel.history(limit=3000):
-            counter += 1
-            if counter % 50 == 0:
-                print('UCLA message:', counter)
 
 
 async def setup(bot):

@@ -20,6 +20,27 @@ class Command(BaseCommand):
 
 class TestChronology(unittest.TestCase):
     def test_suite(self):
-        guild_list = list()
-        for i in range(0, 20000):
-            Guild.objects.bulk_update(name="snorf")
+        guild = Guild(
+            id=1,
+            name='test',
+            icon='https://www.google.com/',
+        )
+        guild.save()
+        user = User(
+            guild=guild,
+            user_id=1,
+            avatar_id='1',
+            tag='blah'
+        )
+        User(
+            guild=guild,
+            user_id=2,
+            avatar_id='1',
+            tag='blah'
+        ).save()
+        #user.save()
+        word = Unique_Word_Count(
+            user=user,
+            obj='blah'
+        )
+        print(word.user.user_id)

@@ -11,7 +11,8 @@ TERMINAL_LOG_LEVEL = logging.INFO
 
 class Stats_Bot(commands.Bot):
     async def setup_hook(self):
-        await self.load_extension('.cogs.collection', package = __package__)
+        await self.load_extension('.cogs.history_collection', package = __package__)
+        #await self.load_extension('.cogs.current_collection', package = __package__)
         #await self.load_extension('.cogs.interface', package = __package__)
 
 
@@ -22,7 +23,7 @@ bot = Stats_Bot(
     command_prefix='$', 
     description=description, 
     intents=intents,
-    max_messages = 2000 # extend the message cache 
+    max_messages = 3000 # extend the message cache 
 )
 
 

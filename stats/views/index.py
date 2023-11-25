@@ -4,7 +4,7 @@ from django.shortcuts import render
 
 from stats import models
 
-from stats.models import timed 
+from stats.models.debug import timed 
 from collections import Counter
 
 hour_strings = ('12AM', '1AM', '2AM', '3AM', '4AM', '5AM', 

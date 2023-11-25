@@ -5,7 +5,7 @@ from django.shortcuts import render
 from stats import models
 
 from collections import Counter
-from stats.models import timed 
+from stats.models.debug import timed 
 
 @timed
 def get_channel_table(guild: models.Guild):
