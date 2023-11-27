@@ -23,24 +23,20 @@ class Collector:
 
     async def _read_channel(self, channel):
         await self.db_processor.process_channel(channel)
-        last_message_dt = self.db_processor.current_channel_model_obj.last_message_dt
-        logger.debug(f"Starting {channel.name} . . . from {last_message_dt}")
+        logger.debug(f"Starting {channel.name} . . .")
+        if not self.db_processor.current_channel_model_obj is None:
+            logger.debug(f"at {self.db_processor.current_channel_model_obj.last_message_dt}")
         till_reset = 0
 
         while True:
             last_message_dt = self.db_processor.current_channel_model_obj.last_message_dt
             start = default_timer()
             try:
-                if last_message_dt is None:
-                    messages = [message async for message in channel.history(
-                        oldest_first = True,
-                        limit = MSG_LIMIT
-                    )]
-                else:
-                    messages = [message async for message in channel.history(
-                        after=last_message_dt if last_message_dt else None,
-                        limit = MSG_LIMIT
-                    )]
+                messages = [message async for message in channel.history(
+                    oldest_first = True,
+                    after=last_message_dt,
+                    limit = MSG_LIMIT
+                )]
 
             except asyncio.TimeoutError as e:
                 logger.error(e, exc_info=True)
@@ -93,7 +89,6 @@ class Collector:
             logger.debug('Processing time: ' + str((end-start)) + ' seconds')
 
             if len(messages) < MSG_LIMIT:
-                logger.debug('Last message created at: ' + str(self.db_processor.current_channel_model_obj.last_message_dt))
                 break
         
         self.bot.loop.create_task(self.db_processor.save())

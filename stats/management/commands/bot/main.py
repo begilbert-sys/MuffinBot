@@ -1,13 +1,11 @@
 import discord
 from discord.ext import commands
 
-import logging
+import logging_config
 
 from .token import TOKEN
 
-
-TERMINAL_LOG_LEVEL = logging.INFO
-
+logging_config.setup()
 
 class Stats_Bot(commands.Bot):
     async def setup_hook(self):
@@ -34,6 +32,7 @@ async def on_ready():
     
 
 # configure custom logger
+'''
 logger = logging.getLogger('collection')
 logger.setLevel(logging.DEBUG)
 
@@ -59,7 +58,7 @@ dsh.setFormatter(terminal_formatter)
 dsh.setLevel(logging.INFO)
 discord_logger.addHandler(dfh)
 discord_logger.addHandler(dsh)
-
+'''
 
 def run():
     bot.run(TOKEN)

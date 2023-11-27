@@ -46,10 +46,14 @@ COUNT_MODELS = models.UserStat.__subclasses__()
 
 class Processor:
     def __init__(self, *, history: bool):
+        # denotes if the processor is processing message history or current messages
         self.history = history
 
         # explanation for this variable in save() function 
         self._saving_semaphore = asyncio.Semaphore(1)
+        
+        if history:
+            self.current_channel_model_obj = None
 
         self.reset()
 
@@ -235,10 +239,9 @@ class Processor:
             self._increment_count(models.URL_Count, user_model_obj, URL, crement)
         
         ### UNIQUE WORDS AND CURSE WORDS
-        for word in message.content.split():
+        for word in message.content.lower().split():
             # valid 'words' need to be alphabetic and between 3 and 18 characters
             if word.isalpha() and len(word) in range(3,19):
-                word = word.lower()
                 if word not in WORDS:
                     self._increment_count(models.Unique_Word_Count, user_model_obj, word, crement)
                 if word in CURSE_WORDS:
@@ -278,15 +281,21 @@ class Processor:
 
         '''
         if self.history:
+            if not self.current_channel_model_obj is None:
+                await self.current_channel_model_obj.asave()
             try:
-                channel_model_obj = await models.Channel.objects.aget(id=channel.id)
-                self.cached_model_objects[models.Channel][channel.id] = channel_model_obj
+                self.current_channel_model_obj = await models.Channel.objects.aget(id=channel.id)
             except models.Channel.DoesNotExist:
-                channel_model_obj = self._get_channel(channel)
-            self.current_channel_model_obj = channel_model_obj
+                self.current_channel_model_obj = models.Channel(
+                    id=channel.id,
+                    guild=self.guild_model_obj,
+                    name=channel.name
+                )
+        
+        # I don't actually know when this would be used 
+        # but this is just in case. . .
         else:
-            channel_model_obj = self._get_channel(channel)
-        return channel_model_obj
+            self._get_channel(channel)
 
 
     async def _update_and_save_count_model_objects(self, Model_Class):
@@ -405,10 +414,13 @@ class Processor:
             self.reset()
 
 
-            # save User & Emoji objects first, to avoid foreign key conflicts (you dummy)
+            # save these objects first, to avoid foreign key conflicts (you dummy)
             await self._update_and_save_user_objects()
             await self._update_and_save_emoji_objects()
-            await self._update_and_save_channel_objects()
+            if self.history:
+                await self.current_channel_model_obj.asave()
+            else:
+                await self._update_and_save_channel_objects()
             # save the rest asynchronously
             gather_list = []
             for Model_Class in COUNT_MODELS:

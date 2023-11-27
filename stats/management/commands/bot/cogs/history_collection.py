@@ -43,6 +43,7 @@ class History_Collection_Cog(commands.Cog):
                 Messages scraped: {collector.messages_scraped}
                 Messages per second: {mps:.2f}
                 Total processing time: {collector._processing_time:.4f} seconds
+                Last message in {collector.db_processor.current_channel_model_obj.name} created at {collector.db_processor.current_channel_model_obj.last_message_dt}
                 '''
             ))
             logger.info('Saving. . . ')

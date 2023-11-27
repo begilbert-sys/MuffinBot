@@ -28,6 +28,10 @@ h3 {
   margin: 3px;
 }
 
+h4 {
+  margin-bottom: 10px;
+}
+
 table {
   border: 0px;
   padding: 0px;
@@ -363,4 +367,9 @@ table {
   width: 25px;
   display: inline;
   vertical-align: middle;
+}
+
+.textbox {
+  margin-left: 15%;
+  margin-right: 15%;
 }

@@ -133,7 +133,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 # static files are hosted on a Amazon S3 bucket static site
 
-STATIC_URL = 'http://staticfiles-bucket.s3-website-us-west-1.amazonaws.com/static/'
+#STATIC_URL = 'http://staticfiles-bucket.s3-website-us-west-1.amazonaws.com/static/'
+STATIC_URL = '/static/'
 
 
 # Default primary key field type
