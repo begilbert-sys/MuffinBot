@@ -1,11 +1,13 @@
 import discord
 from discord.ext import commands
 
-import logging_config
+import logging
+from pathlib import Path
 
 from .token import TOKEN
 
-logging_config.setup()
+parentdir = Path(__file__).parent
+logging.config.fileConfig(f'{parentdir}/logger.ini')
 
 class Stats_Bot(commands.Bot):
     async def setup_hook(self):

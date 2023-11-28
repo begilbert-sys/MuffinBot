@@ -23,7 +23,7 @@ class Collector:
 
     async def _read_channel(self, channel):
         await self.db_processor.process_channel(channel)
-        logger.debug(f"Starting {channel.name} . . .")
+        logger.debug(f"---\nStarting {channel.name} . . .")
         if not self.db_processor.current_channel_model_obj is None:
             logger.debug(f"at {self.db_processor.current_channel_model_obj.last_message_dt}")
         till_reset = 0
@@ -43,15 +43,15 @@ class Collector:
                 continue
 
             except aiohttp.client_exceptions.ClientOSError as e:
-                if e.os_error.errno == 60:
+                if e.errno == 60:
                     # error code 60 denotes a timeout error and means the error can be ignored 
                     logger.error(e, exc_info=True)
                     continue
                 else:
                     raise
-    
-            end = default_timer()
-            logger.debug('Actual message Scraping: ' +  str((end-start)) + ' seconds')
+            finally:
+                end = default_timer()
+                logger.debug('Actual message Scraping: ' +  str((end-start)) + ' seconds')
             
 
             start = default_timer()

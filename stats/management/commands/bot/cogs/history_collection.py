@@ -62,6 +62,12 @@ class History_Collection_Cog(commands.Cog):
         #guild2 = self.bot.get_guild(100770673609150464)
         #if guild2.id not in self.active_collectors:
             #self.bot.loop.create_task(self.collection_instance(guild2))
-        
+
+    @commands.Cog.listener()
+    async def on_disconnect(self):
+        for collector in self.active_collectors:
+            await collector.db_processor.save()
+        self.bot.close()
+
 async def setup(bot):
     await bot.add_cog(History_Collection_Cog(bot))

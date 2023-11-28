@@ -50,10 +50,10 @@
     <table cellspacing="1" cellpadding="2">
       <tbody>
         <tr class="hour_percentage" valign="bottom" align="center">
-          {% for hour, value in total_hour_counts.items %}
+          {% for hour, value, pctvalue in hour_totals %}
             <td class="tgr">
               <!-- hour percentage value -->
-              {{ value|div:total_messages|mul:100|floatformat:1 }}%
+              {{ pctvalue|floatformat:1 }}%
               <br>
               <!-- changes color of bar based on time of day -->
               <div class='{{ hour|set_hour_class }}' style="margin-left: 2px;width:18px; height:{% widthratio value max_hour_count 120 %}px;">
