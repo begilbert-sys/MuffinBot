@@ -1,4 +1,5 @@
 from django.db import models
+
 from . import Channel, Emoji, Guild, User
 
 from .debug import timed
@@ -221,10 +222,14 @@ class Date_Count_Manager(UserStat_Manager):
         return date_strs
     @timed
     def weekday_distribution(self, guild: Guild):
-        weekdays = [0] * 7
-        for date_obj in self.filter(user__guild=guild).iterator():
-            weekdays[date_obj.obj.weekday()] += date_obj.count
-        return weekdays
+        weekday_counts = list()
+        for weekday in range(1, 8):
+            total = self.filter(user__guild=guild, obj__week_day=weekday).aggregate(models.Sum('count'))['count__sum']
+            if total is None:
+                weekday_counts.append(0)
+            else:
+                weekday_counts.append(total)
+        return weekday_counts
     
     def weekday_distribution_user(self, user):
         weekdays = [0] * 7

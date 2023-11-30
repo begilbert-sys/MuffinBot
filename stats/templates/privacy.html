@@ -34,26 +34,22 @@
         How is my data kept safe?
     </h3>
     <p>
-        Every time MuffinBot posts a URL, you'll find this bit at the end:
+        To see statistics for a server, your account must be in that server. This information is verified when you login using your Discord account.
+        Unfortunately, this means that if you leave a server, its statistics will be hidden from you. 
         <br>
-        <code>?token=060c709290182bbb6035211ac368134d618498685bd57ea7a7fb82fdae0aa2e5</code>
-        <br>
-
-        This is called a token, which is the "password" used to access your server's stats. Without the right token, the stats are inaccessible. 
-        <br>
-        The token is only posted by the bot within the server, the goal being for only server members to have access.
-        However, Members of the server <i>could</i> share this link outside of the server, in which case non-members would have access. 
-        Tokens are therefore reset periodically, and can also be manually reset with the [command] command.
+        Because Discord users are prone to leaving and rejoining servers, your data will <b>not</b> be deleted if you leave a server. If you want to delete it, 
+        you may do so via the dashboard for that server. 
 
         <br>
         <br>
-        The data itself is securely hosted in an AWS database. 
+        The data itself is securely hosted in an Amazon RDS database. 
+    </p>
     <h3>
         What data is collected? 
     </h3>
     <p>
-        Here's a list of all the data retained by the bot. For servers without the 'server history' feature enabled,
-        this only applies to messages sent <i>after</i> the bot joined the server. 
+        Here's a list of all data retained by the bot. For servers without the 'server history' feature enabled,
+        this only applies to messages sent <i>after</i> the bot joined.
         <h4>Data collected per server</h4>
         <ul>
             <li>Server Name</li>
@@ -69,13 +65,13 @@
             <li>Avatar URL</li>
             <li>Number of messages per viewable text channel</li>
             <li>Average message length</li>
-            <li>Curse word frequency - the curse words themselves are <b>not</b> collected</li>
+            <li>Curse word frequency - curse words themselves are <b>not</b> collected</li>
         </ul>
-        <h4>Data collected per message</h4>
+        <h4>Data collected per user message</h4>
         <ul>
             <li>"Uncommon" words - words that do not appear in a standard dictionary</li>
             <li>Users mentioned</li>
-            <li>Message date and time of day (only the hour)</li>
+            <li>Message date and hour</li>
             <li>URLs used</li>
             <li>Emojis used</li>
             <li>Reactions</li>

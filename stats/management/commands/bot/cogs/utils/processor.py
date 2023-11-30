@@ -254,9 +254,6 @@ class Processor:
         
         self.cache_count += 1
 
-        if self.history:
-            self.current_channel_model_obj.last_message_dt = message.created_at
-
     async def process_guild(self, guild: discord.guild):
         '''
         Save a guild's info to the DB if it has not already been added

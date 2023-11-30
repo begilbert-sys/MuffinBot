@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width">
   {% load static %}
   {% load humanize %}
-  {% load mathfilters %}
   {% load stat_extras %}
 
   <title>{{ guild.name }} Stats</title>
@@ -31,7 +30,7 @@
     <h3>Personal Stats</h3>
     <div class="user_header">
       <div class="user_column user_display">
-      <img src="{{ user.avatar|icon_size:128 }}" class="user_icon">
+      <img src="{{ user.avatar }}" class="user_icon">
       &nbsp;{{ user.nick }}
       </div>
       <div class="user_column user_rank">

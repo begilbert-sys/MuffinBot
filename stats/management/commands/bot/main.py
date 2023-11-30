@@ -33,35 +33,6 @@ async def on_ready():
     print('------')
     
 
-# configure custom logger
-'''
-logger = logging.getLogger('collection')
-logger.setLevel(logging.DEBUG)
-
-fh = logging.FileHandler('debug.log', 'w')
-debug_formatter = logging.Formatter('%(name)s - %(levelname)s: %(message)s')
-fh.setFormatter(debug_formatter)
-fh.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-
-sh = logging.StreamHandler()
-terminal_formatter = logging.Formatter('%(message)s')
-sh.setFormatter(terminal_formatter)
-sh.setLevel(TERMINAL_LOG_LEVEL)
-logger.addHandler(sh)
-
-# configure discord logger
-discord_logger = logging.getLogger('discord')
-dfh = logging.FileHandler('discord.log', 'w')
-dfh.setFormatter(debug_formatter)
-dfh.setLevel(logging.INFO)
-dsh = logging.StreamHandler()
-dsh.setFormatter(terminal_formatter)
-dsh.setLevel(logging.INFO)
-discord_logger.addHandler(dfh)
-discord_logger.addHandler(dsh)
-'''
-
 def run():
     bot.run(TOKEN)
 

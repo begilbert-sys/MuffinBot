@@ -57,6 +57,7 @@ class Collector:
             start = default_timer()
             for message in messages:
                 if message.author.bot:
+                    self.db_processor.current_channel_model_obj.last_message_dt = message.created_at
                     continue
                 if message.type is discord.MessageType.reply:
                     reply_message = message.reference.resolved 
@@ -72,8 +73,8 @@ class Collector:
                     self.db_processor.process_message(message, reply_message)
                 elif message.type is discord.MessageType.default:
                     self.db_processor.process_message(message)
-
-
+                self.db_processor.current_channel_model_obj.last_message_dt = message.created_at
+                
                 ### progress update
                 self.messages_scraped += 1
                 till_reset += 1

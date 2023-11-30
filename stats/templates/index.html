@@ -22,6 +22,24 @@
 </head>
 
 <body>
+  <header>
+    <div class="header-navigation">
+      <nav>
+        <ul>
+            <li style="margin-right:15px"><img src="https://cdn-icons-png.flaticon.com/512/465/465235.png" height=40>
+            <li class="muffinstats"><a href="../">MuffinStats</a></li>
+            <li><a href="../add">MuffinStats</a></li>
+            <li>Additional Info</li>
+            <li><a href="../privacy">Privacy Policy</a></li>
+        </ul>
+      </nav>
+      <div class="discord_login">
+        <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/discord-white-icon.png">Discord Login</div>
+    </div>
+    <div class="greybar" style="margin-top:5px; width:99.9%;"></div>
+  </header>
+
+
   <center>
     <h1>
       {{ guild.name }} Stats (rendered on {% now "n/j/o" %})
@@ -108,12 +126,12 @@
     <table cellspacing="0" cellpadding="0" class="weekday_table">
       <tbody>
         <tr class="hour_percentage" valign="bottom">
-          {% for value in weekday_dist %}
+          {% for value, pctvalue in weekday_dist %}
             <td class="tgr" align="center">
               <!-- hour percentage value -->
-              {{ value|div:total_messages|mul:100|floatformat:1 }}%
+              {{ pctvalue|floatformat:1 }}%
               <!-- changes color of bar based on time of day -->
-              <div class='defaultbar' style="height:{% widthratio value max_weekday 120 %}px;">
+              <div class='defaultbar' style="height:{% widthratio value max_weekday_count 120 %}px;">
             </td>
           {% endfor %}
         </tr>
@@ -175,7 +193,7 @@
             <td class="nick">
               <img src="{{ user_dict.user.avatar }}" class="icon">
               &nbsp;
-              <a href="/stats/users/{{ user_dict.user.tag }}" class="userlink">{{ user_dict.user.nick }}</a>
+              <a href="/stats/users/{{ user_dict.user.tag }}" class="userlink">{{ user_dict.user.tag }}</a>
             </td>
 
             <td class="line_count">
@@ -226,7 +244,7 @@
             <td>{{ forloop.counter }} </td>
             {% for user, count in zip_packet %}
               <td>
-                <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.nick }}</a> - {{ count|intcomma }}
+                <a href="/stats/users/{{ user.tag }}" class="userlink">{{ user.tag }}</a> - {{ count|intcomma }}
                 <br>
                 {% cycle 'bluebar' 'greenbar' 'yellowbar' 'redbar' as bar_class silent %}
                 {% cycle time_of_day_maxes.0 time_of_day_maxes.1 time_of_day_maxes.2 time_of_day_maxes.3 as current_time_most_messages silent %}

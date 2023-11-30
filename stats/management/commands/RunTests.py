@@ -1,7 +1,8 @@
 from django.core.management.base import BaseCommand
 import unittest
 
-from django.db.models import F
+from django.db.models import Count, Sum
+from django.db.models.functions import ExtractWeekDay
 
 from stats.models import *
 from timeit import default_timer
@@ -20,27 +21,6 @@ class Command(BaseCommand):
 
 class TestChronology(unittest.TestCase):
     def test_suite(self):
-        guild = Guild(
-            id=1,
-            name='test',
-            icon='https://www.google.com/',
-        )
-        guild.save()
-        user = User(
-            guild=guild,
-            user_id=1,
-            avatar_id='1',
-            tag='blah'
-        )
-        User(
-            guild=guild,
-            user_id=2,
-            avatar_id='1',
-            tag='blah'
-        ).save()
-        #user.save()
-        word = Unique_Word_Count(
-            user=user,
-            obj='blah'
-        )
-        print(word.user.user_id)
+        queryset = Date_Count.objects.all()
+        days_of_week = Date_Count.objects.filter(obj__week_day=0).aggregate(Sum('count'))
+        print(days_of_week['count__sum'])

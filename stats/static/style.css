@@ -32,12 +32,71 @@ h4 {
   margin-bottom: 10px;
 }
 
+nav ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  padding-left: 30px;
+  color: #d1e3fa99;
+}
+nav ul li {
+  margin-right:50px;
+}
+
+nav ul li a {
+  color: #d1e3fa99;
+  text-decoration: underline;
+}
+
+
 table {
   border: 0px;
   padding: 0px;
   border-spacing: 1px;
 }
 
+.header-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.muffinstats {
+  color:white;
+  font-size:24px;
+}
+.muffinstats a {
+  color:white;
+  text-decoration: none;
+}
+
+.discord_login {
+  cursor: pointer;
+  color: white;
+  text-decoration: none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-left:auto;
+  margin-right:2%;
+  border-radius: 25px;
+  background-color: #7289da;
+  height: 40px;
+  width: 150px;
+  transition: all .2s ease-in;
+}
+.discord_login:hover {
+  background-color: #536fd2;
+  transition: all .2s ease-in;
+}
+.discord_login:active {
+  background-color: #3555c9;
+}
+
+.discord_login img {
+  height:20px;
+  margin-right: 10px;
+}
 
 .greybar {
   width: 90%;

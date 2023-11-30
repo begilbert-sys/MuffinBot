@@ -13,7 +13,7 @@ class History_Collection_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.active_collectors = set()
+        self.active_collectors = dict()
 
 
     async def collection_instance(self, guild: discord.Guild):
@@ -22,7 +22,7 @@ class History_Collection_Cog(commands.Cog):
             return
         
         collector = Collector(self.bot, guild)
-        self.active_collectors.add(guild.id)
+        self.active_collectors[guild.id] = collector
         try:
             await collector.collect_data()
 
@@ -65,9 +65,9 @@ class History_Collection_Cog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_disconnect(self):
-        for collector in self.active_collectors:
+        for collector in self.active_collectors.values():
             await collector.db_processor.save()
-        self.bot.close()
+        await self.bot.close()
 
 async def setup(bot):
     await bot.add_cog(History_Collection_Cog(bot))

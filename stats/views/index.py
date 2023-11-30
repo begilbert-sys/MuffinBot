@@ -72,47 +72,59 @@ def hour_graph(guild: models.Guild, total_messages: int):
         result.append((hour, value, pctvalue))
     return result
 
-@cache_page(60 * 30)
+def weekday_graph(guild: models.Guild, total_messages: int):
+    result = list()
+    for value in models.Date_Count.objects.weekday_distribution(guild):
+        pctvalue = (value/total_messages) * 100
+        result.append((value, pctvalue))
+    return result 
+
 def index(request, guild_id):
+    
+    # predefine variables
     guild = models.Guild.objects.get(id=guild_id)
 
-    # predefine variables 
     total_messages = models.User.objects.total_messages(guild)
 
-    total_hour_counts = models.Hour_Count.objects.total_hour_counts(guild)
+    # hour graph 
+    hour_totals = hour_graph(guild, total_messages)
+    hour_max = max(hour_totals, key=lambda tup: tup[1])[1] # tup[1] gives the int value
+
     time_of_day_table = get_time_of_day_table(guild)
 
     time_of_day_maxes = tuple(item[1] for item in time_of_day_table[0])
 
-    weekday_dist = models.Date_Count.objects.weekday_distribution(guild)
-    max_weekday = max(weekday_dist)
+    # weekday graph
+    weekday_dist = weekday_graph(guild, total_messages)
+    max_weekday = max(weekday_dist, key=lambda tup: tup[0])[0]
 
     context = {
+        # general info 
         'guild': guild,
-
         'first_message_date': models.Date_Count.objects.first_message_date(guild),
         'last_message_date': models.Date_Count.objects.last_message_date(guild),
         'total_days': models.Date_Count.objects.total_days(guild),
-
         'total_users': models.User.objects.total_users(guild),
         'total_messages': total_messages,
         'most_messages': models.User.whitelist.top_user_message_count(guild),
 
-
-        'hour_totals': hour_graph(guild, total_messages),
-        'max_hour_count': max(total_hour_counts.values()),
+        # hour graph 
+        'hour_totals': hour_totals,
+        'max_hour_count': hour_max,
         'hour_strings': hour_strings,
 
-        ### left off here
+        # weekday graph
+        'weekday_dist': weekday_dist,
+        'max_weekday_count': max_weekday,
+
+
+
+
 
         'user_messages_table': get_messages_table(guild),
         'time_of_day_table': time_of_day_table,
         'time_of_day_maxes': time_of_day_maxes,
         'date_data': models.Date_Count.objects.date_counts_as_str(guild),
-
-        'weekday_dist': weekday_dist,
-        'max_weekday': max_weekday,
-        'days of the week': weekdays,
 
         'unique_words_table': get_unique_word_table(guild),
         'emoji_table': get_emoji_table(guild),
