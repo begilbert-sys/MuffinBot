@@ -1,13 +1,12 @@
 from django.db import models
 
-from . import Channel, Emoji, Guild, User
+from . import Channel, Emoji, Guild, GuildUser
 
 from .debug import timed
 
 from collections import Counter
 import datetime
 import heapq
-
 
 class UserStat_Manager(models.Manager):
     async def abulk_create_or_update(self, objs):
@@ -18,10 +17,6 @@ class UserStat_Manager(models.Manager):
             update_fields = update_fields,
             unique_fields = ['id']
         )
-
-    def cull(self):
-        '''deletes all objects with a count equal to 1'''
-        self.filter(count=1).delete()
     
     @timed
     def top_n_objs(self, guild: Guild, n: int = None):
@@ -33,11 +28,11 @@ class UserStat_Manager(models.Manager):
         else:
             return objs.most_common(n)
     @timed
-    def top_n_user_objs(self, user: User, n: int):
+    def top_n_user_objs(self, user: GuildUser, n: int):
         return self.filter(user=user)[:n]
 
 class UserStat(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(GuildUser, on_delete=models.CASCADE)
     count = models.PositiveIntegerField(default=0)
 
     objects = UserStat_Manager()
@@ -89,7 +84,7 @@ class Mention_Count_Manager(UserStat_Manager):
         # optimized
         top_n_tuples = list()
         pairdict = dict()
-        for mention_count in self.filter(user__guild=guild, user__blacklist=False):
+        for mention_count in self.filter(user__guild=guild, user__hidden=False):
             userpair = frozenset({mention_count.user_id, mention_count.obj_id})
             if userpair not in pairdict:
                 pairdict[userpair] = mention_count
@@ -119,10 +114,10 @@ class Mention_Count_Manager(UserStat_Manager):
         return top_n_tuples_result
     
     def top_n_user_mentions(self, user, n):
-        return [(mention_count.obj, mention_count.count) for mention_count in self.filter(user=user, obj__blacklist=False).order_by('-count')[:n]]
+        return [(mention_count.obj, mention_count.count) for mention_count in self.filter(user=user, obj__hidden=False).order_by('-count')[:n]]
 
 class Mention_Count(UserStat):
-    obj = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mentioned_user')
+    obj = models.ForeignKey(GuildUser, on_delete=models.CASCADE, related_name='mentioned_user')
 
     objects = Mention_Count_Manager()
 
@@ -136,7 +131,7 @@ class Hour_Count_Manager(UserStat_Manager):
             hour_count_dict[hour] = hour_sum if hour_sum is not None else 0
         return hour_count_dict
     
-    def user_hour_count_range(self, user: User, start: int, end: int):
+    def user_hour_count_range(self, user: GuildUser, start: int, end: int):
         # optimized
         return Hour_Count.objects.filter(user=user, obj__range=(start,end)).aggregate(models.Sum('count'))['count__sum']
     @timed
@@ -147,7 +142,7 @@ class Hour_Count_Manager(UserStat_Manager):
         '''
         # optimized
         user_dict = Counter()
-        for hour_count in self.filter(user__guild=guild, obj__range=(start, end), user__blacklist=False).select_related("user"):
+        for hour_count in self.filter(user__guild=guild, obj__range=(start, end), user__hidden=False).select_related("user"):
             user_dict[hour_count.user] += hour_count.count
         n_largest_users = heapq.nlargest(n, user_dict.items(), key=lambda item: item[1])
         return n_largest_users
@@ -189,16 +184,16 @@ class Date_Count_Manager(UserStat_Manager):
     def last_message_date(self, guild: Guild):
         return self.filter(user__guild=guild).latest().obj
     
-    def first_user_message_date(self, user: User):
+    def first_user_message_date(self, user: GuildUser):
         return self.filter(user=user).earliest().obj
     
-    def last_user_message_date(self, user: User):
+    def last_user_message_date(self, user: GuildUser):
         return self.filter(user=user).latest().obj
     
-    def total_user_days(self, user: User):
+    def total_user_days(self, user: GuildUser):
         return (self.last_user_message_date(user) - self.first_user_message_date(user)).days + 1
     
-    def total_user_active_days(self, user: User):
+    def total_user_active_days(self, user: GuildUser):
         return self.filter(user=user).count()
     @timed
     def date_counts_as_str(self, obj) -> dict:
@@ -206,7 +201,7 @@ class Date_Count_Manager(UserStat_Manager):
         '''returns a dictionary of how many messages were sent on every date
         past_n_days: allows the dict to be limited to the past n days. If None, returns all.'''
         date_strs = list()
-        if type(obj) is User:
+        if type(obj) is GuildUser:
             date_sums = list(self.filter(user=obj).values_list('obj').order_by('-obj').annotate(models.Sum('count')))
         elif type(obj) is Guild:
             date_sums = list(self.filter(user__guild=obj).values_list('obj').order_by('-obj').annotate(models.Sum('count')))
@@ -263,7 +258,7 @@ class Emoji_Count_Manager(UserStat_Manager):
         for emoji_count in self.filter(user__guild=guild):
             emojis[emoji_count.obj] += emoji_count.count
         return emojis.most_common(n)
-    def sorted_user_emojis(self, user: User):
+    def sorted_user_emojis(self, user: GuildUser):
         return [obj.emoji for obj in self.filter(user=user).order_by('-count')]
     
 class Emoji_Count(UserStat):
@@ -273,7 +268,7 @@ class Emoji_Count(UserStat):
 
 
 class Unique_Word_Count_Manager(UserStat_Manager):
-    def top_n_user_words(self, user: User, n):
+    def top_n_user_words(self, user: GuildUser, n):
         return list(self.filter(user=user)[:n].values_list('obj', 'count'))
     
 

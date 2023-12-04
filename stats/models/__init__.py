@@ -1,7 +1,8 @@
 from .guild import Guild
 from .emoji import Emoji
 from .channel import Channel
-from .user import User
+from .user import User, UserBlacklist
+from .guilduser import GuildUser
 from .userstats import (
     UserStat,
     Channel_Count,

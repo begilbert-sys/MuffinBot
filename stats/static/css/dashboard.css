@@ -1,0 +1,71 @@
+.cardtable {
+    margin: 0 auto;
+    width: 80%;
+    max-width: 1000px;
+    border-width: 1px;
+    border-style: solid;
+    border-color:black;
+    border-radius:5px;
+    padding-bottom:16px;
+    padding-right: 16px;
+}
+
+.cardtable tr {
+    display:flex;
+    flex-direction:row;
+    margin: 0 auto;
+}
+  
+.servercard {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:space-around;
+    background-color: #26282c;
+    border-style:solid;
+    border-width:1px;
+    border-radius:8px;
+    height: 183.41px;
+    width: 18%;
+    min-width: 125px;
+    color:white;
+    transition: background-color .125s,box-shadow .125s, transform .125s;
+    transform-origin: center bottom;
+    position:relative;
+    margin-top: 21px;
+    margin-left: 16px;
+}
+  
+.servercard:hover {
+    transform: translateY(-9px);
+    cursor:pointer;
+    box-shadow: 0 10px 18px rgba(0,0,0,.35);
+    background-color: #1e2023;
+    transition: background-color .125s,box-shadow .125s, transform .125s;
+    transform-origin: center bottom;
+}
+  
+/* these elements stop the card animation from glitching */
+.servercard:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+}
+  
+.servercard:hover::before {
+    height: calc(100% + 1em);
+}
+  
+  
+.text {
+    word-wrap:break-word;
+    max-width:145px;
+    margin: 0 auto;
+}
+  
+.servercard img {
+    border-radius: 50%;
+}

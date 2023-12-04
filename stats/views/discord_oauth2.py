@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse, JsonResponse
-
+from django.contrib.auth import authenticate, login, logout
 import requests
 
 from .client_info import CLIENT_ID, CLIENT_SECRET
@@ -45,7 +45,14 @@ def discord_login(request):
 
 def discord_login_redirect(request):
     code = request.GET.get('code')
-    print(code)
     response = exchange_code(code)
-    user = get_user_data(response)
-    return JsonResponse(user)
+    user_dict = get_user_data(response)['user']
+    user_model_obj = authenticate(request, user=user_dict)
+
+    login(request, user_model_obj)
+
+    return redirect("/dashboard/")
+
+def discord_logout(request):
+    logout(request)
+    return redirect("/")

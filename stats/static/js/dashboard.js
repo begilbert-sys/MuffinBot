@@ -1,3 +1,4 @@
+
 function fitText() {
     var container = $('.servercard');
     var text = $('.text');
@@ -6,7 +7,7 @@ function fitText() {
     text.css('font-size', fontSize + 'px');
     console.log(text.width());
     console.log(text.height());
-    while (text.height() > 50 && text.width() > 130) {
+    while (text.height() > 82) {
       fontSize--;
       text.css('font-size', fontSize + 'px');
     }

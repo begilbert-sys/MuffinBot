@@ -116,6 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'stats.auth.DiscordAuthenticationBackend'
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/

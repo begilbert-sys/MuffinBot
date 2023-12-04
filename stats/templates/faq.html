@@ -19,15 +19,21 @@
                 <ul>
                     <li style="margin-right:15px"><img src="https://cdn-icons-png.flaticon.com/512/465/465235.png" height=40>
                     <li class="muffinstats"><a href="../">MuffinStats</a></li>
-                    <li><a href="../dashboard">Dashboard</a></li>
+                    <li>Dashboard</li>
                     <li><a href="../add">Add to server</a></li>
-                    <li>Additional Info</li>
+                    <li><a href="../info">Additional Info</a></li>
                     <li><a href="../privacy">Privacy Policy/Opt-Out</a></li>
                 </ul>
             </nav>
-            <a href="../login/" class="discord_login">
-                <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/discord-white-icon.png">Discord Login
+            {% if user.is_authenticated %}
+            <a href="../logout/" class="discord_button logout">
+                <img src="">Logout
             </a>
+            {% else %}
+                <a href="../login/" class="discord_button">
+                    <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/discord-white-icon.png" height=20>Discord Login
+                </a>
+            {% endif %}
         </div>
         <div class="greybar" style="margin-top:5px; width:99.9%;"></div>
     </header>

@@ -8,3 +8,5 @@ class Guild(models.Model):
     join_dt = models.DateTimeField()
     last_message_dt = models.DateTimeField(null=True)
     timezone = models.CharField(max_length=32, default='utc')
+
+    premium = models.BooleanField(default=False)

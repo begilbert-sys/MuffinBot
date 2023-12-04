@@ -66,29 +66,29 @@ class Processor:
             Model_Class: dict() for Model_Class in COUNT_MODELS
         }
         self.cached_model_objects[models.User] = dict()
+        self.cached_model_objects[models.GuildUser] = dict()
         self.cached_model_objects[models.Emoji] = dict()
         self.cached_model_objects[models.Channel] = dict()
 
-    def _get_user(self, user: discord.User) -> models.User:
+    def _get_user(self, user: discord.User) -> models.GuildUser:
         '''
-        Return a user model object from the cache dict or, if one does not exist, then add one and return it
-        The cache dict key is the user's ID
+        Return a GuildUser model object from the cache dict or, if one does not exist, then add one and return it
         '''
-        if user.id in self.cached_model_objects[models.User]:
-            user_model_obj = self.cached_model_objects[models.User][user.id]
-        else:
-            if user.discriminator == '0':
-                tag = user.name
-            else:
-                tag = user.name + '＃' + user.discriminator
-            user_model_obj = models.User(
-                guild=self.guild_model_obj,
-                user_id = user.id,
-                tag = tag,
-                avatar_id = get_avatar_id(str(user.display_avatar))
-            )
-            self.cached_model_objects[models.User][user.id] = user_model_obj
-        return user_model_obj
+        if user.id in self.cached_model_objects[models.GuildUser]:
+            return self.cached_model_objects[models.GuildUser][user.id]
+        new_user_model_obj = models.User(
+            id=user.id,
+            tag=user.name,
+            discriminator=user.discriminator if user.discriminator != '0' else None,
+            avatar_id = get_avatar_id(str(user.display_avatar))
+        )
+        self.cached_model_objects[models.User][user.id] = new_user_model_obj
+        new_guilduser_model_obj = models.GuildUser(
+            guild=self.guild_model_obj,
+            user=new_user_model_obj
+        )
+        self.cached_model_objects[models.GuildUser][user.id] = new_guilduser_model_obj
+        return new_guilduser_model_obj
     
     def _get_channel(self, channel: discord.TextChannel):
         if channel.id in self.cached_model_objects[models.Channel]:
@@ -102,7 +102,7 @@ class Processor:
             self.cached_model_objects[models.Channel][channel.id] = channel_model_obj
         return channel_model_obj
     
-    def _get_message_mentions(self, message: discord.message, reply_message: discord.message = None) -> list[models.User]:
+    def _get_message_mentions(self, message: discord.message, reply_message: discord.message = None) -> list[models.GuildUser]:
         '''
         Return a generator of the User model objects representing a message's mentions
         A message's mentions consist of: the author of the message that's being replied to (if
@@ -115,20 +115,19 @@ class Processor:
 
     def _get_emoji(self, emoji_id: int, emoji_name: str, *, custom: bool):
         '''
-        Return an emoji model object
-        Gets the object from the cachem, or creates one if it isn't there
+        Return an emoji model object from the cache, or add one if it isn't there
         '''
         assert type(emoji_id) is int
         if emoji_id in self.cached_model_objects[models.Emoji]:
             return self.cached_model_objects[models.Emoji][emoji_id]
-        else:
-            emoji_model_obj = models.Emoji(
-                id = emoji_id,
-                name = emoji_name,
-                custom = custom
-            )
-            self.cached_model_objects[models.Emoji][emoji_id] = emoji_model_obj
-            return emoji_model_obj
+        
+        emoji_model_obj = models.Emoji(
+            id = emoji_id,
+            name = emoji_name,
+            custom = custom
+        )
+        self.cached_model_objects[models.Emoji][emoji_id] = emoji_model_obj
+        return emoji_model_obj
         
     def _get_default_emojis(self, message: discord.Message):
         '''
@@ -149,7 +148,7 @@ class Processor:
         for name, key in re.findall(EMOJI_CODE_REGEX, message.content):
             yield self._get_emoji(int(key), name, custom=True)
 
-    def _increment_count(self, Count_Class: type, user: models.User, object, increment_by):
+    def _increment_count(self, Count_Class: type, user: models.GuildUser, object, increment_by):
         '''
         Increment (or decrement) a count object from the cache or, if one does not exist, create one and add it to the cache
         The cache dict key is a hashed tuple consisting of the user's ID and a unique object associated with the model object
@@ -268,14 +267,14 @@ class Processor:
             }
         )
 
-        if not created: # update these values, just in case they change 
+        if not created: # update these values, just in case they've changed
             self.guild_model_obj.name = guild.name
             self.guild_model_obj.icon = guild.icon
             await self.guild_model_obj.asave()
         
     async def process_channel(self, channel: discord.channel):
         '''
-
+        Sets up the channel history object to be 
         '''
         if self.history:
             if not self.current_channel_model_obj is None:
@@ -303,9 +302,9 @@ class Processor:
         items = tuple(self.cache_copy[Model_Class].items())
         for hash_val, dummy_model_obj in items:
             assert issubclass(Model_Class, models.UserStat)
-            valid_user = self.cache_copy[models.User][dummy_model_obj.user.user_id]
+            valid_user = self.cache_copy[models.GuildUser][dummy_model_obj.user.user_id]
             if Model_Class is models.Mention_Count:
-                obj_attr = self.cache_copy[models.User][dummy_model_obj.obj.user_id]
+                obj_attr = self.cache_copy[models.GuildUser][dummy_model_obj.obj.user_id]
             else:
                 obj_attr = dummy_model_obj.obj
             kwargs = {'user': valid_user, 'obj': obj_attr}
@@ -325,31 +324,31 @@ class Processor:
         )
         logger.debug(f'{self.guild_name}::{Model_Class.__name__} saved to DB')
     
-    async def _update_and_save_user_objects(self):
+    async def _update_and_save_guilduser_objects(self):
         '''
-        Update and save User objects to the DB
-        Update the User object IDs to those assigned to them by the database
+        Update and save GuildUser objects to the DB
+        Update the GuildUser object IDs to those assigned to them by the database
         '''
-        logger.debug(self.guild_name + '::User saving. . . ')
-        for hash_val, dummy_model_obj in self.cache_copy[models.User].items():
+        logger.debug(self.guild_name + '::GuildUser saving. . . ')
+        for hash_val, dummy_model_obj in self.cache_copy[models.GuildUser].items():
             user_id = dummy_model_obj.user_id
             guild = dummy_model_obj.guild
             try:
-                real_model_obj = await models.User.objects.aget(user_id=user_id, guild=guild)
+                real_model_obj = await models.GuildUser.objects.aget(user_id=user_id, guild=guild)
                 real_model_obj.merge(dummy_model_obj)
-                self.cache_copy[models.User][hash_val] = real_model_obj
-            except models.User.DoesNotExist:
+                self.cache_copy[models.GuildUser][hash_val] = real_model_obj
+            except models.GuildUser.DoesNotExist:
                 pass
         
-        await models.User.objects.abulk_create_or_update(
-            self.cache_copy[models.User].values()
+        await models.GuildUser.objects.abulk_create_or_update(
+            self.cache_copy[models.GuildUser].values()
         )
         updated_models_list = list()
-        for usr in self.cache_copy[models.User].values():
+        for usr in self.cache_copy[models.GuildUser].values():
             try:
-                real_model_obj = await models.User.objects.aget(user_id=usr.user_id, guild=self.guild_model_obj) 
+                real_model_obj = await models.GuildUser.objects.aget(user_id=usr.user_id, guild=self.guild_model_obj) 
                 updated_models_list.append(real_model_obj)
-            except models.User.DoesNotExist:
+            except models.GuildUser.DoesNotExist:
                 print(f"{usr.name}, {usr.user_id}")
                 raise
             
@@ -358,45 +357,29 @@ class Processor:
         # the cached (temporary) user models must be updated with those IDs
         # this is so that the count objects can backreference the correct user object
         # this is ABSOLUTELY NECESSARY
-        self.cache_copy[models.User] = {user_model_obj.user_id:user_model_obj for user_model_obj in updated_models_list}
+        self.cache_copy[models.GuildUser] = {user_model_obj.user_id:user_model_obj for user_model_obj in updated_models_list}
 
-        logger.debug(self.guild_name + '::User saved to DB')
+        logger.debug(self.guild_name + '::GuildUser saved to DB')
 
-    async def _update_and_save_emoji_objects(self):
+
+    async def _update_and_save_objects(self, Model_Class):
         '''
-        Update and save Emoji objects to the DB
+        Update and save objects from the cache to the DB
         '''
-        logger.debug(self.guild_name + '::Emoji saving. . . ')
-        for hash_val, dummy_model_obj in self.cache_copy[models.Emoji].items():
+        logger.debug(f'{self.guild_name}::{Model_Class.__name__} saving. . .')
+        for obj_id, dummy_model_obj in self.cache_copy[Model_Class].items():
             try:
-                real_model_obj = await models.Emoji.objects.aget(id=dummy_model_obj.id)
+                real_model_obj = await Model_Class.objects.aget(id=dummy_model_obj.id)
                 real_model_obj.merge(dummy_model_obj)
-                self.cache_copy[models.Emoji][hash_val] = real_model_obj
-            except models.Emoji.DoesNotExist:
+                self.cache_copy[Model_Class][obj_id] = real_model_obj  
+            except Model_Class.DoesNotExist:
                 pass
-        await models.Emoji.objects.abulk_create_or_update(
-            self.cache_copy[models.Emoji].values()
-        )
-        logger.debug(self.guild_name + '::Emoji saved to DB')
-        
-    async def _update_and_save_channel_objects(self):
-        '''
-        Update and save Channel objects to the DB
-        '''
-        logger.debug(self.guild_name + '::Channel saving. . . ')
-        for hash_val, dummy_model_obj in self.cache_copy[models.Channel].items():
-            try:
-                real_model_obj = await models.Channel.objects.aget(id=dummy_model_obj.id)
-                real_model_obj.merge(dummy_model_obj)
-                self.cache_copy[models.Channel][hash_val] = real_model_obj
-            except models.Channel.DoesNotExist:
-                pass
-        await models.Channel.objects.abulk_create_or_update(
-            self.cache_copy[models.Channel].values()
-        )
-        logger.debug(self.guild_name + '::Channel saved to DB')
+        await Model_Class.objects.abulk_create_or_update(
+            self.cache_copy[Model_Class].values()
+        )   
+        logger.debug(f'{self.guild_name}::{Model_Class.__name__} saved to DB')
 
-    async def save(self):
+    async def _save(self):
         '''
         Asynchronously saves all info to the DB
         '''
@@ -412,15 +395,25 @@ class Processor:
 
 
             # save these objects first, to avoid foreign key conflicts (you dummy)
-            await self._update_and_save_user_objects()
-            await self._update_and_save_emoji_objects()
+            await self._update_and_save_objects(models.User)
+            await self._update_and_save_objects(models.Emoji)
+
+            await self._update_and_save_guilduser_objects()
+
             if self.history:
                 await self.current_channel_model_obj.asave()
             else:
-                await self._update_and_save_channel_objects()
+                await self._update_and_save_objects(models.Channel)
+
             # save the rest asynchronously
             gather_list = []
             for Model_Class in COUNT_MODELS:
                 gather_list.append(self._update_and_save_count_model_objects(Model_Class))
 
             await asyncio.gather(*gather_list)
+
+    async def save(self):
+        try:
+            await self._save()
+        except Exception as e:
+            logger.error(e, exc_info=True)

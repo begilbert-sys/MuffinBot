@@ -9,10 +9,13 @@
   <title>Stats FAQ</title>
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" type="text/css" />
   <link rel="icon">
 
 </head>
 <body>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
     <header>
         <div class="header-navigation">
             <nav>
@@ -25,24 +28,48 @@
                     <li><a href="../privacy">Privacy Policy/Opt-Out</a></li>
                 </ul>
             </nav>
-            <a href="../login/" class="discord_login">
-                <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/discord-white-icon.png">Discord Login
+            <a href="../logout/" class="discord_button logout">
+                <img src="{{ user.avatar }}">Logout
             </a>
         </div>
         <div class="greybar" style="margin-top:5px; width:99.9%;"></div>
     </header>
     <h1>Servers</h1>
-    <span class="subtext">Every one of your servers that MuffinBot has collected data from</span>
+    <span class="subtext">All of the servers that both you and MuffinBot can see</span>
     <br>
     <br>
-    <div class="cardtable">
-        <div class="servercard">
-            <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
-            <p class="text">UCLA Students & Friendskjdhfiuskjdghiufhjsbd</p>
-        </div>
-    </div>
-
-
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-    <script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
+    <table class="cardtable">
+        <tr>
+            <td class="servercard">
+                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
+                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
+            </td>
+            <td class="servercard">
+                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
+                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
+            </td>
+            <td class="servercard">
+                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
+                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
+            </td>
+            <td class="servercard">
+                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
+                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
+            </td>
+            <td class="servercard">
+                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
+                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
+            </td>
+        </tr>
+        <tr>
+            <td class="servercard">
+                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
+                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
+            </td>
+            <td class="servercard">
+                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
+                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
+            </td>
+        </tr>
+    </table>
 </body>

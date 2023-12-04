@@ -12,6 +12,14 @@ from .processor import Processor
 MSG_LIMIT = 100
 logger = logging.getLogger('collection')
 
+async def _get_messages(channel, last_message_dt):
+    return [message async for message in channel.history(
+        oldest_first=True,
+        after=last_message_dt,
+        limit=MSG_LIMIT
+    )]
+
+
 class Collector:
     def __init__(self, bot, guild):
         self.bot = bot
@@ -38,7 +46,7 @@ class Collector:
                     limit = MSG_LIMIT
                 )]
 
-            except asyncio.TimeoutError as e:
+            except (TimeoutError, asyncio.TimeoutError) as e:
                 logger.error(e, exc_info=True)
                 continue
 
