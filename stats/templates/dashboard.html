@@ -16,6 +16,7 @@
 <body>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
     <script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
+    
     <header>
         <div class="header-navigation">
             <nav>
@@ -23,12 +24,12 @@
                     <li style="margin-right:15px"><img src="https://cdn-icons-png.flaticon.com/512/465/465235.png" height=40>
                     <li class="muffinstats"><a href="../">MuffinStats</a></li>
                     <li>Dashboard</li>
-                    <li><a href="../add">Add to server</a></li>
-                    <li><a href="../info">Additional Info</a></li>
-                    <li><a href="../privacy">Privacy Policy/Opt-Out</a></li>
+                    <li><a href="/add">Add to server</a></li>
+                    <li><a href="/info">Additional Info</a></li>
+                    <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
                 </ul>
             </nav>
-            <a href="../logout/" class="discord_button logout">
+            <a href="/logout/" class="discord_button logout">
                 <img src="{{ user.avatar }}">Logout
             </a>
         </div>
@@ -39,37 +40,17 @@
     <br>
     <br>
     <table class="cardtable">
-        <tr>
-            <td class="servercard">
-                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
-                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
-            </td>
-            <td class="servercard">
-                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
-                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
-            </td>
-            <td class="servercard">
-                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
-                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
-            </td>
-            <td class="servercard">
-                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
-                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
-            </td>
-            <td class="servercard">
-                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
-                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
-            </td>
-        </tr>
-        <tr>
-            <td class="servercard">
-                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
-                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
-            </td>
-            <td class="servercard">
-                <img src="https://i.pinimg.com/originals/24/8a/45/248a452587f56539da876d6e2bd13007.png" height=100>
-                <p class="text">OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO</p>
-            </td>
-        </tr>
+        {% for row in server_table %}
+            <tr>
+                {% for guild in row %}
+                    <td class="servercard">
+                        <a href="/guild/{{ guild.id }}">
+                            <img src="{{ guild.display_icon }}" height=100>
+                            <p class="text">{{ guild.name }}</p>
+                        </a>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
     </table>
 </body>

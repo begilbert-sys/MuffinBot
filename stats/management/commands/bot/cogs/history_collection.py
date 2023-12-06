@@ -57,8 +57,8 @@ class History_Collection_Cog(commands.Cog):
         
     @commands.Cog.listener()
     async def on_ready(self):
-        guild = self.bot.get_guild(424942639906029568)
-        self.bot.loop.create_task(self.collection_instance(guild))
+        for guild in self.bot.guilds:
+            self.bot.loop.create_task(self.collection_instance(guild))
         #guild2 = self.bot.get_guild(100770673609150464)
         #if guild2.id not in self.active_collectors:
             #self.bot.loop.create_task(self.collection_instance(guild2))

@@ -1,6 +1,6 @@
 import discord
 
-import asyncio, aiohttp
+import asyncio
 
 import logging
 
@@ -10,15 +10,19 @@ from timeit import default_timer
 from .processor import Processor
 
 MSG_LIMIT = 100
+TIMEOUT = 10
+
 logger = logging.getLogger('collection')
 
-async def _get_messages(channel, last_message_dt):
+async def _get_messages(channel: discord.TextChannel, last_message_dt):
+    # this function exists for the sole reason that in order to set a timeout using asyncio.wait_for(),
+    # it needs to be able to call an awaitable function 
+    # I'd use a lambda but sadly, async lambdas don't exist
     return [message async for message in channel.history(
         oldest_first=True,
         after=last_message_dt,
         limit=MSG_LIMIT
     )]
-
 
 class Collector:
     def __init__(self, bot, guild):
@@ -40,28 +44,17 @@ class Collector:
             last_message_dt = self.db_processor.current_channel_model_obj.last_message_dt
             start = default_timer()
             try:
-                messages = [message async for message in channel.history(
-                    oldest_first = True,
-                    after=last_message_dt,
-                    limit = MSG_LIMIT
-                )]
-
-            except (TimeoutError, asyncio.TimeoutError) as e:
+                messages = await asyncio.wait_for(
+                    _get_messages(channel, last_message_dt), 
+                    timeout=TIMEOUT
+                )
+            except TimeoutError as e:
                 logger.error(e, exc_info=True)
                 continue
-
-            except aiohttp.client_exceptions.ClientOSError as e:
-                if e.errno == 60:
-                    # error code 60 denotes a timeout error and means the error can be ignored 
-                    logger.error(e, exc_info=True)
-                    continue
-                else:
-                    raise
             finally:
                 end = default_timer()
                 logger.debug('Actual message Scraping: ' +  str((end-start)) + ' seconds')
             
-
             start = default_timer()
             for message in messages:
                 if message.author.bot:

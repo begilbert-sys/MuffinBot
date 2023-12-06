@@ -35,7 +35,9 @@ if other:
     sizes.append(other)
 
 
-
+def fmt(pct_value):
+    mb_value = (total*pct_value/100) / (10 ** 6)
+    return '{:.1f}%\n({:.2f}MB)'.format(pct_value, mb_value)
 fig, ax = plt.subplots()
-ax.pie(sizes, labels=labels, autopct='%1.1f%%')
+ax.pie(sizes, labels=labels, autopct=fmt, radius=1.5)
 plt.show()

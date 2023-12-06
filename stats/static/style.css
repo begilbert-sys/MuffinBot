@@ -111,13 +111,10 @@ table {
   margin-right: 15px;
 }
 
-
-
 .greybar {
   width: 90%;
   height: 3px;
-  margin-top: 1em;
-  margin-bottom: 1.8em;
+  margin: 1em auto 1.8em auto;
   background-color: #c0bcb4;
 }
 

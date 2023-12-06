@@ -42,7 +42,7 @@ class GuildUser_Manager(models.Manager):
 
 class GuildUser_Whitelist_Manager(GuildUser_Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(blacklist=False)
+        return super().get_queryset().filter(hidden=False)
 
 
 class GuildUser(models.Model):

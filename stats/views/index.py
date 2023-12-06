@@ -15,7 +15,7 @@ hour_strings = ('12AM', '1AM', '2AM', '3AM', '4AM', '5AM',
 weekdays = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
 
 
-def get_time_of_day_counts(user: models.User):
+def get_time_of_day_counts(user: models.GuildUser):
     return {
         'night': models.Hour_Count.objects.user_hour_count_range(user, 0, 5),
         'morning':  models.Hour_Count.objects.user_hour_count_range(user, 6, 11),
@@ -29,11 +29,11 @@ def get_messages_table(guild: models.Guild):
     Each list element is a row, and each dictionary entry is a column
     '''
     user_table = list()
-    for user in models.User.whitelist.filter(guild=guild)[:100].iterator():
+    for user in models.GuildUser.whitelist.filter(guild=guild)[:100].iterator():
         if user.messages == 0:
             continue
         user_table.append({
-            'user': user,
+            'guilduser': user,
             'time_of_day_counts': get_time_of_day_counts(user),
             'lines_per_day': user.messages / models.Date_Count.objects.total_user_days(user),
             'special_words': list(models.Unique_Word_Count.objects.filter(user=user)[:5].values_list('obj', flat=True)),
@@ -84,7 +84,7 @@ def index(request, guild_id):
     # predefine variables
     guild = models.Guild.objects.get(id=guild_id)
 
-    total_messages = models.User.objects.total_messages(guild)
+    total_messages = models.GuildUser.objects.total_messages(guild)
 
     # hour graph 
     hour_totals = hour_graph(guild, total_messages)
@@ -104,9 +104,9 @@ def index(request, guild_id):
         'first_message_date': models.Date_Count.objects.first_message_date(guild),
         'last_message_date': models.Date_Count.objects.last_message_date(guild),
         'total_days': models.Date_Count.objects.total_days(guild),
-        'total_users': models.User.objects.total_users(guild),
+        'total_users': models.GuildUser.objects.total_users(guild),
         'total_messages': total_messages,
-        'most_messages': models.User.whitelist.top_user_message_count(guild),
+        'most_messages': models.GuildUser.whitelist.top_user_message_count(guild),
 
         # hour graph 
         'hour_totals': hour_totals,

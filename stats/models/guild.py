@@ -10,3 +10,8 @@ class Guild(models.Model):
     timezone = models.CharField(max_length=32, default='utc')
 
     premium = models.BooleanField(default=False)
+
+    def display_icon(self):
+        if self.icon is None:
+            return 'https://cdn.discordapp.com/embed/avatars/0.png'
+        return self.icon
