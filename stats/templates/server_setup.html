@@ -14,7 +14,10 @@
 
 </head>
 <body>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script>
+        const up_arrow = "{% static 'assets/sort_up.svg' %}";
+        const down_arrow = "{% static 'assets/sort_down.svg' %}";
+    </script>
     <script type="text/javascript" src="{% static 'js/server_setup.js' %}"></script>
     <header>
         <div class="header-navigation">
@@ -42,19 +45,36 @@
     <p style="font-weight: 700;">Select a timezone</p>
 
     <div class="searchbox_wrapper">
-        <button class="searchbutton" onclick="showPopdown()">
+        <button class="searchbutton" onclick="toggleSelector()">
             <img src="{% static 'assets/earth.svg' %}"></img>
-            <span>Pacific Time - US & Canada (11:56pm) ▾</span>
+            <span>Pacific Time - US & Canada (11:56pm) <img id="popdown-arrow" src="{% static 'assets/sort_down.svg' %}">
         </button>
     </div>
-    <div id="timezone-popdown" class="timezone_wrapper">
+    <div id="timezone-wrapper" class="timezone_wrapper" style="display: none;">
         <input class="inputbox" type="text" placeholder="Search...">
         <div class="tz_options">
             <div class="tz_category">
                 US/CANADA
             </div>
+            <div class="tz_selection" id="pacific-time">
+                <div>Pacific Time - US & Canada</div>
+                <div>8:40</div>
+            </div>
             <div class="tz_selection">
-                Pacific Time - US & Canada
+                <div>Pacific Time - US & Canada</div>
+                <div>8:40</div>
+            </div>
+            <div class="tz_selection">
+                <div>Pacific Time - US & Canada</div>
+                <div>8:40</div>
+            </div>
+            <div class="tz_selection">
+                <div>Pacific Time - US & Canada</div>
+                <div>8:40</div>
+            </div>
+            <div class="tz_selection">
+                <div>Pacific Time - US & Canada</div>
+                <div>8:40</div>
             </div>
 
     </input>
