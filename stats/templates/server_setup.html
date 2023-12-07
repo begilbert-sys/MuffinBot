@@ -10,14 +10,30 @@
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
   <link rel="stylesheet" href="{% static 'css/setup.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'css/select2-modified.css' %}" type="text/css" />
   <link rel="icon">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'css/select2-modified.css' %}" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 </head>
 <body>
-    <script>
-        const up_arrow = "{% static 'assets/sort_up.svg' %}";
-        const down_arrow = "{% static 'assets/sort_down.svg' %}";
-    </script>
+    <style>
+        /* this style must be defined within the document because it contains a Django static asset */
+        .select2-selection__rendered:before {
+            content: '';
+            display: inline-block; 
+            width: 20px; 
+            height: 20px; 
+            background-image: url('{% static 'assets/earth.svg' %}');
+            background-size: 18px;
+            background-repeat: no-repeat;
+            vertical-align: middle;
+            position: relative;
+            margin-right: 11px;
+        }
+    </style>
     <script type="text/javascript" src="{% static 'js/server_setup.js' %}"></script>
     <header>
         <div class="header-navigation">
@@ -44,39 +60,15 @@
     <span class="subtext">This isn't necessarily your timezone, it's what works best for everyone</span>
     <p style="font-weight: 700;">Select a timezone</p>
 
-    <div class="searchbox_wrapper">
-        <button class="searchbutton" onclick="toggleSelector()">
-            <img src="{% static 'assets/earth.svg' %}"></img>
-            <span>Pacific Time - US & Canada (11:56pm) <img id="popdown-arrow" src="{% static 'assets/sort_down.svg' %}">
-        </button>
-    </div>
-    <div id="timezone-wrapper" class="timezone_wrapper" style="display: none;">
-        <input class="inputbox" type="text" placeholder="Search...">
-        <div class="tz_options">
-            <div class="tz_category">
-                US/CANADA
-            </div>
-            <div class="tz_selection" id="pacific-time">
-                <div>Pacific Time - US & Canada</div>
-                <div>8:40</div>
-            </div>
-            <div class="tz_selection">
-                <div>Pacific Time - US & Canada</div>
-                <div>8:40</div>
-            </div>
-            <div class="tz_selection">
-                <div>Pacific Time - US & Canada</div>
-                <div>8:40</div>
-            </div>
-            <div class="tz_selection">
-                <div>Pacific Time - US & Canada</div>
-                <div>8:40</div>
-            </div>
-            <div class="tz_selection">
-                <div>Pacific Time - US & Canada</div>
-                <div>8:40</div>
-            </div>
-
-    </input>
+    <!--display: none; prevents FOUC-->
+    <select class="js-example-basic-single" id="tz-selector" name="state" style="display:none;">
+        <optgroup label="US/CANADA">
+            <option value="PA">Pacific Time - US & Canada</option>
+            <option value="AL">Central Time - US & Canada</option>
+            <option value="AL">Eastern Time - US & Canada</option>
+            <option value="AL">Central Time - US & Canada</option>
+            <option value="WY">Wyoming</option>
+        </optgroup>
+    </select>
     </div>
 </body>
