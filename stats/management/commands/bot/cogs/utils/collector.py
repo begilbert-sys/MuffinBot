@@ -49,7 +49,7 @@ class Collector:
                     timeout=TIMEOUT
                 )
             except TimeoutError as e:
-                logger.warning(f'{self.guild.name} timeout')
+                logger.warning(f'{self.guild.name} timeout in channel {channel.name} at {last_message_dt}')
                 continue
             finally:
                 end = default_timer()

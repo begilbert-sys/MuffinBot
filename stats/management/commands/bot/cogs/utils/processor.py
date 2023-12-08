@@ -257,18 +257,26 @@ class Processor:
         Save a guild's info to the DB if it has not already been added
         '''
         self.guild_name = guild.name
-        self.guild_model_obj, created = await models.Guild.objects.aget_or_create(
+        self.guild_model_obj, newly_created = await models.Guild.objects.aget_or_create(
             id=guild.id, 
             defaults={
                 "name": guild.name, 
-                "icon_id": get_icon_id(guild.icon),
+                "icon_id": get_icon_id(str(guild.icon)),
                 "join_dt": datetime.datetime.now(datetime.UTC)
             }
         )
-
-        if not created: # update these values, just in case they've changed
+        if newly_created: 
+            for channel in guild.channels:
+                perms = channel.permissions_for(guild.me)
+                if type(channel) is discord.channel.TextChannel and perms.read_message_history:
+                    await models.Channel.objects.acreate(
+                        guild = self.guild_model_obj,
+                        id=channel.id,
+                        name=channel.name,
+                    )
+        else: # update these values, just in case they've changed
             self.guild_model_obj.name = guild.name
-            self.guild_model_obj.icon = guild.icon
+            self.guild_model_obj.icon_id = get_icon_id(str(guild.icon))
             await self.guild_model_obj.asave()
         
     async def process_channel(self, channel: discord.channel):

@@ -12,6 +12,6 @@ class Guild(models.Model):
     setup = models.BooleanField(default=False)
 
     def display_icon(self):
-        if self.icon is None:
+        if self.icon_id is None:
             return 'https://cdn.discordapp.com/embed/avatars/0.png'
-        return self.icon
+        return f'https://cdn.discordapp.com/icons/{self.id}/{self.icon_id}'

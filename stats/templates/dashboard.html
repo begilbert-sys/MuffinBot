@@ -45,10 +45,10 @@
                 {% for guild in row %}
                     <td class="servercard">
                         {% if guild.setup %}
-                            <a href="/guild/{{ guild.id }}/setup">
-                                    <img src="{% static 'assets/notification.svg' %}" class="medallion">
-                        {% else %}
                             <a href="/guild/{{ guild.id }}">
+                        {% else %}
+                            <a href="/guild/{{ guild.id }}/setup">
+                                <img src="{% static 'assets/notification.svg' %}" class="medallion">
                         {% endif %}
                             <img src="{{ guild.display_icon }}" height=100>
                             <p class="text">{{ guild.name }}</p>

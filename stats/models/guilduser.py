@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 from . import Guild, User
 
@@ -44,6 +45,8 @@ class GuildUser_Whitelist_Manager(GuildUser_Manager):
     def get_queryset(self):
         return super().get_queryset().filter(hidden=False)
 
+def _hourfield():
+    return [0 for _ in range(48)]
 
 class GuildUser(models.Model):
     guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
@@ -51,6 +54,7 @@ class GuildUser(models.Model):
 
     messages = models.PositiveIntegerField(default=0)
 
+    hour_counts = ArrayField(models.PositiveSmallIntegerField(), size=48, default=_hourfield)
     curse_word_count = models.PositiveIntegerField(default=0)
     ALL_CAPS_count = models.PositiveIntegerField(default=0)
     total_chars = models.PositiveBigIntegerField(default=0)

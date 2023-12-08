@@ -85,5 +85,6 @@
 .medallion {
     position:absolute;
     height:20px;
-    left: 100px;
+    left: 150px;
+    top: -10px;
 }
