@@ -44,7 +44,12 @@
             <tr>
                 {% for guild in row %}
                     <td class="servercard">
-                        <a href="/guild/{{ guild.id }}">
+                        {% if guild.setup %}
+                            <a href="/guild/{{ guild.id }}/setup">
+                                    <img src="{% static 'assets/notification.svg' %}" class="medallion">
+                        {% else %}
+                            <a href="/guild/{{ guild.id }}">
+                        {% endif %}
                             <img src="{{ guild.display_icon }}" height=100>
                             <p class="text">{{ guild.name }}</p>
                         </a>

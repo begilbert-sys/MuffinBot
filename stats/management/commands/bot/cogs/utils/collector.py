@@ -49,7 +49,7 @@ class Collector:
                     timeout=TIMEOUT
                 )
             except TimeoutError as e:
-                logger.error(e, exc_info=True)
+                logger.warning(f'{self.guild.name} timeout')
                 continue
             finally:
                 end = default_timer()

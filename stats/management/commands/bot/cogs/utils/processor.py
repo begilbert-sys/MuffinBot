@@ -30,16 +30,15 @@ def get_URLs(string: str) -> list[str]:
     return raw_urls
 
 
-def get_avatar_id(icon_url: str) -> str:
+def get_icon_id(icon_url: str) -> str:
     # storiung this instead of the entire URL cuts storage space big time
     '''Given the URL of a discord avatar, return the avatar's hex ID'''
-    av_id_regex = r'https://cdn\.discordapp\.com/avatars/\d+/((?:a_)?[0-9a-f]+)'
+    av_id_regex = r'https://cdn\.discordapp\.com/(?:avatars|icons)/\d+/((?:a_)?[0-9a-f]+)'
     regex_match = re.match(av_id_regex, icon_url)
     if regex_match:
         return regex_match.group(1)
     else:
         return None # indicates default avatar
-    
 
 # list all of the count model classes
 COUNT_MODELS = models.UserStat.__subclasses__()
@@ -80,7 +79,7 @@ class Processor:
             id=user.id,
             tag=user.name,
             discriminator=user.discriminator if user.discriminator != '0' else None,
-            avatar_id = get_avatar_id(str(user.display_avatar))
+            avatar_id = get_icon_id(str(user.display_avatar))
         )
         self.cached_model_objects[models.User][user.id] = new_user_model_obj
         new_guilduser_model_obj = models.GuildUser(
@@ -262,7 +261,7 @@ class Processor:
             id=guild.id, 
             defaults={
                 "name": guild.name, 
-                "icon": guild.icon, 
+                "icon_id": get_icon_id(guild.icon),
                 "join_dt": datetime.datetime.now(datetime.UTC)
             }
         )

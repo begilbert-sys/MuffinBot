@@ -1,10 +1,22 @@
 function getCurrentTimeString() {
     var now = new Date;
+
     var hour = now.getHours();
+    var hourString = String(hour);
+    if (hour === 0) {
+        hourString = '12';
+    }
+
+    var minute = now.getMinutes();
+    var minuteString = String(minute);
+    if (minute < 10) {
+        minuteString = '0' + minuteString;
+    }
+
     if (hour <= 12) {
-        return now.getHours() + ":" + now.getMinutes() + "am";
+        return hourString + ":" + minuteString + "am";
     } else {
-        return (now.getHours() - 12) + ":" + now.getMinutes() + "pm";
+        return (hour - 12) + ":" + minuteString + "pm";
     }
 }
 

@@ -81,3 +81,9 @@
 .servercard img {
     border-radius: 50%;
 }
+
+.medallion {
+    position:absolute;
+    height:20px;
+    left: 100px;
+}

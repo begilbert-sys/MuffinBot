@@ -4,12 +4,12 @@ class Guild(models.Model):
     id = models.PositiveBigIntegerField(primary_key=True)
 
     name = models.CharField(max_length=100)
-    icon = models.URLField(null=True)
+    icon_id = models.CharField(max_length=34, null=True) # the 'a_' prefix for animated avatars adds two characters
     join_dt = models.DateTimeField()
     last_message_dt = models.DateTimeField(null=True)
-    timezone = models.CharField(max_length=32, default='utc')
 
-    premium = models.BooleanField(default=False)
+    premium_level = models.SmallIntegerField(default=0)
+    setup = models.BooleanField(default=False)
 
     def display_icon(self):
         if self.icon is None:

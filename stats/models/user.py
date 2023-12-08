@@ -16,6 +16,7 @@ class User(models.Model):
     avatar_id = models.CharField(max_length=34, null=True) # the 'a_' prefix for animated avatars adds two characters
 
     last_login = models.DateTimeField(null=True)
+    timezone = models.CharField(max_length=32, default='utc')
 
     hidden = models.BooleanField(default=False)
 

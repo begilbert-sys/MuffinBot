@@ -5,6 +5,7 @@ from . import views
 app_name = 'stats'
 urlpatterns = [
     path("guild/<int:guild_id>/", views.index, name="index"),
+    path("guild/<int:guild_id>/setup", views.channel_setup, name="channel setup"),
     path("guild/<int:guild_id>/details/", views.details, name="details"),
     path("guild/<int:guild_id>/user/<str:tag>", views.users, name="users"),
     path("FAQ/", views.faq, name="FAQ"),
