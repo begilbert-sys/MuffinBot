@@ -425,9 +425,19 @@ table {
   margin: 5px 0px;
 }
 
+.emoji_table {
+  border-spacing: 10px !important;
+  border-collapse: separate;
+}
+
 .emoji_table td {
   height: 27px;
+  border-width: 2px;
+  border-color: #5765F2;
+  border-radius: 20px;
+  border-style: solid;
 }
+
 .emoji_display {
   display: flex;
   align-items: center;

@@ -54,7 +54,7 @@ class GuildUser(models.Model):
 
     messages = models.PositiveIntegerField(default=0)
 
-    hour_counts = ArrayField(models.PositiveSmallIntegerField(), size=48, default=_hourfield)
+    hour_counts = ArrayField(models.PositiveIntegerField(), size=48, default=_hourfield)
     curse_word_count = models.PositiveIntegerField(default=0)
     ALL_CAPS_count = models.PositiveIntegerField(default=0)
     total_chars = models.PositiveBigIntegerField(default=0)

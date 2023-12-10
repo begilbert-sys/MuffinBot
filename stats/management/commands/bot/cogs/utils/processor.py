@@ -12,6 +12,8 @@ from itertools import chain
 from stats import models
 from django.db import connection
 
+DELETED_USER_ID = 456226577798135808
+
 logger = logging.getLogger('collection')
 
 with open('stats/data/words.txt') as f:
@@ -81,6 +83,8 @@ class Processor:
             discriminator=user.discriminator if user.discriminator != '0' else None,
             avatar_id = get_icon_id(str(user.display_avatar))
         )
+        if user.id == DELETED_USER_ID:
+            new_user_model_obj.hidden = True
         self.cached_model_objects[models.User][user.id] = new_user_model_obj
         new_guilduser_model_obj = models.GuildUser(
             guild=self.guild_model_obj,
