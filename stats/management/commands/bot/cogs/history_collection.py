@@ -65,6 +65,7 @@ class History_Collection_Cog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_disconnect(self):
+        logger.warning("CLIENT DISCONNECTED")
         for collector in self.active_collectors.values():
             await collector.db_processor.save()
         await self.bot.close()

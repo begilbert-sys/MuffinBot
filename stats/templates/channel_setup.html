@@ -41,9 +41,10 @@
     </span>
     <br>
     <br>
-    
+
     <form action="/submit/" method="post">
         {% csrf_token %}
+        {{ formset.management_form }}
         <table class="channeltable">
         {% for row in formset_table %}
             <tr>
@@ -57,10 +58,12 @@
         </table>
         <br>
         <br>
-        <input class="submit" type="submit" value="Submit">
+        <input class="submit" type="submit" value="Next Step">
     </form>
     <script type="text/javascript" src="{% static 'js/channel_setup.js' %}"></script>
     <br>
     <br>
     <br>
 </body>
+
+</html>

@@ -82,9 +82,46 @@
     border-radius: 50%;
 }
 
-.medallion {
+.medallion img {
     position:absolute;
     height:20px;
     left: 150px;
     top: -10px;
+}
+
+.medallion img:hover {
+    transform: scale(1.1);
+}
+  
+.medallion .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 105%;
+    left: 91%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.medallion .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.medallion:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
 }

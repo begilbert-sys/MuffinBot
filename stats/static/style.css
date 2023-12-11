@@ -408,11 +408,11 @@ table {
   text-decoration: underline;
 }
 
-.questions a {
+a {
   color: white;
   text-decoration: underline;
 }
-.questions a:hover {
+a:hover {
   color: #D3D3D3;
 }
 

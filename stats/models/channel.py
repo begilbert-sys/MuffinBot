@@ -17,7 +17,7 @@ class Channel(models.Model):
 
     name = models.CharField(max_length=100)
     last_message_dt = models.DateTimeField(null=True)
-    enabled = models.BooleanField(default=True)
+    enabled = models.BooleanField(default=True, blank=True)
 
     objects = Channel_Manager()
     def merge(self, other):
