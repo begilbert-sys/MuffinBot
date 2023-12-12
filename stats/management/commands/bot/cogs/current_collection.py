@@ -3,10 +3,9 @@ from discord.ext import commands
 
 import datetime
 import logging 
-import pytz
 from stats import models
 from textwrap import dedent
-from .utils.processor import Processor, get_avatar_id
+from .utils.processor import Processor
 
 
 logger = logging.getLogger('collection')
@@ -15,21 +14,6 @@ class Current_Collection_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.active_processors = dict()
-    
-    @commands.command()
-    async def timezone(self, ctx, tz_string):
-        if tz_string in pytz.all_timezones_set:
-            guild_model_obj = await models.Guild.get(id=ctx.guild.id)
-            guild_model_obj.timezone = tz_string
-            await guild_model_obj.asave()
-            ctx.reply('Timezone set')
-        else:
-            await ctx.reply(dedent(
-                f'''{tz_string} is not a valid timezone
-                Abbreviated timezones do not work as they aren't specific, or don't consider daylight savings time
-                For a list of valid timezones, refer to the \'TZ identifier\' column in the following table: 
-                https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
-                '''))
             
     @commands.Cog.listener()
     async def on_ready(self):
@@ -38,11 +22,6 @@ class Current_Collection_Cog(commands.Cog):
             await processor.process_guild(guild)
             self.active_processors[guild.id] = processor
         print(self.active_processors)
-
-    #@commands.Cog.listener()
-    #async def on_disconnect(self):
-    #    for processor in self.active_processors.values():
-    #        await processor.save()
     
     @commands.Cog.listener()
     async def on_guild_join(self, guild):

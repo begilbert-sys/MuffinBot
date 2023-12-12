@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.forms import modelformset_factory
-from django.http import HttpResponseRedirect, HttpResponseNotAllowed
+from django.http import *
 
 from stats import models, forms
 
@@ -28,6 +28,8 @@ def channel_table(formset):
 
 def channel_setup(request, guild_id):
     guild = models.Guild.objects.get(id=guild_id)
+    if guild.setup:
+        return HttpResponseForbidden("Guild Setup Already Completed")
 
     formset = ChannelFormSet(queryset=models.Channel.objects.filter(guild=guild))
 
@@ -46,13 +48,17 @@ def channel_setup(request, guild_id):
     }
     return render(request, "channel_setup.html", context)
 
-def channel_submit(request):
+def channel_submit(request, guild_id):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST']) # this view should only handle POST requests 
+    
+    guild = models.Guild.objects.get(id=guild_id)
+    if guild.setup:
+        return HttpResponseForbidden("Guild Setup Already Completed")
     formset = ChannelFormSet(request.POST)
     if formset.is_valid:
         formset.save()
-        return HttpResponseRedirect("/thanks/")
+        return redirect("/thanks/")
     
 def channel_thanks(request):
     return render(request, "channel_thanks.html")

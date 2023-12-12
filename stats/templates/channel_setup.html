@@ -31,30 +31,36 @@
 
     <h1>Channel Setup</h1>
     <div class="greybar"></div>
-    <h3>Select which channels to track</h3>
-    <p>
-        Disabled channels will be completely left out of statistics
-    </p>
-    <p class="subtext">Recommended: disable bot channels, spam channels, and restricted channels (like #rules and #announcements)</p>
-    <span class="subtext">
-        If channels are missing, ensure Muffinbot has the correct channel permissions, then reload the page
-    </span>
-    <br>
+        
     <br>
 
-    <form action="/submit/" method="post">
+    <form action="submit/" method="post">
         {% csrf_token %}
         {{ formset.management_form }}
         <table class="channeltable">
-        {% for row in formset_table %}
-            <tr>
-            {% for form in row %}
-            <td class="selectedCell">
-                {{ form.as_div }}
-            </td>
-            {% endfor %}
-            </tr>
-        {% endfor%}
+            <thead>
+                <tr>
+                    <th colspan=5 class="questions">
+                        Select which channels to track
+                        <p class="subtext">
+                            Disabling a channel means it will be completely ignored by MuffinBot. Consider disabling bot-only or "bot spam" channels, and channels without much message activity (like #rules and #announcements).
+                            <br>
+                            <b>Disabling cannot be easily undone.</b> So if you're unsure about a channel, keep it enabled. 
+                            <br>
+                            If you notice that channels are missing from this list, ensure that MuffinBot has the correct channel permissions, then reload the page. 
+                        </p>
+                    </th>
+                </tr>
+            </thead>
+            {% for row in formset_table %}
+                <tr>
+                    {% for form in row %}
+                        <td class="selectedCell">
+                            {{ form.as_div }}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor%}
         </table>
         <br>
         <br>
@@ -65,5 +71,4 @@
     <br>
     <br>
 </body>
-
 </html>

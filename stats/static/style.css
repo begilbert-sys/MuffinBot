@@ -48,6 +48,10 @@ nav ul li a {
   text-decoration: underline;
 }
 
+nav ul li a:hover {
+  text-decoration: none;
+}
+
 
 table {
   border: 0px;
@@ -98,17 +102,38 @@ table {
 
 .discord_button img {
   margin-right:10px;
-  height: 20px;
+  height: 15px;
 }
 
 .logout {
-  width:100px;
+  display: flex;
+  margin-right: 2%;
 }
 
 .logout img {
-  height: 25px;
+  height: 40px;
   border-radius: 50%;
-  margin-right: 15px;
+  margin-right: 10px;
+}
+
+.logout_text {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+}
+
+.logout_text a {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #d1e3fa99;
+  text-decoration: underline;
+}
+
+.logout_text a:hover {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #D3D3D3;
+  text-decoration: none;
 }
 
 .greybar {
@@ -161,6 +186,7 @@ table {
   color: #99AAB5;
   font-size: 12px;
   text-align: left;
+  line-height: 1.5;
 }
 
 .headerlinks {
@@ -401,7 +427,8 @@ table {
 
 .questions {
   text-align: left;
-  width: 68%;
+  width:1000px; 
+  margin:0 auto;
 }
 
 .questions h3 {

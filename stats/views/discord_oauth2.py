@@ -46,11 +46,10 @@ def discord_login(request):
 def discord_login_redirect(request):
     code = request.GET.get('code')
     response = exchange_code(code)
-    user_dict = get_user_data(response)['user']
-    user_model_obj = authenticate(request, user=user_dict)
-
+    user_data = get_user_data(response)
+    user_dict = user_data['user']
+    user_model_obj = authenticate(request, user_data=user_data)
     login(request, user_model_obj)
-
     return redirect("/dashboard/")
 
 def discord_logout(request):

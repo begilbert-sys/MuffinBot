@@ -58,8 +58,11 @@ class GuildUser(models.Model):
     curse_word_count = models.PositiveIntegerField(default=0)
     ALL_CAPS_count = models.PositiveIntegerField(default=0)
     total_chars = models.PositiveBigIntegerField(default=0)
-    hidden = models.BooleanField(default=False)
 
+    hidden = models.BooleanField(default=False)
+    manage_guild_perm = models.BooleanField(default=False)
+    in_guild = models.BooleanField(default=True)
+    
     objects = GuildUser_Manager()
     whitelist = GuildUser_Whitelist_Manager()
 

@@ -11,8 +11,8 @@ logging.config.fileConfig(f'{parentdir}/logger.ini')
 
 class Stats_Bot(commands.Bot):
     async def setup_hook(self):
-        await self.load_extension('.cogs.history_collection', package = __package__)
-        #await self.load_extension('.cogs.current_collection', package = __package__)
+        #await self.load_extension('.cogs.history_collection', package = __package__)
+        await self.load_extension('.cogs.current_collection', package = __package__)
         #await self.load_extension('.cogs.interface', package = __package__)
 
 

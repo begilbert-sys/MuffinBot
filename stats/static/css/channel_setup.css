@@ -1,7 +1,3 @@
-table {
-    border-spacing: 10px;
-}
-
 .channeltable {
     margin: 0 auto;
     width: 80%;
@@ -12,6 +8,11 @@ table {
     border-radius:5px;
     border-collapse: separate;
     border-spacing: 15px;
+}
+
+.channeltable thead .subtext {
+  margin-top: 5px;
+  margin-bottom: 0px;
 }
 
 .channeltable td {
@@ -139,12 +140,6 @@ label {
 
 .unselectedText {
   color: #999;
-}
-
-.subtext {
-  color: #99AAB5;
-  text-align: center;
-  font-size: 14px;
 }
 
 .submit {

@@ -9,108 +9,48 @@
   <title>Stats FAQ</title>
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
-  <link rel="icon" href="">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" type="text/css" />
+  <link rel="icon">
 
 </head>
 <body>
-    <div class="greybar" style="margin-bottom:15px;"></div>
-    <div class="headerlinks">
-        <a href="/stats/">1. Main page</a> | <a href="/stats/details/">2. Detailed info</a> | 3. FAQ
-    </div>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
+    
+    <header>
+        <div class="header-navigation">
+            <nav>
+                <ul>
+                    <li style="margin-right:15px"><img src="https://cdn-icons-png.flaticon.com/512/465/465235.png" height=40>
+                    <li class="muffinstats"><a href="../">MuffinStats</a></li>
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li>Add to server</li>
+                    <li><a href="/info">Additional Info</a></li>
+                    <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
+                </ul>
+            </nav>
+            <div class="logout">
+                <img src="{{ user.avatar }}">
+                <div class="logout_text">
+                    <span>{{ user.tag }}</span>
+                    <a href="/logout/">Logout</a>
+                </div>
+            </div>
+        </div>
+        <div class="greybar" style="margin-top:5px; width:99.9%;"></div>
+    </header>
+    <h1>Adding MuffinBot</h1>
     <div class="greybar"></div>
-    <h2>Privacy Policy & Opting Out</h2>
-    <div class='textbox questions'> 
-    <h3>
-        Introduction 
-    </h3>
-    <p>
-        The privacy policy outlines exactly what data is collected, and how you can view, manage, or delete it. 
-
-        If you're in a server running this bot, the stats pages are the <b>only</b> place your data will ever be used. <b>Your data 
-        will never be shared with any third-party, ever.</b>
-    </p>
-    <br>
-    <h3>
-        How is my data kept safe?
-    </h3>
-    <p>
-        Every time MuffinBot posts a URL, you'll find this bit at the end:
-        <br>
-        <code>?token=060c709290182bbb6035211ac368134d618498685bd57ea7a7fb82fdae0aa2e5</code>
-        <br>
-
-        This is called a token, which is the "password" used to access your server's stats. Without the right token, the stats are inaccessible. 
-        <br>
-        The token is only posted by the bot within the server, the goal being for only server members to have access.
-        However, Members of the server <i>could</i> share this link outside of the server, in which case non-members would have access. 
-        Tokens are therefore reset periodically, and can also be manually reset with the [command] command.
-
-        <br>
-        <br>
-        The data itself is securely hosted in an AWS database. 
-    <h3>
-        What data is collected? 
-    </h3>
-    <p>
-        Here's a list of all the data retained by the bot. For servers without the 'server history' feature enabled,
-        this only applies to messages sent <i>after</i> the bot joined the server. 
-        <h4>Data collected per server</h4>
-        <ul>
-            <li>Server Name</li>
-            <li>Server ID</li>
-            <li>Server Icon URL</li>
-            <li>Names of viewable text channels</li>
-            <li>IDs of viewavle text channels</li>
-        </ul>
-        <h4>Data collected per user</h4>
-        <ul>
-            <li>Tag (your username)</li>
-            <li>User ID</li>
-            <li>Avatar URL</li>
-            <li>Number of messages per viewable text channel</li>
-            <li>Average message length</li>
-            <li>Curse word frequency - the curse words themselves are <b>not</b> collected</li>
-        </ul>
-        <h4>Data collected per message</h4>
-        <ul>
-            <li>"Uncommon" words - words that do not appear in a standard dictionary</li>
-            <li>Users mentioned</li>
-            <li>Message date and time of day (only the hour)</li>
-            <li>URLs used</li>
-            <li>Emojis used</li>
-            <li>Reactions</li>
-        </ul>
-    </p>
-    <br>
-    <h3>
-        Opting Out - Hiding or Deleting Your Data
-    </h3>
-    <p>
-        If you aren't comfortable with the bot displaying or retaining your data, you can manage
-        the data associated with your account using a few simple commands.
-    </p>
-        <h4>Hiding your data</h4>
-    <p>
-        Using this command means that any mentions of your account in the server's stats will be hidden. 
-        However, your data will still anonymously count towards server-wide statistics. 
-        This action <b>can</b> be undone. All of your data will be retained, but not shown.
-    </p>
-        <h4>Deleting your data</h4>
-    <p>
-        Using this command deletes your data. This action <b>cannot be undone!</b> All data associated 
-        with your account will be permanently erased. The bot will subsequently ignore all activity associated with your account. 
-    </p>
-        <h4>What if my account is no longer in the server?</h4>
-    <p>
-        The opt-out commands may still be used if you DM the bot.
-    </p>
-        <h4>What if I deleted my account?</h4>
-    <p>
-        Unfortunately, Discord does not alert bots when accounts are deleted. 
-        If your account's data was collected before your account's deletion, and you want it erased, 
-        you will have to send an email to [email here] containing the following data: 
-        After some time, your data will be manually deleted and a confirmation email will be sent in reply. 
-    </p>
+    <div class='textblock questions' style="width:1000px; margin:0 auto;">
+        <h3>
+            Step 1: Add the bot to your server
+        </h3>
+        <p>
+            Click this link, verify that the permissions
+            After the bot has been added, visit the dashboard to perform a basic setup.
+            When you're ready, use the following command
+        </p>
     </div>
+
 </body>
 </html>

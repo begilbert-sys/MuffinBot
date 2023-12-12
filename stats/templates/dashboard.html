@@ -29,9 +29,13 @@
                     <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
                 </ul>
             </nav>
-            <a href="/logout/" class="discord_button logout">
-                <img src="{{ user.avatar }}">Logout
-            </a>
+            <div class="logout">
+                <img src="{{ user.avatar }}">
+                <div class="logout_text">
+                    <span>{{ user.tag }}</span>
+                    <a href="/logout/">Logout</a>
+                </div>
+            </div>
         </div>
         <div class="greybar" style="margin-top:5px; width:99.9%;"></div>
     </header>

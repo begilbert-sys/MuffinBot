@@ -36,6 +36,7 @@ class User(models.Model):
             return f'https://cdn.discordapp.com/avatars/{self.id}/{self.avatar_id}.png'
         else:
             return 'https://cdn.discordapp.com/embed/avatars/0.png'
+
     
     def is_authenticated(self):
         return True
