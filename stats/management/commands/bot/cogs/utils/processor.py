@@ -42,6 +42,11 @@ def get_icon_id(icon_url: str) -> str:
     else:
         return None # indicates default avatar
 
+def get_half_hour_increment(dt: datetime.datetime) -> int:
+    '''Given a datetime, return an int from 0 to 47 denoting the time of day'''
+    return (dt.hour * 2) + (1 if dt.minute >= 30 else 0)
+
+
 # list all of the count model classes
 COUNT_MODELS = models.UserStat.__subclasses__()
 
@@ -67,16 +72,16 @@ class Processor:
             Model_Class: dict() for Model_Class in COUNT_MODELS
         }
         self.cached_model_objects[models.User] = dict()
-        self.cached_model_objects[models.GuildUser] = dict()
+        self.cached_model_objects[models.Member] = dict()
         self.cached_model_objects[models.Emoji] = dict()
         self.cached_model_objects[models.Channel] = dict()
 
-    def _get_user(self, user: discord.User) -> models.GuildUser:
+    def _get_member(self, user: discord.User) -> models.Member:
         '''
-        Return a GuildUser model object from the cache dict or, if one does not exist, then add one and return it
+        Return a Member model object from the cache dict or, if one does not exist, then add one and return it
         '''
-        if user.id in self.cached_model_objects[models.GuildUser]:
-            return self.cached_model_objects[models.GuildUser][user.id]
+        if user.id in self.cached_model_objects[models.Member]:
+            return self.cached_model_objects[models.Member][user.id]
         new_user_model_obj = models.User(
             id=user.id,
             tag=user.name,
@@ -86,12 +91,12 @@ class Processor:
         if user.id == DELETED_USER_ID:
             new_user_model_obj.hidden = True
         self.cached_model_objects[models.User][user.id] = new_user_model_obj
-        new_guilduser_model_obj = models.GuildUser(
+        new_member_model_obj = models.Member(
             guild=self.guild_model_obj,
             user=new_user_model_obj
         )
-        self.cached_model_objects[models.GuildUser][user.id] = new_guilduser_model_obj
-        return new_guilduser_model_obj
+        self.cached_model_objects[models.Member][user.id] = new_member_model_obj
+        return new_member_model_obj
     
     def _get_channel(self, channel: discord.TextChannel):
         if channel.id in self.cached_model_objects[models.Channel]:
@@ -105,16 +110,16 @@ class Processor:
             self.cached_model_objects[models.Channel][channel.id] = channel_model_obj
         return channel_model_obj
     
-    def _get_message_mentions(self, message: discord.message, reply_message: discord.message = None) -> list[models.GuildUser]:
+    def _get_message_mentions(self, message: discord.message, reply_message: discord.message = None) -> list[models.Member]:
         '''
         Return a generator of the User model objects representing a message's mentions
         A message's mentions consist of: the author of the message that's being replied to (if
         applicable), as well as all users pinged in the message 
         '''
         if reply_message:
-            yield self._get_user(reply_message.author)
+            yield self._get_member(reply_message.author)
         for user in message.mentions:
-            yield self._get_user(user)
+            yield self._get_member(user)
 
     def _get_emoji(self, emoji_id: int, emoji_name: str, *, custom: bool):
         '''
@@ -151,7 +156,7 @@ class Processor:
         for name, key in re.findall(EMOJI_CODE_REGEX, message.content):
             yield self._get_emoji(int(key), name, custom=True)
 
-    def _increment_count(self, Count_Class: type, user: models.GuildUser, object, increment_by):
+    def _increment_count(self, Count_Class: type, user: models.Member, object, increment_by):
         '''
         Increment (or decrement) a count object from the cache or, if one does not exist, create one and add it to the cache
         The cache dict key is a hashed tuple consisting of the user's ID and a unique object associated with the model object
@@ -170,17 +175,17 @@ class Processor:
     
     def process_reaction(self, message, reaction, count):
         emoji_object = reaction.emoji
-        user_model_obj = self._get_user(message.author)
+        member_model_obj = self._get_member(message.author)
         if type(emoji_object) is str:
             if emoji_object not in EMOJI_IDS:
                 return
             emoji_id = EMOJI_IDS[emoji_object]
             emoji_name = emoji.demojize(emoji_object, delimiters=('', ''))
             emoji_model_obj = self._get_emoji(emoji_id, emoji_name, custom=False)
-            self._increment_count(models.Reaction_Count, user_model_obj, emoji_model_obj, count)
+            self._increment_count(models.Reaction_Count, member_model_obj, emoji_model_obj, count)
         elif type(emoji_object) in [discord.Emoji, discord.PartialEmoji]:
             emoji_model_obj = self._get_emoji(emoji_object.id, emoji_object.name, custom=True)
-            self._increment_count(models.Reaction_Count, user_model_obj, emoji_model_obj, count)
+            self._increment_count(models.Reaction_Count, member_model_obj, emoji_model_obj, count)
             
     def process_message(self, message: discord.Message, reply_message: discord.Message = None, *, unprocess = False):
         '''
@@ -192,35 +197,38 @@ class Processor:
             crement = 1
 
         ### USER
-        user_model_obj = self._get_user(message.author)
-        user_model_obj.messages += crement
+        member_model_obj = self._get_member(message.author)
+        member_model_obj.messages += crement
 
         ### TOTAL CHARS
-        user_model_obj.total_chars += (len(message.content) * crement)
+        member_model_obj.total_chars += (len(message.content) * crement)
 
         ### ALL CAPS
         if message.content.isupper():
-            user_model_obj.ALL_CAPS_count += crement
+            member_model_obj.ALL_CAPS_count += crement
     
         ### CHANNEL
         if self.history:
             channel_model_obj = self.current_channel_model_obj
         else:
             channel_model_obj = self._get_channel(message.channel)
-        self._increment_count(models.Channel_Count, user_model_obj, channel_model_obj, crement)
+        self._increment_count(models.Channel_Count, member_model_obj, channel_model_obj, crement)
 
         ### HOUR
         msg_hour = message.created_at.hour
-        self._increment_count(models.Hour_Count, user_model_obj, msg_hour, crement)
+
+        member_model_obj.half_hour_counts[get_half_hour_increment(message.created_at)] += 1
+
+        self._increment_count(models.Hour_Count, member_model_obj, msg_hour, crement)
 
         ### DATE
         msg_date = message.created_at.date()
-        self._increment_count(models.Date_Count, user_model_obj, msg_date, crement)
+        self._increment_count(models.Date_Count, member_model_obj, msg_date, crement)
 
         ### EMOJIS
         all_emojis = chain(self._get_default_emojis(message), self._get_custom_emojis(message))
         for emoji_model_obj in all_emojis:
-            self._increment_count(models.Emoji_Count, user_model_obj, emoji_model_obj, crement)
+            self._increment_count(models.Emoji_Count, member_model_obj, emoji_model_obj, crement)
 
         ### REACTIONS
         for reaction in message.reactions:
@@ -231,28 +239,28 @@ class Processor:
                 emoji_id = EMOJI_IDS[emoji_object]
                 emoji_name = emoji.demojize(emoji_object, delimiters=('', ''))
                 emoji_model_obj = self._get_emoji(emoji_id, emoji_name, custom=False)
-                self._increment_count(models.Reaction_Count, user_model_obj, emoji_model_obj, (reaction.count * crement))
+                self._increment_count(models.Reaction_Count, member_model_obj, emoji_model_obj, (reaction.count * crement))
             elif type(emoji_object) in [discord.Emoji, discord.PartialEmoji]:
                 emoji_model_obj = self._get_emoji(emoji_object.id, emoji_object.name, custom=True)
-            self._increment_count(models.Reaction_Count, user_model_obj, emoji_model_obj, (reaction.count * crement))
+            self._increment_count(models.Reaction_Count, member_model_obj, emoji_model_obj, (reaction.count * crement))
         
         ### URL
         for URL in get_URLs(message.content):
-            self._increment_count(models.URL_Count, user_model_obj, URL, crement)
+            self._increment_count(models.URL_Count, member_model_obj, URL, crement)
         
         ### UNIQUE WORDS AND CURSE WORDS
         for word in message.content.lower().split():
             # valid 'words' need to be alphabetic and between 3 and 18 characters
             if word.isalpha() and len(word) in range(3,19):
                 if word not in WORDS:
-                    self._increment_count(models.Unique_Word_Count, user_model_obj, word, crement)
+                    self._increment_count(models.Unique_Word_Count, member_model_obj, word, crement)
                 if word in CURSE_WORDS:
-                    user_model_obj.curse_word_count += crement
+                    member_model_obj.curse_word_count += crement
 
         ### MENTIONS
         all_mentions = self._get_message_mentions(message, reply_message)
         for user in all_mentions:
-            self._increment_count(models.Mention_Count, user_model_obj, user, crement)
+            self._increment_count(models.Mention_Count, member_model_obj, user, crement)
         
         self.cache_count += 1
 
@@ -313,9 +321,9 @@ class Processor:
         items = tuple(self.cache_copy[Model_Class].items())
         for hash_val, dummy_model_obj in items:
             assert issubclass(Model_Class, models.UserStat)
-            valid_user = self.cache_copy[models.GuildUser][dummy_model_obj.user.user_id]
+            valid_user = self.cache_copy[models.Member][dummy_model_obj.user.user_id]
             if Model_Class is models.Mention_Count:
-                obj_attr = self.cache_copy[models.GuildUser][dummy_model_obj.obj.user_id]
+                obj_attr = self.cache_copy[models.Member][dummy_model_obj.obj.user_id]
             else:
                 obj_attr = dummy_model_obj.obj
             kwargs = {'user': valid_user, 'obj': obj_attr}
@@ -335,31 +343,31 @@ class Processor:
         )
         logger.debug(f'{self.guild_name}::{Model_Class.__name__} saved to DB')
     
-    async def _update_and_save_guilduser_objects(self):
+    async def _update_and_save_member_objects(self):
         '''
-        Update and save GuildUser objects to the DB
-        Update the GuildUser object IDs to those assigned to them by the database
+        Update and save Member objects to the DB
+        Update the Member object IDs to those assigned to them by the database
         '''
-        logger.debug(self.guild_name + '::GuildUser saving. . . ')
-        for hash_val, dummy_model_obj in self.cache_copy[models.GuildUser].items():
+        logger.debug(self.guild_name + '::Member saving. . . ')
+        for hash_val, dummy_model_obj in self.cache_copy[models.Member].items():
             user_id = dummy_model_obj.user_id
             guild = dummy_model_obj.guild
             try:
-                real_model_obj = await models.GuildUser.objects.aget(user_id=user_id, guild=guild)
+                real_model_obj = await models.Member.objects.aget(user_id=user_id, guild=guild)
                 real_model_obj.merge(dummy_model_obj)
-                self.cache_copy[models.GuildUser][hash_val] = real_model_obj
-            except models.GuildUser.DoesNotExist:
+                self.cache_copy[models.Member][hash_val] = real_model_obj
+            except models.Member.DoesNotExist:
                 pass
         
-        await models.GuildUser.objects.abulk_create_or_update(
-            self.cache_copy[models.GuildUser].values()
+        await models.Member.objects.abulk_create_or_update(
+            self.cache_copy[models.Member].values()
         )
         updated_models_list = list()
-        for usr in self.cache_copy[models.GuildUser].values():
+        for usr in self.cache_copy[models.Member].values():
             try:
-                real_model_obj = await models.GuildUser.objects.aget(user_id=usr.user_id, guild=self.guild_model_obj) 
+                real_model_obj = await models.Member.objects.aget(user_id=usr.user_id, guild=self.guild_model_obj) 
                 updated_models_list.append(real_model_obj)
-            except models.GuildUser.DoesNotExist:
+            except models.Member.DoesNotExist:
                 print(f"{usr.name}, {usr.user_id}")
                 raise
             
@@ -368,9 +376,9 @@ class Processor:
         # the cached (temporary) user models must be updated with those IDs
         # this is so that the count objects can backreference the correct user object
         # this is ABSOLUTELY NECESSARY
-        self.cache_copy[models.GuildUser] = {user_model_obj.user_id:user_model_obj for user_model_obj in updated_models_list}
+        self.cache_copy[models.Member] = {user_model_obj.user_id:user_model_obj for user_model_obj in updated_models_list}
 
-        logger.debug(self.guild_name + '::GuildUser saved to DB')
+        logger.debug(self.guild_name + '::Member saved to DB')
 
 
     async def _update_and_save_objects(self, Model_Class):
@@ -409,7 +417,7 @@ class Processor:
             await self._update_and_save_objects(models.User)
             await self._update_and_save_objects(models.Emoji)
 
-            await self._update_and_save_guilduser_objects()
+            await self._update_and_save_member_objects()
 
             if self.history:
                 await self.current_channel_model_obj.asave()

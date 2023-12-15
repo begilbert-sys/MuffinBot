@@ -6,23 +6,63 @@
   <meta name="viewport" content="width=device-width">
   {% load static %}
   {% load humanize %}
-  {% load mathfilters %}
   {% load stat_extras %}
 
   <title>{{ guild.name }} Stats</title>
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
-  <link rel="icon" href="{{ guild.icon }}">
+  <link rel="stylesheet" href="{% static 'css/details.css' %}" type="text/css" />
+  <link rel="icon" href="{{ guild.display_icon }}">
 
 </head>
 
 <body>
-    <center>
-        <div class="greybar" style="margin-bottom:15px;"></div>
-        <div class="headerlinks">
-            <a href="../">1. Main page</a> | 2. Detailed info | <a href="/FAQ/">3. FAQ</a>
+    <header>
+        <div class="header-navigation">
+            <nav class="pages_directory">
+                <ul>
+                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
+                    <li class="muffinstats"><a href="../">MuffinStats</a></li>
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/add">Add to server</a></li>
+                    <li><a href="/info">Additional Info</a></li>
+                    <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
+                </ul>
+            </nav>
+            <div class="logout">
+                <img src="{{ user.avatar }}">
+                <div class="logout_text">
+                    <span>{{ user.tag }}</span>
+                    <a href="/logout/">Logout</a>
+                </div>
+            </div>
         </div>
         <div class="greybar"></div>
+    </header>
+
+    <h1>
+        {{ guild.name }} Stats (rendered on {% now "n/j/o" %})
+    </h1>
+    <span class="subtext">
+        Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
+    </span>
+    <br>
+    <span class="subtext">
+        {{ total_users|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
+    </span>
+    <br>
+    <div class="greybar"></div>
+    <nav class="stats_directory">
+      <ul>
+        <li><a href="../">Overview</a></li>
+        <li><a href="../activity/">Most Active Users</a></li>
+        <li>Detailed Info</li>
+        <li><a href="../details/">Emojis/Reactions</a></li>
+        <li><a href="../details/">My Profile</a></li>
+      </ul>
+    </nav>
+    <div class="greybar"></div>
+
         <!-- 
         Top Swearers
         -->    
@@ -40,16 +80,16 @@
             <th>Curse Ratio</th>
         </thead>
         <tbody>
-            {% for user in top_curse_users %}
+            {% for member in top_curse_members %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>
-                    <img class="icon mini_icon" src="{{ user.avatar }}">
-                    <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                    <img class="icon mini_icon" src="{{ member.user.avatar }}">
+                    <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
                 </td>
                 <td>
-                    <div class="defaultbar" style="height:5px; width: {% widthratio user.curse_ratio top_curse_users.0.curse_ratio 100 %}px"></div>
-                    {{ user.curse_ratio|floatformat:2 }}%
+                    <div class="defaultbar" style="height:5px; width: {% widthratio member.curse_ratio top_curse_members.0.curse_ratio 100 %}px"></div>
+                    {{ member.curse_ratio|floatformat:2 }}%
                 </td>
             </tr>
             {% endfor %}
@@ -74,16 +114,16 @@
             <th>Caps Ratio</th>
         </thead>
         <tbody>
-            {% for user in top_ALL_CAPS_users %}
+            {% for member in top_ALL_CAPS_members %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>
-                    <img class="icon mini_icon" src="{{ user.avatar }}">
-                    <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                    <img class="icon mini_icon" src="{{ member.user.avatar }}">
+                    <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
                 </td>
                 <td>
-                    <div class="defaultbar" style="height:5px; width: {% widthratio user.CAPS_ratio top_ALL_CAPS_users.0.CAPS_ratio 100 %}px"></div>
-                    {{ user.CAPS_ratio|floatformat:2 }}%
+                    <div class="defaultbar" style="height:5px; width: {% widthratio member.CAPS_ratio top_ALL_CAPS_members.0.CAPS_ratio 100 %}px"></div>
+                    {{ member.CAPS_ratio|floatformat:2 }}%
                 </td>
             </tr>
             {% endfor %}
@@ -109,16 +149,16 @@
             <th>Characters per message</th>
         </thead>
         <tbody>
-            {% for user in top_verbose_users %}
+            {% for member in top_verbose_members %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>
-                    <img class="icon mini_icon" src="{{ user.avatar }}">
-                    <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                    <img class="icon mini_icon" src="{{ member.user.avatar }}">
+                    <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
                 </td>
                 <td>
-                    <div class="defaultbar" style="height:5px; width: {% widthratio user.average_chars top_verbose_users.0.average_chars 100 %}px"></div>
-                    {{ user.average_chars|floatformat:2 }}
+                    <div class="defaultbar" style="height:5px; width: {% widthratio member.average_chars top_verbose_members.0.average_chars 100 %}px"></div>
+                    {{ member.average_chars|floatformat:2 }}
                 </td>
             </tr>
             {% endfor %}
@@ -143,20 +183,21 @@
 
         </thead>
         <tbody>
-            {% for user1, user2, user1count, user2count in top_mention_pairs %}
+            {% for member1, member2, member1count, member2count in top_mention_pairs %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td style="text-align: right;">
-                    <a href="../users/{{ user1.tag }}" class="userlink">{{ user1.nick }}</a>
-                    <img class="icon mini_icon" src="{{ user1.avatar }}">
-                    <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user1count max_mention_count 100 %}">
+                    <a href="../users/{{ member1.user.tag }}" class="userlink">{{ member1.user.tag }}</a>
+                    <img class="icon mini_icon" src="{{ member1.user.avatar }}">
+                    <!--<div class="defaultbar" style="height: 5px; width: {% widthratio member1count max_mention_count 100 %}px">-->
+                    <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio member1count max_mention_count 100 %}">
                     {{ user1count }}
                 </td>
                 <td>
                     {{ user2count }}
-                    <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio user2count max_mention_count 100 %}">
-                    <img class="icon mini_icon" src="{{ user2.avatar }}">
-                    <a href="../users/{{ user2.tag }}" class="userlink">{{ user2.nick }}</a>
+                    <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio member2count max_mention_count 100 %}">
+                    <img class="icon mini_icon" src="{{ member2.user.avatar }}">
+                    <a href="../users/{{ member2.user.tag }}" class="userlink">{{ member2.user.tag }}</a>
                 </td>
             </tr>
             {% endfor %}
@@ -183,18 +224,18 @@
             <th>Often posted by</th>
         </thead>
         <tbody>
-            {% for URL, count, user in top_URLs %}
+            {% for URL, count, member in top_URLs %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>
-                    <a href="{{ URL }}" target="_blank">{{ URL }}</a>
+                    <a href="{{ URL }}" class="url" target="_blank">{{ URL }}</a>
                 </td>
                 <td>
                     {{ count }}
                 </td>
                 <td>
-                    <img class="icon mini_icon" src="{{ user.avatar }}">
-                    <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                    <img class="icon mini_icon" src="{{ member.user.avatar }}">
+                    <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
                 </td>
             </tr>
             {% endfor %}
@@ -216,7 +257,7 @@
                 <th colspan="5">Top Contributors</th>
             </thead>
             <tbody>
-                {% for channel, count, userlist in channel_counts %}
+                {% for channel, count, memberlist in channel_counts %}
                 <tr>
                     <td><b>{{ forloop.counter }}</b></td>
                     <td>#{{ channel.name }} </td>
@@ -225,10 +266,10 @@
                         <br>
                         <div class="defaultbar" style="height:5px; width: {% widthratio count channel_counts.0.1 180 %}px"></div>
                     </td>
-                    {% for user in userlist %}
+                    {% for member in memberlist %}
                         <td>
-                            <img class="icon mini_icon" src="{{ user.avatar }}">
-                            <a href="../users/{{ user.tag }}" class="userlink">{{ user.nick }}</a>
+                            <img class="icon mini_icon" src="{{ member.user.avatar }}">
+                            <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
                         {% endfor %}
                         </td>
                     {% endfor %}

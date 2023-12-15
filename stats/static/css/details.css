@@ -1,0 +1,13 @@
+/* just reassigned these to the URL defaults. . . ¯\_(ツ)_/¯ */
+.url {
+    color: blue;
+}
+.url:hover {
+    color: blue;
+}
+.url:active {
+    color: #EE0000;
+}
+.url:visited {
+    color: #551A8B;
+}

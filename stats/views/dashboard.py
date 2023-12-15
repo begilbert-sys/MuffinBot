@@ -3,13 +3,14 @@ from django.contrib.auth.decorators import login_required
 
 from stats import models
 
-def get_server_table(user):
+def get_server_table(user: models.User) -> list[tuple[models.Guild, bool]]:
     '''
-    Return a matrix of row length 5 containing every guild model object that the user is in 
+    Return a matrix of row length 5 containing a tuple providing the guild,
+    and whether or not the user is in the server
     '''
     matrix = list()
-    guildusers = models.GuildUser.objects.filter(user=user)
-    guilds = [models.Guild.objects.get(id=guilduser.guild_id) for guilduser in guildusers]
+    members = models.Member.objects.filter(user=user)
+    guilds = [(models.Guild.objects.get(id=member.guild_id), member.in_guild) for member in members]
     sublist = list()
     while len(guilds) > 0:
         if len(sublist) == 5:

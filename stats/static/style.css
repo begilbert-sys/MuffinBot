@@ -10,6 +10,7 @@ body {
   background-color: #2C2F33;
   color: #FFFFFF;
   font-size: 14px;
+  margin:0px;
 }
 
 h1 {
@@ -32,31 +33,52 @@ h4 {
   margin-bottom: 10px;
 }
 
+
+a {
+  color: white;
+  text-decoration: underline;
+}
+
 nav ul {
   list-style: none;
   display: flex;
   align-items: center;
-  padding-left: 30px;
-  color: #d1e3fa99;
-}
-nav ul li {
-  margin-right:50px;
 }
 
 nav ul li a {
-  color: #d1e3fa99;
   text-decoration: underline;
 }
-
 nav ul li a:hover {
   text-decoration: none;
 }
 
+nav.pages_directory ul {
+  padding-left: 30px;
+}
+
+nav.pages_directory ul li {
+  margin-right:50px;
+  color: #d1e3fa99;
+}
+
+nav.pages_directory ul li a {
+  color: #d1e3fa99;
+}
 
 table {
   border: 0px;
   padding: 0px;
   border-spacing: 1px;
+}
+
+.unset_tz_warning {
+  background-color: #E46667;
+  width: 100%;
+  padding: 10px 0px;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
 .header-navigation {
@@ -66,12 +88,11 @@ table {
 }
 
 .muffinstats {
-  color:white;
   font-size:24px;
 }
 .muffinstats a {
-  color:white;
-  text-decoration: none;
+  color:white !important;
+  text-decoration: none !important;
 }
 
 .discord_button {
@@ -132,15 +153,20 @@ table {
 .logout_text a:hover {
   margin-top: 5px;
   font-size: 12px;
-  color: #D3D3D3;
   text-decoration: none;
 }
 
 .greybar {
   width: 90%;
   height: 3px;
-  margin: 1em auto 1.8em auto;
+  margin: 1em auto 1em auto;
   background-color: #c0bcb4;
+}
+
+header .greybar {
+  margin: 5px auto 1em auto;
+  width: auto;
+  min-width: 892px;
 }
 
 .bluebar {
@@ -189,18 +215,22 @@ table {
   line-height: 1.5;
 }
 
-.headerlinks {
+nav.stats_directory {
+  color: white;
   font-size: 12px;
   margin-bottom: 15px;
 }
-.headerlinks a {
-  text-decoration: underline;
-  color: white;
+nav.stats_directory ul {
+  justify-content: center;
+  padding: 0;
+  margin-top: 0px;
 }
 
-.headerlinks a:hover {
-  text-decoration: none;
+nav.stats_directory ul li:not(:last-child):after {
+  content: "|";
+  margin: 0px 5px;
 }
+
 
 .tablink {
   background-color: #2C2F33;
@@ -292,7 +322,7 @@ table {
   font-size: 12px;
   text-align: left;
   font-weight: bold;
-  margin-top: 3px;
+  margin: 3px auto 0px auto;
 }
 
 .default_table th {
@@ -372,6 +402,7 @@ table {
   border-color: #7289DA;
   font-size: 16px;
   font-weight: bold;
+  margin: 0 auto;
 }
 
 .user_column {
@@ -397,6 +428,7 @@ table {
 .user_info_table {
   width: 70%;
   padding: 3px;
+  margin: 0 auto;
 }
 .user_hour_table tr {
   vertical-align: bottom;
@@ -435,14 +467,6 @@ table {
   text-decoration: underline;
 }
 
-a {
-  color: white;
-  text-decoration: underline;
-}
-a:hover {
-  color: #D3D3D3;
-}
-
 .questions p {
   line-height: 150%;
 }
@@ -453,11 +477,12 @@ a:hover {
 }
 
 .emoji_table {
-  border-spacing: 10px !important;
+  border-spacing: 10px;
   border-collapse: separate;
 }
 
 .emoji_table td {
+  padding: 5px;
   height: 27px;
   border-width: 2px;
   border-color: #5765F2;
@@ -472,11 +497,18 @@ a:hover {
 }
 
 .emoji_table img {
+  max-height: 25px;
+  aspect-ratio: 1;
   width: 25px;
   display: inline;
   vertical-align: middle;
+  transition: all 0.125s;
 }
 
+.emoji_table img:hover {
+  transform: scale(1.1);
+  transition: all 0.125s;
+}
 .textbox {
   margin-left: 15%;
   margin-right: 15%;

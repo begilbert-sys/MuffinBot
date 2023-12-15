@@ -1,13 +1,20 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.core.cache import cache
+from typing import Self
+
+import datetime 
+import pytz 
+import heapq
+
 
 from . import Guild, User
 
 from .debug import timed
 
-import heapq
+CACHE_TIMEOUT = 60 * 60 * 24
 
-class GuildUser_Manager(models.Manager):
+class Member_Manager(models.Manager):
     async def abulk_create_or_update(self, objs):
         return await self.abulk_create(
             objs,
@@ -15,46 +22,51 @@ class GuildUser_Manager(models.Manager):
             update_fields = ['messages', 'curse_word_count', 'ALL_CAPS_count', 'total_chars'],
             unique_fields = ['id']
         )
+    def top_100(self, guild: Guild):
+        top_100_members = cache.get_or_set('top100', self.filter(guild=guild)[:100], CACHE_TIMEOUT, version=guild.id)
+        return top_100_members
     @timed
     def total_messages(self, guild: Guild):
         '''Return the total number of messages ever sent for a server'''
         return self.filter(guild=guild).aggregate(models.Sum('messages'))['messages__sum']
     @timed
-    def total_users(self, guild: Guild):
+    def total_members(self, guild: Guild):
         return self.filter(guild=guild).count()
     @timed
-    def top_user_message_count(self, guild: Guild) -> int:
+    def top_member_message_count(self, guild: Guild) -> int:
         return self.filter(guild=guild).first().messages
     @timed
-    def top_n_curse_users(self, guild: Guild, n):
-        top_100_users = self.filter(guild=guild)[:100]
-        return heapq.nlargest(n, top_100_users, key = lambda user: user.curse_ratio)
+    def top_n_curse_members(self, guild: Guild, n):
+        top_100_members = self.top_100(guild)
+        return heapq.nlargest(n, top_100_members, key = lambda member: member.curse_ratio)
     @timed
-    def top_n_ALL_CAPS_users(self, guild: Guild, n):
-        top_100_users = self.filter(guild=guild)[:100]
-        return heapq.nlargest(n, top_100_users, key = lambda user: user.CAPS_ratio)
+    def top_n_ALL_CAPS_members(self, guild: Guild, n):
+        top_100_members = self.top_100(guild)
+        return heapq.nlargest(n, top_100_members, key = lambda member: member.CAPS_ratio)
     @timed
-    def top_n_verbose_users(self, guild: Guild, n):
-        top_100_users = self.filter(guild=guild)[:100]
-        return heapq.nlargest(n, top_100_users, key = lambda user: user.average_chars)
+    def top_n_verbose_members(self, guild: Guild, n):
+        top_100_members = self.top_100(guild)
+        return heapq.nlargest(n, top_100_members, key = lambda member: member.average_chars)
     @timed
-    def get_rank(self, guild: Guild, user):
-        return self.filter(guild=guild, messages__gt=user.messages).count() + 1
+    def get_rank(self, guild: Guild, member):
+        return self.filter(guild=guild, messages__gt=member.messages).count() + 1
+    
 
-class GuildUser_Whitelist_Manager(GuildUser_Manager):
+class Member_Whitelist_Manager(Member_Manager):
     def get_queryset(self):
         return super().get_queryset().filter(hidden=False)
+
 
 def _hourfield():
     return [0 for _ in range(48)]
 
-class GuildUser(models.Model):
+class Member(models.Model):
     guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     messages = models.PositiveIntegerField(default=0)
 
-    hour_counts = ArrayField(models.PositiveIntegerField(), size=48, default=_hourfield)
+    half_hour_counts = ArrayField(models.PositiveIntegerField(), size=48, default=_hourfield)
     curse_word_count = models.PositiveIntegerField(default=0)
     ALL_CAPS_count = models.PositiveIntegerField(default=0)
     total_chars = models.PositiveBigIntegerField(default=0)
@@ -63,8 +75,8 @@ class GuildUser(models.Model):
     manage_guild_perm = models.BooleanField(default=False)
     in_guild = models.BooleanField(default=True)
     
-    objects = GuildUser_Manager()
-    whitelist = GuildUser_Whitelist_Manager()
+    objects = Member_Manager()
+    whitelist = Member_Whitelist_Manager()
 
     def __str__(self):
         return self.user.tag
@@ -81,7 +93,22 @@ class GuildUser(models.Model):
     def average_chars(self):
         return self.total_chars / self.messages
     
-    def merge(self, other):
+    def hour_counts_tz(self, timezone: str) -> list[int]:
+        '''
+        Return the user's hour count for each hour of the day in a given timezone
+        '''
+        hour_counts = [0 for _ in range(24)]
+        dummy_dt = datetime.datetime.now(datetime.UTC)
+        for half_hour in range(48):
+            hour_24 = half_hour // 2
+            minute = 30 if half_hour % 2 == 1 else 0
+            dummy_dt = dummy_dt.replace(hour=hour_24, minute=minute)
+            local_tz = dummy_dt.astimezone(pytz.timezone(timezone))
+            hour_counts[local_tz.hour] += self.half_hour_counts[half_hour]
+        return hour_counts
+
+    
+    def merge(self, other: Self):
         '''
         Update the counts of one User with the counts of another, with the equivalent 
         Args:

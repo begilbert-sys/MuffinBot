@@ -19,9 +19,9 @@
     
     <header>
         <div class="header-navigation">
-            <nav>
+            <nav class="pages_directory">
                 <ul>
-                    <li style="margin-right:15px"><img src="https://cdn-icons-png.flaticon.com/512/465/465235.png" height=40>
+                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
                     <li class="muffinstats"><a href="../">MuffinStats</a></li>
                     <li>Dashboard</li>
                     <li><a href="/add">Add to server</a></li>
@@ -37,18 +37,24 @@
                 </div>
             </div>
         </div>
-        <div class="greybar" style="margin-top:5px; width:99.9%;"></div>
+        <div class="greybar"></div>
     </header>
     <h1>Servers</h1>
-    <span class="subtext">All of the servers that both you and MuffinBot can see</span>
+    <span class="subtext">All of the servers that you have statistics for</span>
     <br>
     <br>
     <table class="cardtable">
         {% for row in server_table %}
             <tr>
-                {% for guild in row %}
+                {% for guild, user_in_guild in row %}
                     <td class="servercard">
-                        {% if guild.setup %}
+                        {% if not user_in_guild %}
+                            <a href="/guild/{{ guild.id }}/setup">
+                                <div class="medallion">
+                                    <img src="{% static 'assets/warning.svg' %}">
+                                    <span class="tooltiptext">You are no longer in this server</span>
+                                </div>
+                        {% elif guild.setup %}
                             <a href="/guild/{{ guild.id }}">
                         {% else %}
                             <a href="/guild/{{ guild.id }}/setup">
@@ -57,9 +63,9 @@
                                     <span class="tooltiptext">Setup required</span>
                                 </div>
                         {% endif %}
-                            <img src="{{ guild.display_icon }}" height=100>
-                            <p class="text">{{ guild.name }}</p>
-                        </a>
+                                <img src="{{ guild.display_icon }}" height=100>
+                                <p class="text">{{ guild.name }}</p>
+                            </a>
                     </td>
                 {% endfor %}
             </tr>

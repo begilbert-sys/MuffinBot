@@ -24,12 +24,12 @@ class DiscordAuthenticationBackend(BaseBackend):
         guild_perms_dict = {int(guild['id']):int(guild['permissions']) for guild in guilds}
 
         # checks if they're no longer in a server
-        for member in models.GuildUser.objects.filter(user=user_model_obj):
+        for member in models.Member.objects.filter(user=user_model_obj):
             if member.guild_id not in guild_perms_dict:
                 member.in_guild = False
                 member.save()
         
-        # creates a guilduser for each eligible server 
+        # creates a member model object for each eligible server 
         # and updates their manage_guild perms
         for guild_id, perm_int in guild_perms_dict.items():
             if not models.Guild.objects.filter(id=guild_id).exists():
@@ -37,7 +37,7 @@ class DiscordAuthenticationBackend(BaseBackend):
 
             perms = discord.Permissions(perm_int)
             manage_guild_perm = perms.manage_guild
-            member_model_obj, member_was_created = models.GuildUser.objects.get_or_create(
+            member_model_obj, member_was_created = models.Member.objects.get_or_create(
                 guild_id=guild_id,
                 user=user_model_obj,
             )

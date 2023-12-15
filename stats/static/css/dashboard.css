@@ -85,8 +85,20 @@
 .medallion img {
     position:absolute;
     height:20px;
-    left: 150px;
+    left: 85%;
     top: -10px;
+    border-radius: 0;
+}
+
+@media all and (max-width: 1200px) {
+    .medallion img {
+        left: 83%;
+    }
+}
+@media all and (max-width: 1050px) {
+    .medallion img {
+        left: 80%;
+    }
 }
 
 .medallion img:hover {

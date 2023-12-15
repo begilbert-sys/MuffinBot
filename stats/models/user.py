@@ -18,8 +18,6 @@ class User(models.Model):
     last_login = models.DateTimeField(null=True)
     timezone = models.CharField(max_length=32, default='utc')
 
-    hidden = models.BooleanField(default=False)
-
     objects = User_Manager()
 
     def __str__(self):

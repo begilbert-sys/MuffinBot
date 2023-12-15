@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  {% load static %}
+  {% load humanize %}
+  {% load stat_extras %}
+
+  <title>{{ guild.name }} Stats</title>
+
+  <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+  <link rel="icon" href="{{ guild.display_icon }}">
+
+  
+  {{ date_data|json_script:"dateData" }}
+</head>
+
+<body>
+  <header>
+    <div class="header-navigation">
+        <nav class="pages_directory">
+            <ul>
+                <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
+                <li class="muffinstats"><a href="../">MuffinStats</a></li>
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="/add">Add to server</a></li>
+                <li><a href="/info">Additional Info</a></li>
+                <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
+            </ul>
+        </nav>
+        <div class="logout">
+            <img src="{{ user.avatar }}">
+            <div class="logout_text">
+                <span>{{ user.tag }}</span>
+                <a href="/logout/">Logout</a>
+            </div>
+        </div>
+    </div>
+    <div class="greybar"></div>
+  </header>
+  <h1>
+      {{ guild.name }} Stats (rendered on {% now "n/j/o" %})
+  </h1>
+  <span class="subtext">
+      Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
+  </span>
+  <br>
+  <span class="subtext">
+      {{ total_members|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
+  </span>
+  <br>
+  <div class="greybar"></div>
+  <nav class="stats_directory">
+    <ul>
+      <li><a href="../">Overview</a></li>
+      <li><a href="../activity/">Most Active Users</a></li>
+      <li><a href="../details/">Detailed Info</a></li>
+      <li><a href="../details/">Emojis/Reactions</a></li>
+      <li>My Profile</li>
+    </ul>
+  </nav>
+  <div class="greybar"></div>
+
+  <h3>Personal Stats</h3>
+  <div class="user_header">
+    <div class="user_column user_display">
+      <img src="{{ user.avatar }}" class="user_icon">
+      &nbsp;{{ user.nick }}
+    </div>
+    <div class="user_column user_rank">
+      {{ rank }}
+    </div>
+  </div>
+  <table class="user_info_table">
+    <tbody>
+      <tr>
+        <td>
+          Messages: {{ member.messages|intcomma }}
+        </td>
+        <td>
+          Average messages per day: {{ avg_messages|floatformat:2 }}
+        </td>
+        <td>
+          Average letters per message: {{ avg_letters|floatformat:2 }} (<b>{{ chars_magnitude }}</b>)
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Curse ratio: {{ curse_word_ratio|floatformat:2 }}% (<b>{{ curse_magnitude }}</b>)
+        </td>
+        <td>
+          CAPS ratio: {{ CAPS_ratio|floatformat:2 }}% (<b>{{ CAPS_magnitude }}</b>)
+        </td>
+        <td>
+          Active Days: {{ total_user_active_days }} / {{ total_user_days }} ({{ total_user_active_days_percentage|floatformat:2 }}%)
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <br>
+  <br>
+
+
+  <table cellspacing="0" cellpadding="0" class="user_mini_table weekday_table" >
+    <thead>
+      <th colspan="7" class="subtext" style="padding-bottom: 18px;">Weekly Activity</th>
+    </thead>
+    <tbody>
+      <tr class="hour_percentage" valign="bottom">
+        {% for value, pctvalue in weekday_dist %}
+          <td class="tgr" align="center">
+            <!-- hour percentage value -->
+            {{ pctvalue|floatformat:1 }}%
+            <!-- changes color of bar based on time of day -->
+            <div class='defaultbar' style="height:{% widthratio value max_weekday 65 %}px;">
+          </td>
+        {% endfor %}
+      </tr>
+
+      <tr class="user_hour_counter">
+        <td class="cd">Mon</td>
+        <td class="cd">Tue</td>
+        <td class="cd">Wed</td>
+        <td class="cd">Thu</td>
+        <td class="cd">Fri</td>
+        <td class="cd">Sat</td>
+        <td class="cd">Sun</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="user_mini_table user_hour_table">
+    <thead>
+      <th colspan="24" class="subtext" style="padding-bottom: 18px;">Hourly Activity</th>
+    </thead>
+    <tbody>
+      <tr>
+        {% for hour_count, hour_string in member_hour_counts %}
+          <td>
+            <div class="{{ forloop.counter0|set_hour_class }}" title="{{ hour_string }}" style="height:{% widthratio hour_count max_hour_count 71 %}px; width:6px"></div>
+          </td>
+        {% endfor %}
+      </tr>
+      <tr class="user_hour_counter">
+        <td colspan="6">12AM-5AM</td>
+        <td colspan="6">6AM-11AM</td>
+        <td colspan="6">12PM-5PM</td>
+        <td colspan="6">6PM-11PM</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="user_mini_table tiny_table">
+    <thead>
+      <th colspan="2" class="subtext">Likes chatting with</th>
+    </thead>
+    <tbody>
+      {% for pair in talking_partners %}
+      <tr>
+        {% for mention in pair %}
+        {% with member=mention.0 count=mention.1 %}
+        <td>
+          {{ forloop.counter0|add:forloop.parentloop.counter }}.&nbsp;
+            <img class="icon time_of_day_icon" height="15" style="vertical-align: middle" src="{{ member.user.avatar }}">
+            <a href="./{{ member.user.tag }}" class="userlink" style="color: white">{{ member.user.tag }}</a>
+        </td>
+        <td class="pipe">
+          <div class="defaultbar" style="height:8px; width:{% widthratio count talking_partner_max 80 %}px"></div>
+        </td>
+        {% endwith %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="greybar"></div>
+  
+  <div style="width: 50%; margin-left: 8.7%;">
+    <button class="subtext selectedTablink" onclick="openPage('topWeekly', this)">Weekly</button>
+    <button class="subtext tablink" onclick="openPage('topMonthly', this)">Monthly</button>
+    <button class="subtext tablink" onclick="openPage('topYearly', this)">Yearly</button>
+    <button class="subtext tablink" onclick="openPage('topAllTime', this)">All Time</button>
+  </div>
+  <br>
+  <div id="topWeekly" class="tabcontent"></div>
+  <div id="topMonthly" class="tabcontent"></div>
+  <div id="topYearly" class="tabcontent"></div>
+  <div id="topAllTime" class="tabcontent"></div>
+  <script type="text/javascript" src="{% static 'js/chart_setup.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  {% load static %}
+  {% load humanize %}
+
+  <title>Stats FAQ</title>
+
+  <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'css/tablesort-custom.min.css' %}" type="text/css" />
+  <link rel="icon" href="{{ guild.display_icon }}">
+
+</head>
+<body>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/top_users.js' %}"></script>
+    
+    <header>
+        <div class="header-navigation">
+            <nav class="pages_directory">
+                <ul>
+                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
+                    <li class="muffinstats"><a href="../">MuffinStats</a></li>
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/add">Add to server</a></li>
+                    <li><a href="/info">Additional Info</a></li>
+                    <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
+                </ul>
+            </nav>
+            <div class="logout">
+                <img src="{{ user.avatar }}">
+                <div class="logout_text">
+                    <span>{{ user.tag }}</span>
+                    <a href="/logout/">Logout</a>
+                </div>
+            </div>
+        </div>
+        <div class="greybar"></div>
+    </header>
+    <h1>
+        {{ guild.name }} Stats (rendered on {% now "n/j/o" %})
+    </h1>
+    <span class="subtext">
+        Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
+    </span>
+    <br>
+    <span class="subtext">
+        {{ total_members|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
+    </span>
+    <br>
+    <div class="greybar"></div>
+    <nav class="stats_directory">
+      <ul>
+        <li><a href="../">Overview</a></li>
+        <li>Most Active Users</li>
+        <li><a href="../details/">Detailed Info</a></li>
+        <li><a href="../details/">Emojis/Reactions</a></li>
+        <li><a href="../details/">My Profile</a></li>
+      </ul>
+    </nav>
+    <div class="greybar"></div>
+<!-- 
+      100 Most Talkative Users
+    -->
+    <h3>100 Most Talkative Users</h3>
+    <span class="subtext">Click a username to view their profile</span>
+    <table border="0" cellspacing="1" cellpadding="2" 
+    class="tablesorter default_table" id="user_rankings">
+      <tbody>
+        <thead>
+          <!-- tablesort settings for each column defined here-->
+          <th data-sorter="false"></th>
+          <th data-sorter="false">Nick</th>
+          <th data-lockedorder="desc" class="sorter-bignumber">Line Count</th>
+          <th data-lockedorder="desc">Lines Per Day</th>
+          <th data-sorter="false">Peculiar Words</th>
+          <th data-sorter="false" style="width: 21%;">Favorite Emojis</th>
+        </thead>
+        {% for user_dict in messages_table %}
+          <tr>
+            <td class="rank">
+              {{ forloop.counter }}
+            </td>
+            <td class="nick">
+              <img src="{{ user_dict.member.user.avatar }}" class="icon">
+              &nbsp;
+              <a href="/stats/users/{{ user_dict.member.user.tag }}" class="userlink">{{ user_dict.member.user.tag }}</a>
+            </td>
+
+            <td class="line_count">
+              <div class="bluebar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.night most_messages 100 %}px"></div>
+              <div class="greenbar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.morning most_messages 100 %}px"></div>
+              <div class="yellowbar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.afternoon most_messages 100 %}px"></div>
+              <div class="redbar" style="height:15px; width: {% widthratio user_dict.time_of_day_counts.evening most_messages 100 %}px; margin-right:3px;"></div>
+              {{ user_dict.member.messages|intcomma }}
+            </td>
+
+            <td>
+              {{ user_dict.lines_per_day|floatformat:1 }}
+            </td>
+
+            <td class="words">
+              {{ user_dict.special_words|join:", " }}
+            </td>
+
+            <td>
+              <div class="emoji_display">
+              {% for emoji in user_dict.emojis %}
+                <img src="{{ emoji.obj.URL }}" title="{{ emoji.obj.name }}" height="15">
+              {% endfor %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</body>
+</html>

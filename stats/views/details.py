@@ -10,14 +10,14 @@ from stats.models.debug import timed
 @timed
 def get_channel_table(guild: models.Guild):
     rows = {}
-    for channel_count in models.Channel_Count.objects.filter(user__guild=guild).select_related("obj", "user"):
+    for channel_count in models.Channel_Count.objects.filter(member__guild=guild).select_related("obj", "member"):
         if channel_count.obj not in rows:
-            row = (channel_count.count, [(channel_count.user,channel_count.count)])
+            row = (channel_count.count, [(channel_count.member,channel_count.count)])
             rows[channel_count.obj] = row
         else:
-            count_total, user_counts = rows[channel_count.obj]
-            user_counts.append((channel_count.user, channel_count.count))
-            culled_user_counter = Counter(dict(user_counts)).most_common(5)
+            count_total, member_counts = rows[channel_count.obj]
+            member_counts.append((channel_count.member, channel_count.count))
+            culled_user_counter = Counter(dict(member_counts)).most_common(5)
             row = (channel_count.count + count_total, culled_user_counter)
             rows[channel_count.obj] = row
     return tuple((item[0], item[1][0], [n[0] for n in item[1][1]]) for item in sorted(rows.items(), key=lambda item: item[1][0], reverse=True))
@@ -30,7 +30,7 @@ def top_URLs_table(guild: models.Guild):
         table.append((
             url,
             count,
-            models.URL_Count.objects.filter(user__guild=guild, obj=url).select_related('user').first().user
+            models.URL_Count.objects.filter(member__guild=guild, obj=url).select_related('member').first().member
         ))
     return table
 
@@ -47,13 +47,13 @@ def details(request, guild_id):
     
     context = {
         'guild': guild,
-        'top_curse_users': models.User.objects.top_n_curse_users(guild, 10),
-        'top_ALL_CAPS_users': models.User.objects.top_n_ALL_CAPS_users(guild, 10),
-        'top_verbose_users': models.User.objects.top_n_verbose_users(guild, 10),
+        'top_curse_members': models.Member.objects.top_n_curse_members(guild, 10),
+        'top_ALL_CAPS_members': models.Member.objects.top_n_ALL_CAPS_members(guild, 10),
+        'top_verbose_members': models.Member.objects.top_n_verbose_members(guild, 10),
         'channel_counts': get_channel_table(guild),
         'top_mention_pairs': top_mention_pairs,
         'max_mention_count': max_mention_count,
 
         'top_URLs': top_URLs_table(guild)
     }
-    return render(request, "details.html", context)
+    return render(request, "stats/details.html", context)

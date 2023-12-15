@@ -1,4 +1,5 @@
 from .index import index
+from .activity import activity
 from .details import details
 from .faq import faq
 from .users import users
