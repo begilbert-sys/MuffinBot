@@ -1,14 +1,28 @@
-function getCurrentTimezoneString(timezone) {
-    var nowUTC = new Date;
-    var nowTimezone = new Date(nowUTC.toLocaleString('en-US', {timeZone: timezone})); // converts date into specified timezone
 
-    var hour = nowTimezone.getHours();
+function militaryTime(dateTime) {
+    var hour = dateTime.getHours();
+    var minute = dateTime.getMinutes();
+    var hourString = String(hour);
+    if (hour < 10) {
+        var hourString = '0' + String(hour);
+    } 
+
+    var minuteString = String(minute);
+    if (minute < 10) {
+        var minuteString = '0' + String(minute);
+    }
+    return hourString + ':' + minuteString;
+
+}
+
+function meridiemTime(dateTime) {
+    var hour = dateTime.getHours();
     var hourString = String(hour);
     if (hour === 0) {
         hourString = '12';
     }
 
-    var minute = nowTimezone.getMinutes();
+    var minute = dateTime.getMinutes();
     var minuteString = String(minute);
     if (minute < 10) {
         minuteString = '0' + minuteString;
@@ -18,6 +32,17 @@ function getCurrentTimezoneString(timezone) {
         return hourString + ":" + minuteString + "am";
     } else {
         return (hour - 12) + ":" + minuteString + "pm";
+    }
+}
+
+
+function getCurrentTimezoneString(timezone) {
+    var nowUTC = new Date;
+    var nowTimezone = new Date(nowUTC.toLocaleString('en-US', {timeZone: timezone})); // converts date into specified timezone
+    if (document.getElementById("time-type").checked) {
+        return militaryTime(nowTimezone);
+    } else {
+        return meridiemTime(nowTimezone);
     }
 }
 
@@ -39,12 +64,19 @@ function formatSelection(option) {
 }
 
 // select2 setup
+settings = {
+    dropdownCssClass: 'dropdown',
+    selectionCssClass: 'searchbox',
+    width: "494px",
+    templateResult: formatResult,
+    templateSelection: formatSelection
+};
+
 $(document).ready(function() {
-    $('#id_timezone').select2({
-        dropdownCssClass: 'dropdown',
-        selectionCssClass: 'searchbox',
-        width: "494px",
-        templateResult: formatResult,
-        templateSelection: formatSelection
+    $('#id_timezone').select2(settings);
+
+    $('#time-type').on('input', function() {
+        $("#id_timezone").select2("destroy");
+        $("#id_timezone").select2(settings);
     });
 });
