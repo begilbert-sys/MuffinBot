@@ -61,7 +61,7 @@
       <li>Overview</li>
       <li><a href="activity/">Most Active Users</a></li>
       <li><a href="details/">Detailed Info</a></li>
-      <li><a href="details/">Emojis/Reactions</a></li>
+      <li><a href="emojis/">Emojis/Reactions</a></li>
       <li><a href="details/">My Profile</a></li>
     </ul>
   </nav>
@@ -220,28 +220,6 @@
         <tr style="line-height:25px">
           {% for word, count in row %}
             <td><i>{{ word }}</i> ({{ count|intcomma }})</td>
-          {% endfor %}
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <div class="greybar"></div>
-
-    <!-- 
-      Emojis 
-    -->
-    <h3>Top Emojis</h3>
-    <table class="emoji_table" style="width: 70%;">
-      <tbody>
-        {% for row in emoji_table %}
-        <tr>
-          {% for emoji, count in row %}
-          <td>
-            <div class="emoji_display">
-              <img src="{{ emoji.URL }}" title="{{ emoji.name }}">
-              <b>{{ count|intcomma }}</b>
-            </div>
-          </td>
           {% endfor %}
         </tr>
         {% endfor %}

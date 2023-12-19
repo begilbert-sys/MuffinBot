@@ -28,15 +28,6 @@ def get_unique_word_table(guild: models.Guild):
     COLS = 10
     words = models.Unique_Word_Count.objects.top_n_objs(guild, ROWS * COLS)
     return [words[i*COLS:i*COLS+COLS] for i in range(10)]
-@timed
-def get_emoji_table(guild: models.Guild):
-    ROWS = 10
-    COLS = 12
-    emoji_counts = Counter()
-    for emoji_count in models.Emoji_Count.objects.filter(member__guild=guild).select_related('obj'):
-        emoji_counts[emoji_count.obj] += emoji_count.count
-    emojis = emoji_counts.most_common(ROWS * COLS)
-    return [emojis[i*COLS:i*COLS+COLS] for i in range(ROWS)]
 
 def hour_graph(guild: models.Guild, total_messages: int):
     totals = models.Hour_Count.objects.total_hour_counts(guild)
@@ -95,6 +86,5 @@ def index(request, guild_id):
         'date_data': models.Date_Count.objects.date_counts_as_str(guild),
 
         'unique_words_table': get_unique_word_table(guild),
-        'emoji_table': get_emoji_table(guild),
     }
     return render(request, "stats/overview.html", context)

@@ -1,0 +1,144 @@
+table {
+    margin: 5px auto 0px auto;
+}
+table.emoji_ranking {
+    border-style: solid;
+    border-width: 1px;
+    border-color: white;
+    border-collapse: collapse;
+    width: 80%;
+
+}
+
+table.emoji_ranking td {
+    border: solid white;
+    text-align: left;
+    padding: 5px 0px 5px 11px;
+    line-height: 2.2;
+    min-width: 20px;
+}
+
+.emoji {
+    display: inline-block;
+    position: relative;
+    width: 25px;
+}
+
+.emoji:hover img {
+    transform: scale(1.2);
+    transition: all 0.125s;
+}
+
+.emoji img {
+    transform: scale(1);
+    transition: all 0.125s;
+    max-width: 22px;
+    max-height: 22px;
+    width: auto;
+    height: auto;
+    margin: auto;
+    vertical-align: middle;
+}
+  
+.emoji .tooltiptext {
+    visibility: hidden;
+    max-width: 120px;
+    min-width: 60px;
+    background-color: black;
+    color: #fff;
+    text-align:center;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-left: 10px;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    bottom: -120%;
+    left: 350%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    word-wrap:break-word;
+    z-index:1;
+}
+
+.emoji:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+table.reaction_ranking {
+    border-spacing: 6px;
+}
+
+table.reaction_ranking td {
+    border-radius: 0.5rem;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+    border: 0.0625rem solid transparent;
+    background-color: #2b2d31;
+    border-color: #484b4e;
+}
+table.reaction_ranking td:hover {
+    background-color: #31354E;
+    border-color: #545FE7;
+}
+
+.reaction {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 0.125rem 0.375rem;
+    position: relative;
+}
+
+.reaction img {
+    max-width: 22px;
+    max-height: 22px;
+    width: auto;
+    height: auto;
+}
+
+.reaction_number {
+    font-weight: 600;
+    margin-left: 0.375rem;
+    text-align: center;
+}
+
+.reaction .tooltiptext {
+    visibility: hidden;
+    max-width: 200px;
+    min-width: 60px;
+    background-color: black;
+    color: #fff;
+    text-align:center;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-left: 10px;
+    border-radius: 6px;
+    padding: 15px;
+    position: absolute;
+    bottom: 190%;
+    left:  86%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    word-wrap:break-word;
+    z-index:1;
+    display:flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+.reaction .tooltiptext img {
+    margin-right: 8px;
+    max-height: 40px;
+    max-width: 40px;
+    height: 40px;
+}
+
+.reaction:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(10px);
+    transition: all 0.25s;
+}

@@ -1,4 +1,18 @@
 from django.db import models
+import json
+
+def get_timezones() -> dict:
+    '''
+    Return a dictionary of the form {timezone:readable name} for every timezone
+    These are used as choices for User's timezone field
+    '''
+    with open("stats/data/timezones.json") as f:
+        timezone_dict = json.load(f)
+    tz_values = dict()
+    for continent in timezone_dict:
+        tz_values[continent] = {val:name for name,val in timezone_dict[continent].items()}
+    return tz_values
+
 
 class User_Manager(models.Manager):
     async def abulk_create_or_update(self, objs):
@@ -16,7 +30,7 @@ class User(models.Model):
     avatar_id = models.CharField(max_length=34, null=True) # the 'a_' prefix for animated avatars adds two characters
 
     last_login = models.DateTimeField(null=True)
-    timezone = models.CharField(max_length=32, default='utc')
+    timezone = models.CharField(max_length=32, default='US/Pacific', choices=get_timezones)
 
     objects = User_Manager()
 

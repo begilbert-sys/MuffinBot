@@ -47,6 +47,13 @@ def details(request, guild_id):
     
     context = {
         'guild': guild,
+        'user': request.user,
+        'first_message_date': models.Date_Count.objects.first_message_date(guild),
+        'last_message_date': models.Date_Count.objects.last_message_date(guild),
+        'total_days': models.Date_Count.objects.total_days(guild),
+        'total_members': models.Member.objects.total_members(guild),
+        'total_messages': models.Member.objects.total_messages(guild),
+
         'top_curse_members': models.Member.objects.top_n_curse_members(guild, 10),
         'top_ALL_CAPS_members': models.Member.objects.top_n_ALL_CAPS_members(guild, 10),
         'top_verbose_members': models.Member.objects.top_n_verbose_members(guild, 10),

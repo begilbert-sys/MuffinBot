@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  {% load static %}
+  {% load humanize %}
+
+  <title>{{ guild.name }} Stats</title>
+
+  <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'css/emojis.css' %}" type="text/css" />
+  <link rel="icon" href="{{ guild.display_icon }}">
+</head>
+
+<body>
+    <header>
+      <div class="header-navigation">
+          <nav class="pages_directory">
+              <ul>
+                  <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
+                  <li class="muffinstats"><a href="../">MuffinStats</a></li>
+                  <li><a href="/dashboard">Dashboard</a></li>
+                  <li><a href="/add">Add to server</a></li>
+                  <li><a href="/info">Additional Info</a></li>
+                  <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
+              </ul>
+          </nav>
+          <div class="logout">
+              <img src="{{ user.avatar }}">
+              <div class="logout_text">
+                  <span>{{ user.tag }}</span>
+                  <a href="/logout/">Logout</a>
+              </div>
+          </div>
+      </div>
+      <div class="greybar"></div>
+    </header>
+  
+    <h1>
+        {{ guild.name }} Stats (rendered on {% now "n/j/o" %})
+    </h1>
+    <span class="subtext">
+        Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
+    </span>
+    <br>
+    <span class="subtext">
+        {{ total_members|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
+    </span>
+    <br>
+    <div class="greybar"></div>
+    <nav class="stats_directory">
+      <ul>
+        <li><a href="../">Overview</a></li>
+        <li><a href="../activity/">Most Active Users</a></li>
+        <li><a href="../details/">Detailed Info</a></li>
+        <li>Emojis/Reactions</li>
+        <li><a href="details/">My Profile</a></li>
+      </ul>
+    </nav>
+    <div class="greybar"></div>
+    <h3>Emoji Frequencies</h3>
+    <span class="subtext">Hover over an emoji to see its info</span>
+    <table class="emoji_ranking">
+        {% for emoji_row in top_emojis_table %}
+        <tr> 
+            <td>
+                {{ forloop.counter }}
+            </td>
+            <td align="center">
+                {% for emoji, count in emoji_row %}
+                    <span class="emoji">
+                        <img src="{{ emoji.URL }}" height="20">
+                        <span class="tooltiptext">
+                            <b>{{ emoji.name }}</b>
+                            <br>
+                            {{ count }} uses
+                        </span>
+                    </span>
+                {% endfor%}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+
+    <div class="greybar"></div>
+    <h3>Reactions</h3>
+    <table class="reaction_ranking">
+        {% for reaction_row in top_reactions_table %}
+        <tr>
+            {% for reaction, count in reaction_row %}
+            <td>
+                <div class="reaction">
+                    <img src="{{ reaction.URL }}">
+                    <span class="reaction_number">{{ count }}</span>
+                    <span class="tooltiptext">
+                        <img src="{{ reaction.URL }}" height="40">
+                        {{ reaction.name }}
+                    </span>
+                </div>
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>

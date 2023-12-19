@@ -1,11 +1,13 @@
-from .index import index
-from .activity import activity
-from .details import details
+from .statsviews.index import index
+from .statsviews.activity import activity
+from .statsviews.details import details
+from .statsviews.emojis import emojis
+from .statsviews.users import users
+
 from .faq import faq
-from .users import users
 from .dashboard import dashboard
 from .privacy import privacy
 from .discord_oauth2 import discord_login, discord_login_redirect, discord_logout
-from .server_setup import setup
+from .set_timezone import set_timezone
 from .channel_setup import channel_setup, channel_submit, channel_thanks
 from .add import add

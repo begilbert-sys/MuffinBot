@@ -476,40 +476,26 @@ nav.stats_directory ul li:not(:last-child):after {
   margin: 5px 0px;
 }
 
-.emoji_table {
-  border-spacing: 10px;
-  border-collapse: separate;
-}
 
-.emoji_table td {
-  padding: 5px;
-  height: 27px;
-  border-width: 2px;
-  border-color: #5765F2;
-  border-radius: 20px;
-  border-style: solid;
-}
-
-.emoji_display {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-}
-
-.emoji_table img {
-  max-height: 25px;
-  aspect-ratio: 1;
-  width: 25px;
-  display: inline;
-  vertical-align: middle;
-  transition: all 0.125s;
-}
-
-.emoji_table img:hover {
-  transform: scale(1.1);
-  transition: all 0.125s;
-}
 .textbox {
   margin-left: 15%;
   margin-right: 15%;
+}
+
+
+.submit {
+  border-width: 1px;
+  border-radius: 20px;
+  border-style: solid;
+  color:white;
+  background-color: #04A96D;
+  width: 150px;
+  height: 35px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.125s linear;
+}
+
+.submit:hover {
+  transform: scale(1.1);
 }

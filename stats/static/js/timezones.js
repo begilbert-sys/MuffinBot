@@ -1,13 +1,14 @@
-function getCurrentTimeString() {
-    var now = new Date;
+function getCurrentTimezoneString(timezone) {
+    var nowUTC = new Date;
+    var nowTimezone = new Date(nowUTC.toLocaleString('en-US', {timeZone: timezone})); // converts date into specified timezone
 
-    var hour = now.getHours();
+    var hour = nowTimezone.getHours();
     var hourString = String(hour);
     if (hour === 0) {
         hourString = '12';
     }
 
-    var minute = now.getMinutes();
+    var minute = nowTimezone.getMinutes();
     var minuteString = String(minute);
     if (minute < 10) {
         minuteString = '0' + minuteString;
@@ -20,25 +21,30 @@ function getCurrentTimeString() {
     }
 }
 
-function formatOption(option) {
+function formatResult(option) {
     if (!option.id) {
         return option.text;
     }
-    var currentTime = getCurrentTimeString();
+    var timezoneTime = getCurrentTimezoneString(option.id);
     var formattedOption = $('<span style="display: flex; justify-content: space-between;">' +
     '<span style="flex: 1;">' + option.text + '</span>' +
-    '<span>' + currentTime + '</span>' +
+    '<span>' + timezoneTime + '</span>' +
     '</span>');
     return formattedOption;
-  }
+}
 
+function formatSelection(option) {
+    var timezoneTime = getCurrentTimezoneString(option.id);
+    return option.text + " (" + timezoneTime + ")";
+}
 
 // select2 setup
 $(document).ready(function() {
-    $('.js-example-basic-single').select2({
+    $('#id_timezone').select2({
         dropdownCssClass: 'dropdown',
         selectionCssClass: 'searchbox',
         width: "494px",
-        templateResult: formatOption
+        templateResult: formatResult,
+        templateSelection: formatSelection
     });
 });

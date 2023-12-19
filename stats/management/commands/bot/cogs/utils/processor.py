@@ -48,7 +48,7 @@ def get_half_hour_increment(dt: datetime.datetime) -> int:
 
 
 # list all of the count model classes
-COUNT_MODELS = models.UserStat.__subclasses__()
+COUNT_MODELS = models.MemberStat.__subclasses__()
 
 class Processor:
     def __init__(self, *, history: bool):
@@ -112,9 +112,9 @@ class Processor:
     
     def _get_message_mentions(self, message: discord.message, reply_message: discord.message = None) -> list[models.Member]:
         '''
-        Return a generator of the User model objects representing a message's mentions
+        Return a generator of the Member model objects representing a message's mentions
         A message's mentions consist of: the author of the message that's being replied to (if
-        applicable), as well as all users pinged in the message 
+        applicable), as well as all members pinged in the message 
         '''
         if reply_message:
             yield self._get_member(reply_message.author)
@@ -156,20 +156,20 @@ class Processor:
         for name, key in re.findall(EMOJI_CODE_REGEX, message.content):
             yield self._get_emoji(int(key), name, custom=True)
 
-    def _increment_count(self, Count_Class: type, user: models.Member, object, increment_by):
+    def _increment_count(self, Count_Class: type, member: models.Member, object, increment_by):
         '''
         Increment (or decrement) a count object from the cache or, if one does not exist, create one and add it to the cache
         The cache dict key is a hashed tuple consisting of the user's ID and a unique object associated with the model object
         '''
         if Count_Class is models.Mention_Count:
-            key = (user.user_id, object.user_id)
+            key = (member.user_id, object.user_id)
         else:
             # user models can't be hashed due to the id being unassigned till saved
-            key = (user.user_id, object)
+            key = (member.user_id, object)
         if key in self.cached_model_objects[Count_Class]:
             count_model_obj = self.cached_model_objects[Count_Class][key]
         else:
-            count_model_obj = Count_Class(**{'obj': object, 'user': user})
+            count_model_obj = Count_Class(**{'obj': object, 'member': member})
             self.cached_model_objects[Count_Class][key] = count_model_obj
         count_model_obj.count += increment_by
     
@@ -196,7 +196,7 @@ class Processor:
         else:
             crement = 1
 
-        ### USER
+        ### MEMBER
         member_model_obj = self._get_member(message.author)
         member_model_obj.messages += crement
 
@@ -259,8 +259,8 @@ class Processor:
 
         ### MENTIONS
         all_mentions = self._get_message_mentions(message, reply_message)
-        for user in all_mentions:
-            self._increment_count(models.Mention_Count, member_model_obj, user, crement)
+        for member in all_mentions:
+            self._increment_count(models.Mention_Count, member_model_obj, member, crement)
         
         self.cache_count += 1
 
@@ -320,19 +320,19 @@ class Processor:
         logger.debug(f'{self.guild_name}::{Model_Class.__name__} saving. . .')
         items = tuple(self.cache_copy[Model_Class].items())
         for hash_val, dummy_model_obj in items:
-            assert issubclass(Model_Class, models.UserStat)
-            valid_user = self.cache_copy[models.Member][dummy_model_obj.user.user_id]
+            assert issubclass(Model_Class, models.MemberStat)
+            valid_member = self.cache_copy[models.Member][dummy_model_obj.member.user_id]
             if Model_Class is models.Mention_Count:
                 obj_attr = self.cache_copy[models.Member][dummy_model_obj.obj.user_id]
             else:
                 obj_attr = dummy_model_obj.obj
-            kwargs = {'user': valid_user, 'obj': obj_attr}
+            kwargs = {'member': valid_member, 'obj': obj_attr}
             try:
                 real_model_obj = await Model_Class.objects.aget(**kwargs)
                 real_model_obj.merge(dummy_model_obj)
             except Model_Class.DoesNotExist:
                 real_model_obj = Model_Class(
-                    user = valid_user,
+                    member = valid_member,
                     obj=obj_attr,
                     count=dummy_model_obj.count
                 )
@@ -363,20 +363,16 @@ class Processor:
             self.cache_copy[models.Member].values()
         )
         updated_models_list = list()
-        for usr in self.cache_copy[models.Member].values():
-            try:
-                real_model_obj = await models.Member.objects.aget(user_id=usr.user_id, guild=self.guild_model_obj) 
-                updated_models_list.append(real_model_obj)
-            except models.Member.DoesNotExist:
-                print(f"{usr.name}, {usr.user_id}")
-                raise
+        for member in self.cache_copy[models.Member].values():
+            real_model_obj = await models.Member.objects.aget(user_id=member.user_id, guild=self.guild_model_obj) 
+            updated_models_list.append(real_model_obj)
             
 
         # after postgres assigns auto IDs to all of the user models,
         # the cached (temporary) user models must be updated with those IDs
         # this is so that the count objects can backreference the correct user object
         # this is ABSOLUTELY NECESSARY
-        self.cache_copy[models.Member] = {user_model_obj.user_id:user_model_obj for user_model_obj in updated_models_list}
+        self.cache_copy[models.Member] = {member_model_obj.user_id:member_model_obj for member_model_obj in updated_models_list}
 
         logger.debug(self.guild_name + '::Member saved to DB')
 

@@ -141,20 +141,3 @@ label {
 .unselectedText {
   color: #999;
 }
-
-.submit {
-  border-width: 1px;
-  border-radius: 20px;
-  border-style: solid;
-  color:white;
-  background-color: #04A96D;
-  width: 150px;
-  height: 35px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.125s linear;
-}
-
-.submit:hover {
-  transform: scale(1.1);
-}
