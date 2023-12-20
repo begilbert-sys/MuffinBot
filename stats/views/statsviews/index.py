@@ -5,7 +5,8 @@ from django.shortcuts import render
 from stats import models
 
 from stats.models.debug import timed 
-from collections import Counter
+
+import json, pytz, datetime
 
 hour_strings = ('12AM', '1AM', '2AM', '3AM', '4AM', '5AM', 
             '6AM', '7AM', '8AM', '9AM', '10AM', '11AM', 
@@ -29,13 +30,36 @@ def get_unique_word_table(guild: models.Guild):
     words = models.Unique_Word_Count.objects.top_n_objs(guild, ROWS * COLS)
     return [words[i*COLS:i*COLS+COLS] for i in range(10)]
 
-def hour_graph(guild: models.Guild, total_messages: int):
+
+def hour_graph(guild: models.Guild, timezone: str, total_messages: int) -> list[tuple[int, int, int]]: 
+    '''
+    Return a list of 24 tuples containing the following info for each of the guild's total hour counts:
+    (hour, count, count as percentage of total messages)
+    '''
+    totals = models.Member.objects.total_hour_counts(guild, timezone)
+    return [(hour, totals[hour], (totals[hour]/total_messages) * 100) for hour in range(24)]
+
+
+
+def hour_graph_deprecated(guild: models.Guild, total_messages: int):
+
     totals = models.Hour_Count.objects.total_hour_counts(guild)
+
     result = list()
     for hour, value in totals.items():
         pctvalue = (value/total_messages) * 100
         result.append((hour, value, pctvalue))
     return result
+
+def timezone_string(timezone):
+    with open("stats/data/timezones.json") as f:
+        timezones_dict = json.load(f)
+    raw_timezones = dict()
+    for continent in timezones_dict:
+        raw_timezones.update(timezones_dict[continent])
+    tz_name = raw_timezones[timezone]
+    offset = datetime.datetime.now(pytz.timezone(timezone)).strftime('%:z')
+    return f"{tz_name} (UTC{offset})"
 
 def weekday_graph(guild: models.Guild, total_messages: int):
     result = list()
@@ -50,9 +74,11 @@ def index(request, guild_id):
     guild = models.Guild.objects.get(id=guild_id)
 
     total_messages = models.Member.objects.total_messages(guild)
+    print(hour_graph(guild, request.user.timezone, total_messages))
+    print(hour_graph_deprecated(guild, total_messages))
 
     # hour graph 
-    hour_totals = hour_graph(guild, total_messages)
+    hour_totals = hour_graph(guild, request.user.timezone, total_messages)
     hour_max = max(hour_totals, key=lambda tup: tup[1])[1] # tup[1] gives the int value
 
     time_of_day_table = get_time_of_day_table(guild)
@@ -77,6 +103,7 @@ def index(request, guild_id):
         'hour_totals': hour_totals,
         'max_hour_count': hour_max,
         'hour_strings': hour_strings,
+        'timezone_string': timezone_string(request.user.timezone),
 
         # weekday graph
         'weekday_dist': weekday_dist,

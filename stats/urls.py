@@ -26,5 +26,6 @@ urlpatterns = [
     path("privacy/", views.privacy, name="privacy policy"),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("timezone/", views.set_timezone, name="set timezone"),
+    path("timezone/submit/", views.submit_timezone, name="submit timezone"),
     path("", views.faq)
 ]

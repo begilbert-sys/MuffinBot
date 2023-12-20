@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-
+from django.http import HttpResponseNotAllowed
 from django.forms import ModelForm
 from stats.models import User
 
@@ -20,3 +20,15 @@ def set_timezone(request):
         'form': form
     }
     return render(request, "timezone.html", context)
+
+@login_required(login_url="/login/")
+def submit_timezone(request):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    
+    form = TimezoneForm(request.POST)
+    if form.is_valid:
+        request.user.timezone = request.POST['timezone']
+        request.user.timezone_set = True
+        request.user.save()
+        return redirect("/dashboard/")

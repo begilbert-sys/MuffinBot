@@ -7,11 +7,7 @@ def get_timezones() -> dict:
     These are used as choices for User's timezone field
     '''
     with open("stats/data/timezones.json") as f:
-        timezone_dict = json.load(f)
-    tz_values = dict()
-    for continent in timezone_dict:
-        tz_values[continent] = {val:name for name,val in timezone_dict[continent].items()}
-    return tz_values
+        return json.load(f)
 
 
 class User_Manager(models.Manager):
@@ -31,6 +27,7 @@ class User(models.Model):
 
     last_login = models.DateTimeField(null=True)
     timezone = models.CharField(max_length=32, default='US/Pacific', choices=get_timezones)
+    timezone_set = models.BooleanField(default=False)
 
     objects = User_Manager()
 

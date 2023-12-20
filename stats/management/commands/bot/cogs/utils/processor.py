@@ -156,7 +156,7 @@ class Processor:
         for name, key in re.findall(EMOJI_CODE_REGEX, message.content):
             yield self._get_emoji(int(key), name, custom=True)
 
-    def _increment_count(self, Count_Class: type, member: models.Member, object, increment_by):
+    def _increment_count(self, Count_Class: type, member: models.Member, object, increment_by: int):
         '''
         Increment (or decrement) a count object from the cache or, if one does not exist, create one and add it to the cache
         The cache dict key is a hashed tuple consisting of the user's ID and a unique object associated with the model object
@@ -217,7 +217,7 @@ class Processor:
         ### HOUR
         msg_hour = message.created_at.hour
 
-        member_model_obj.half_hour_counts[get_half_hour_increment(message.created_at)] += 1
+        member_model_obj.half_hour_counts[get_half_hour_increment(message.created_at)] += crement
 
         self._increment_count(models.Hour_Count, member_model_obj, msg_hour, crement)
 
@@ -393,6 +393,14 @@ class Processor:
             self.cache_copy[Model_Class].values()
         )   
         logger.debug(f'{self.guild_name}::{Model_Class.__name__} saved to DB')
+    
+    def _compare_hour_and_user_counts(self):
+        for member_model_obj in self.cached_model_objects[models.Member].values():
+            for hour in range(24):
+                value = member_model_obj.hour_counts_tz('utc')[hour]
+                if value != 0:
+                    assert self.cached_model_objects[models.Hour_Count][(member_model_obj.user_id, hour)].count == value
+                
 
     async def _save(self):
         '''
@@ -401,6 +409,8 @@ class Processor:
         # sometimes, the program will save() before the previous save() is done saving
         # using a semaphore here ensures that only one call to save() will be running at any given time
         async with self._saving_semaphore:
+            self._compare_hour_and_user_counts()
+
             self.guild_model_obj.last_msg_dt = datetime.datetime.now(datetime.UTC)
             await self.guild_model_obj.asave()
 

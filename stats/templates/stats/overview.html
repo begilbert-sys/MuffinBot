@@ -18,13 +18,15 @@
 </head>
 
 <body>
-  <div class="unset_tz_warning">Please <a>set your timezone</a> for accurate hour values</div>
+  {% if not user.timezone_set %}
+    <div class="unset_tz_warning">Please <a href="/timezone/">set your timezone</a> for accurate hour values</div>
+  {% endif %}
   <header>
     <div class="header-navigation">
         <nav class="pages_directory">
             <ul>
                 <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
-                <li class="muffinstats"><a href="../">MuffinStats</a></li>
+                <li class="muffinstats"><a href="/">MuffinStats</a></li>
                 <li><a href="/dashboard">Dashboard</a></li>
                 <li><a href="/add">Add to server</a></li>
                 <li><a href="/info">Additional Info</a></li>
@@ -96,7 +98,7 @@
       </tbody>
     </table>
     <br>
-    <span class="subtext">PST / PDT (UTC-8/7)</span>
+    <span class="subtext">{{ timezone_string }}</span>
     <br>
     <br>
     <table border="0" class="txt1">

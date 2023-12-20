@@ -1,4 +1,3 @@
-
 function militaryTime(dateTime) {
     var hour = dateTime.getHours();
     var minute = dateTime.getMinutes();
@@ -35,11 +34,10 @@ function meridiemTime(dateTime) {
     }
 }
 
-
 function getCurrentTimezoneString(timezone) {
     var nowUTC = new Date;
     var nowTimezone = new Date(nowUTC.toLocaleString('en-US', {timeZone: timezone})); // converts date into specified timezone
-    if (document.getElementById("time-type").checked) {
+    if ($("#time-format").is(":checked")) {
         return militaryTime(nowTimezone);
     } else {
         return meridiemTime(nowTimezone);
@@ -73,10 +71,15 @@ settings = {
 };
 
 $(document).ready(function() {
+
     $('#id_timezone').select2(settings);
 
-    $('#time-type').on('input', function() {
+    $('#time-format').on('input', () => { // reloads selector times when the time format is toggled
         $("#id_timezone").select2("destroy");
         $("#id_timezone").select2(settings);
     });
+
+
+    $("#timezone-selector").css("visibility", "visible"); // prevents FOUC
+
 });

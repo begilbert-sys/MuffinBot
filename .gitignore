@@ -3,11 +3,11 @@ __pycache__
 db.sqlite3
 presets.py
 migrations
-tablesorter
 debug.log
 discord.log
 Archive.zip
 token.py
 theme.custom.min.css
-data/
+words.txt
+curse_words.txt
 client_info.py

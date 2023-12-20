@@ -8,6 +8,6 @@ from .faq import faq
 from .dashboard import dashboard
 from .privacy import privacy
 from .discord_oauth2 import discord_login, discord_login_redirect, discord_logout
-from .set_timezone import set_timezone
+from .set_timezone import set_timezone, submit_timezone
 from .channel_setup import channel_setup, channel_submit, channel_thanks
 from .add import add
