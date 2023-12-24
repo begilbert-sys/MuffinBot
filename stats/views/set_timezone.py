@@ -11,7 +11,7 @@ class TimezoneForm(ModelForm):
 
 
 
-@login_required(login_url="/login/")
+@login_required
 def set_timezone(request):
     form = TimezoneForm()
     form.fields['timezone'].label = '' # remove the label from the form 
@@ -21,7 +21,7 @@ def set_timezone(request):
     }
     return render(request, "timezone.html", context)
 
-@login_required(login_url="/login/")
+@login_required
 def submit_timezone(request):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])

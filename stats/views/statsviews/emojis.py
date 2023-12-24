@@ -7,10 +7,7 @@ def emojis_table(guild: models.Guild, count: int) -> list[list[(models.Emoji, in
     Return a 2D list of the guild's top `count` `emojis, divided into categories depending on their usage
     '''
     ROWS = 10
-    emoji_counts = Counter()
-    for emoji_count in models.Emoji_Count.objects.filter(member__guild=guild).select_related('obj'):
-        emoji_counts[emoji_count.obj] += emoji_count.count
-    emojis = emoji_counts.most_common(count)
+    emojis = models.Emoji_Count.objects.guild_top_n(guild, count)
 
     if len(emojis) <= ROWS:
         return emojis
@@ -44,10 +41,7 @@ def reactions_table(guild: models.Guild, count: int) -> list[list[(models.Emoji,
     '''
     COLS = 15
     reaction_counts = Counter()
-    for reaction_count in models.Reaction_Count.objects.filter(member__guild=guild).select_related('obj'):
-        reaction_counts[reaction_count.obj] += reaction_count.count
-    reactions = reaction_counts.most_common(count)
-
+    reactions = models.Reaction_Count.objects.guild_top_n(guild, count)
     return tablemaker(reactions, COLS)
     
 
@@ -55,7 +49,6 @@ def emojis(request, guild_id):
     guild = models.Guild.objects.get(id=guild_id)
     context = {
         'guild': guild,
-        'user': request.user,
         'first_message_date': models.Date_Count.objects.first_message_date(guild),
         'last_message_date': models.Date_Count.objects.last_message_date(guild),
         'total_days': models.Date_Count.objects.total_days(guild),
@@ -64,6 +57,5 @@ def emojis(request, guild_id):
 
         'top_emojis_table': emojis_table(guild, 120),
         'top_reactions_table': reactions_table(guild, 120)
-
     }
     return render(request, "stats/emojis.html", context)

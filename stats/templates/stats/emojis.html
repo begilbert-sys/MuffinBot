@@ -2,16 +2,15 @@
 <html>
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  {% load static %}
-  {% load humanize %}
-
-  <title>{{ guild.name }} Stats</title>
-
-  <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
-  <link rel="stylesheet" href="{% static 'css/emojis.css' %}" type="text/css" />
-  <link rel="icon" href="{{ guild.display_icon }}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    {% load static %}
+    {% load humanize %}
+    
+    <title>{{ guild.name }} Stats</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+    <link rel="stylesheet" href="{% static 'css/emojis.css' %}" type="text/css" />
+    <link rel="icon" href="{{ guild.display_icon }}">
 </head>
 
 <body>
@@ -56,7 +55,7 @@
         <li><a href="../activity/">Most Active Users</a></li>
         <li><a href="../details/">Detailed Info</a></li>
         <li>Emojis/Reactions</li>
-        <li><a href="details/">My Profile</a></li>
+        <li><a href="../user/{{ user.tag }}">My Profile</a></li>
       </ul>
     </nav>
     <div class="greybar"></div>
@@ -88,9 +87,9 @@
     <div class="greybar"></div>
     <h3>Reactions</h3>
     <table class="reaction_ranking">
-        {% for reaction_row in top_reactions_table %}
+        {% for row in top_reactions_table %}
         <tr>
-            {% for reaction, count in reaction_row %}
+            {% for reaction, count in row %}
             <td>
                 <div class="reaction">
                     <img src="{{ reaction.URL }}">

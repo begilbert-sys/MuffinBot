@@ -78,6 +78,7 @@ table.reaction_ranking td {
     border: 0.0625rem solid transparent;
     background-color: #2b2d31;
     border-color: #484b4e;
+    min-width: 50px;
 }
 table.reaction_ranking td:hover {
     background-color: #31354E;

@@ -24,13 +24,13 @@ def get_channel_table(guild: models.Guild):
 
 @timed
 def top_URLs_table(guild: models.Guild):
-    url_counts = models.URL_Count.objects.top_n_objs(guild, 15)
+    url_counts = models.URL_Count.objects.guild_top_n(guild, 15)
     table = []
     for url, count in url_counts:
         table.append((
             url,
             count,
-            models.URL_Count.objects.filter(member__guild=guild, obj=url).select_related('member').first().member
+            models.URL_Count.objects.filter(member__guild=guild, obj=url).only('member').first().member
         ))
     return table
 
@@ -47,7 +47,6 @@ def details(request, guild_id):
     
     context = {
         'guild': guild,
-        'user': request.user,
         'first_message_date': models.Date_Count.objects.first_message_date(guild),
         'last_message_date': models.Date_Count.objects.last_message_date(guild),
         'total_days': models.Date_Count.objects.total_days(guild),

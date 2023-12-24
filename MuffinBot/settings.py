@@ -139,6 +139,7 @@ USE_TZ = True
 #STATIC_URL = 'http://staticfiles-bucket.s3-website-us-west-1.amazonaws.com/static/'
 STATIC_URL = '/static/'
 
+LOGIN_URL = "/login/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

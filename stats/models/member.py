@@ -73,7 +73,17 @@ class Member_Manager(models.Manager):
         half_hour_counts_lists = self.filter(guild=guild).values_list('half_hour_counts', flat=True)
         total_half_hour_counts = tuple(sum(count) for count in zip(*half_hour_counts_lists))
         return half_hours_to_hours(total_half_hour_counts, timezone)
-
+    def top_n_in_hour_range(self, guild: Guild, timezone: str, n: int, lower_bound: int, upper_bound: int) -> list[tuple['Member', int]]:
+        '''Return a list of tuples representing the top n members with the most messages sent in the hour range of `lower_bound` to `upper_bound`
+        Each tuple contains the member object as well as the hour range message count for that user'''
+        top_100_members = self.top_100(guild)
+        with_counts = [(member, sum(member.hour_counts_tz(timezone)[lower_bound:upper_bound]))
+                         for member in top_100_members]
+        return sorted(
+            with_counts,
+            key=lambda tup: tup[1],
+            reverse=True
+        )[:n]
 
     @timed
     def get_rank(self, guild: Guild, member):
@@ -111,15 +121,16 @@ class Member(models.Model):
 
     @property
     def curse_ratio(self):
-        return (self.curse_word_count / self.messages) * 100
+        return (self.curse_word_count / self.messages) * 100 if self.messages != 0 else 0 
     
     @property
     def CAPS_ratio(self):
-        return (self.ALL_CAPS_count / self.messages) * 100
+
+        return (self.ALL_CAPS_count / self.messages) * 100 if self.messages != 0 else 0 
 
     @property
     def average_chars(self):
-        return self.total_chars / self.messages
+        return (self.total_chars / self.messages) if self.messages != 0 else 0 
     
     def hour_counts_tz(self, timezone: str) -> tuple[int]:
         '''

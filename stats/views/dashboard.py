@@ -20,7 +20,7 @@ def get_server_table(user: models.User) -> list[tuple[models.Guild, bool]]:
     matrix.append(sublist)
     return matrix
 
-@login_required(login_url="/login/")
+@login_required
 def dashboard(request):
     context = {
         'user': request.user,

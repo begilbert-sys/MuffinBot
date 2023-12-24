@@ -19,17 +19,17 @@ class MemberStat_Manager(models.Manager):
         )
     
     @timed
-    def top_n_objs(self, guild: Guild, n: int = None):
+    def guild_top_n(self, guild: Guild, n: int = None) -> list[tuple['models.MemberStat', int]]:
         objs = Counter()
-        for obj, count in self.filter(member__guild=guild).values_list('obj', 'count'):
-            objs[obj] += count
+        for model_obj in self.filter(member__guild=guild).only('obj', 'count'):
+            objs[model_obj.obj] += model_obj.count
         if n is None:
             return objs.most_common()
         else:
             return objs.most_common(n)
     @timed
-    def top_n_member_objs(self, member: Member, n: int):
-        return self.filter(member=member)[:n]
+    def member_top_n(self, member: Member, n: int) -> list['models.MemberStat']:
+        return list(self.filter(member=member).order_by('-count')[:n])
 
 class MemberStat(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
@@ -121,43 +121,6 @@ class Mention_Count(MemberStat):
 
     objects = Mention_Count_Manager()
 
-class Hour_Count_Manager(MemberStat_Manager):
-    @timed
-    def total_hour_counts(self, guild: Guild) -> dict:
-        hour_count_dict = dict()
-        for hour in range(24):
-            hour_objs = self.filter(member__guild=guild, obj=hour)
-            hour_sum = hour_objs.aggregate(models.Sum('count'))['count__sum']
-            hour_count_dict[hour] = hour_sum if hour_sum is not None else 0
-        return hour_count_dict
-    
-    def member_hour_count_range(self, member: Member, start: int, end: int):
-        # optimized
-        return Hour_Count.objects.filter(member=member, obj__range=(start,end)).aggregate(models.Sum('count'))['count__sum']
-    @timed
-    def top_n_members_in_range(self, guild: Guild, n: int, start: int, end: int):
-        '''
-        Return a list of tuples of length 2, with each tuple containing the member obj,
-        and the total count for the range
-        '''
-        # optimized
-        member_dict = Counter()
-        for hour_count in self.filter(member__guild=guild, obj__range=(start, end), member__hidden=False).select_related("member"):
-            member_dict[hour_count.member] += hour_count.count
-        n_largest_members = heapq.nlargest(n, member_dict.items(), key=lambda item: item[1])
-        return n_largest_members
-    
-    def top_member_in_range_message_count(self, start, end):
-        member, count = self.top_n_members_in_range(1, start, end)[0]
-        return count
-    
-    def member_hour_counts(self, member):
-        hour_counts = [0 for _ in range(24)]
-        for hour_count in self.filter(member=member):
-            hour_counts[hour_count.obj] = hour_count.count
-        return hour_counts
-    
-        
 
 class Hour_Count(MemberStat):
     Hours = models.IntegerChoices(
@@ -168,8 +131,6 @@ class Hour_Count(MemberStat):
     )
     
     obj = models.PositiveSmallIntegerField(choices=Hours.choices)
-
-    objects = Hour_Count_Manager()
 
 
 
@@ -274,7 +235,7 @@ class Unique_Word_Count_Manager(MemberStat_Manager):
     
 
 class Unique_Word_Count(MemberStat):
-    obj = models.CharField(max_length=18) 
+    obj = models.CharField(max_length=15) 
 
     objects = Unique_Word_Count_Manager()
 

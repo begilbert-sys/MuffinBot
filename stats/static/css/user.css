@@ -1,0 +1,36 @@
+.info_table {
+    width: 70%;
+    padding: 3px;
+    margin: 0 auto;
+    text-align:left;
+}
+
+
+
+.mini_table {
+    display:inline;
+    margin: 10px;
+    text-align: left;
+}
+  
+.mini_table th {
+    padding-bottom: 3px;
+}
+
+.mini_table td {
+    padding-left: 5px;
+}
+
+/* this is really stupid and hacky, but what it does is it correctly aligns the 10th item in the chat partners list. this is due to the number "10" occupying 9 pixels of extra character space */
+.mini_table tr:nth-child(5) td:nth-child(3){
+    position:relative;
+    left:-9px;
+}
+
+
+.tablink_wrapper {
+    width:50%;
+    margin: 0 auto;
+    position: relative;
+    left: 6.3%;
+}

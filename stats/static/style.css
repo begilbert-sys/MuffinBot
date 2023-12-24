@@ -257,6 +257,7 @@ nav.stats_directory ul li:not(:last-child):after {
 
 .tabcontent {
   width: 80%;
+  margin: 0 auto;
 }
 
 .txt1 {
@@ -344,6 +345,12 @@ nav.stats_directory ul li:not(:last-child):after {
   vertical-align: middle;
 }
 
+.emoji_display {
+  display:flex;
+  justify-content: space-evenly;
+  align-items:center;
+}
+
 
 .rank {
   text-align: right;
@@ -425,11 +432,7 @@ nav.stats_directory ul li:not(:last-child):after {
   border-width: 4px; 
   border-color: #ffffff #000000 #000000 #ffffff; 
 }
-.user_info_table {
-  width: 70%;
-  padding: 3px;
-  margin: 0 auto;
-}
+
 .user_hour_table tr {
   vertical-align: bottom;
 }
@@ -438,23 +441,6 @@ nav.stats_directory ul li:not(:last-child):after {
   font-size: 9px;
   text-align: center;
   vertical-align: bottom;
-}
-
-.user_mini_table {
-  display:inline;
-  margin: 10px;
-}
-
-.user_mini_table th {
-  padding-bottom: 3px;
-}
-
-.user_mention_table {
-  font-size: 12px;
-  
-}
-.user_mention_table td.pipe {
-  padding-right: 10px;
 }
 
 .questions {
@@ -498,4 +484,8 @@ nav.stats_directory ul li:not(:last-child):after {
 
 .submit:hover {
   transform: scale(1.1);
+}
+
+table.word_table tr {
+  line-height: 25px;
 }

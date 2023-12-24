@@ -1,4 +1,4 @@
-from .statsviews.index import index
+from .statsviews.overview import overview
 from .statsviews.activity import activity
 from .statsviews.details import details
 from .statsviews.emojis import emojis

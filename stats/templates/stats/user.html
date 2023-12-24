@@ -11,9 +11,11 @@
   <title>{{ guild.name }} Stats</title>
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'css/user.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'css/emojis.css' %}" type="text/css" />
   <link rel="icon" href="{{ guild.display_icon }}">
 
-  
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   {{ date_data|json_script:"dateData" }}
 </head>
 
@@ -57,7 +59,7 @@
       <li><a href="../">Overview</a></li>
       <li><a href="../activity/">Most Active Users</a></li>
       <li><a href="../details/">Detailed Info</a></li>
-      <li><a href="../details/">Emojis/Reactions</a></li>
+      <li><a href="../emojis/">Emojis/Reactions</a></li>
       <li>My Profile</li>
     </ul>
   </nav>
@@ -66,14 +68,14 @@
   <h3>Personal Stats</h3>
   <div class="user_header">
     <div class="user_column user_display">
-      <img src="{{ user.avatar }}" class="user_icon">
-      &nbsp;{{ user.nick }}
+      <img src="{{ member.user.avatar }}" class="user_icon">
+      &nbsp;{{ member.user.tag }}
     </div>
     <div class="user_column user_rank">
       {{ rank }}
     </div>
   </div>
-  <table class="user_info_table">
+  <table class="info_table">
     <tbody>
       <tr>
         <td>
@@ -94,7 +96,7 @@
           CAPS ratio: {{ CAPS_ratio|floatformat:2 }}% (<b>{{ CAPS_magnitude }}</b>)
         </td>
         <td>
-          Active Days: {{ total_user_active_days }} / {{ total_user_days }} ({{ total_user_active_days_percentage|floatformat:2 }}%)
+          Active Days: {{ total_member_active_days }} / {{ total_member_days }} ({{ total_member_active_days_percentage|floatformat:2 }}%)
         </td>
       </tr>
     </tbody>
@@ -103,7 +105,7 @@
   <br>
 
 
-  <table cellspacing="0" cellpadding="0" class="user_mini_table weekday_table" >
+  <table cellspacing="0" cellpadding="0" class="mini_table weekday_table" >
     <thead>
       <th colspan="7" class="subtext" style="padding-bottom: 18px;">Weekly Activity</th>
     </thead>
@@ -131,7 +133,7 @@
     </tbody>
   </table>
 
-  <table class="user_mini_table user_hour_table">
+  <table class="mini_table user_hour_table">
     <thead>
       <th colspan="24" class="subtext" style="padding-bottom: 18px;">Hourly Activity</th>
     </thead>
@@ -152,7 +154,7 @@
     </tbody>
   </table>
 
-  <table class="user_mini_table tiny_table">
+  <table class="mini_table tiny_table">
     <thead>
       <th colspan="2" class="subtext">Likes chatting with</th>
     </thead>
@@ -160,16 +162,18 @@
       {% for pair in talking_partners %}
       <tr>
         {% for mention in pair %}
-        {% with member=mention.0 count=mention.1 %}
-        <td>
-          {{ forloop.counter0|add:forloop.parentloop.counter }}.&nbsp;
-            <img class="icon time_of_day_icon" height="15" style="vertical-align: middle" src="{{ member.user.avatar }}">
-            <a href="./{{ member.user.tag }}" class="userlink" style="color: white">{{ member.user.tag }}</a>
-        </td>
-        <td class="pipe">
-          <div class="defaultbar" style="height:8px; width:{% widthratio count talking_partner_max 80 %}px"></div>
-        </td>
-        {% endwith %}
+        {% if mention != None %}
+          {% with mentionrank=mention.0 friend=mention.1.obj count=mention.1.count %}
+          <td>
+            {{ mentionrank }}.&nbsp;
+              <img class="icon time_of_day_icon" height="15" style="vertical-align: middle" src="{{ friend.user.avatar }}">
+              <a href="./{{ friend.user.tag }}" class="userlink" style="color: white">{{ friend.user.tag }}</a>
+          </td>
+          <td class="pipe">
+            <div class="defaultbar" style="height:8px; width:{% widthratio count talking_partner_max 80 %}px"></div>
+          </td>
+          {% endwith %}
+        {% endif %}
         {% endfor %}
       </tr>
       {% endfor %}
@@ -177,7 +181,7 @@
   </table>
   <div class="greybar"></div>
   
-  <div style="width: 50%; margin-left: 8.7%;">
+  <div class="tablink_wrapper">
     <button class="subtext selectedTablink" onclick="openPage('topWeekly', this)">Weekly</button>
     <button class="subtext tablink" onclick="openPage('topMonthly', this)">Monthly</button>
     <button class="subtext tablink" onclick="openPage('topYearly', this)">Yearly</button>
@@ -188,6 +192,40 @@
   <div id="topMonthly" class="tabcontent"></div>
   <div id="topYearly" class="tabcontent"></div>
   <div id="topAllTime" class="tabcontent"></div>
+
+  <div class="greybar"></div>
+  <h3>Vocabulary</h3>
+  <br>
+  <table class="default_table tiny_table word_table">
+    {% for row in unique_word_table %}
+      <tr>
+        {% for unique_word_count in row %}
+          <td><i>{{ unique_word_count.obj }}</i> ({{ unique_word_count.count|intcomma }})</td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </table>
+
+  <div class="greybar"></div>
+  <h3>Reactions Received</h3>
+  <table class="reaction_ranking">
+    {% for row in reaction_table %}
+      <tr>
+        {% for reaction_count in row %}
+        <td>
+          <div class="reaction">
+            <img src="{{ reaction_count.obj.URL}}" height="20">
+            <span class="reaction_number">{{ reaction_count.count }}</span>
+            <span class="tooltiptext">
+              <img src="{{ reaction_count.obj.URL }}" height="40">
+              {{ reaction_count.obj.name }}
+            </span>
+          </div>
+        </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </table>
   <script type="text/javascript" src="{% static 'js/chart_setup.js' %}"></script>
 </body>
 </html>

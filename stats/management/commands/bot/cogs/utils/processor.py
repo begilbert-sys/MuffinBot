@@ -10,11 +10,10 @@ import re
 from itertools import chain 
 
 from stats import models
-from django.db import connection
-
-DELETED_USER_ID = 456226577798135808
 
 logger = logging.getLogger('collection')
+
+DELETED_USER_ID = 456226577798135808
 
 with open('stats/data/words.txt') as f:
     WORDS = set(f.read().split('\n'))
@@ -30,7 +29,6 @@ def get_URLs(string: str) -> list[str]:
     url_regex = r'(http|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])'
     raw_urls = [url.group(0) for url in re.finditer(url_regex, string) if len(url.group(0)) <= 200]
     return raw_urls
-
 
 def get_icon_id(icon_url: str) -> str:
     # storiung this instead of the entire URL cuts storage space big time
@@ -57,6 +55,7 @@ class Processor:
 
         # explanation for this variable in save() function 
         self._saving_semaphore = asyncio.Semaphore(1)
+        self.save_checker = 0
         
         if history:
             self.current_channel_model_obj = None
@@ -88,13 +87,13 @@ class Processor:
             discriminator=user.discriminator if user.discriminator != '0' else None,
             avatar_id = get_icon_id(str(user.display_avatar))
         )
-        if user.id == DELETED_USER_ID:
-            new_user_model_obj.hidden = True
         self.cached_model_objects[models.User][user.id] = new_user_model_obj
         new_member_model_obj = models.Member(
             guild=self.guild_model_obj,
             user=new_user_model_obj
         )
+        if user.id == DELETED_USER_ID:
+            new_member_model_obj.hidden = True
         self.cached_model_objects[models.Member][user.id] = new_member_model_obj
         return new_member_model_obj
     
@@ -187,10 +186,15 @@ class Processor:
             emoji_model_obj = self._get_emoji(emoji_object.id, emoji_object.name, custom=True)
             self._increment_count(models.Reaction_Count, member_model_obj, emoji_model_obj, count)
             
-    def process_message(self, message: discord.Message, reply_message: discord.Message = None, *, unprocess = False):
+    def process_message(self, message: discord.Message, *, unprocess = False):
         '''
         Given a message, increment or decrement all of the cached models accordingly 
         '''
+        if message.author.bot:
+            if self.history:
+                self.current_channel_model_obj.last_message_dt = message.created_at
+                return
+
         if unprocess:
             crement = -1
         else:
@@ -251,17 +255,22 @@ class Processor:
         ### UNIQUE WORDS AND CURSE WORDS
         for word in message.content.lower().split():
             # valid 'words' need to be alphabetic and between 3 and 18 characters
-            if word.isalpha() and len(word) in range(3,19):
+            if word.isalpha() and len(word) in range(3,15):
                 if word not in WORDS:
                     self._increment_count(models.Unique_Word_Count, member_model_obj, word, crement)
                 if word in CURSE_WORDS:
                     member_model_obj.curse_word_count += crement
 
         ### MENTIONS
+        reply_message = None
+        if message.type is discord.MessageType.reply and type(message.reference.resolved) is not discord.DeletedReferencedMessage:
+            reply_message = message.reference.resolved
         all_mentions = self._get_message_mentions(message, reply_message)
         for member in all_mentions:
             self._increment_count(models.Mention_Count, member_model_obj, member, crement)
-        
+
+        if self.history:
+            self.current_channel_model_obj.last_message_dt = message.created_at
         self.cache_count += 1
 
     async def process_guild(self, guild: discord.guild):
@@ -296,6 +305,7 @@ class Processor:
         Sets up the channel history object to be 
         '''
         if self.history:
+            # this save is to ensure the last_message_dt value gets saved
             if not self.current_channel_model_obj is None:
                 await self.current_channel_model_obj.asave()
             try:
@@ -393,13 +403,6 @@ class Processor:
             self.cache_copy[Model_Class].values()
         )   
         logger.debug(f'{self.guild_name}::{Model_Class.__name__} saved to DB')
-    
-    def _compare_hour_and_user_counts(self):
-        for member_model_obj in self.cached_model_objects[models.Member].values():
-            for hour in range(24):
-                value = member_model_obj.hour_counts_tz('utc')[hour]
-                if value != 0:
-                    assert self.cached_model_objects[models.Hour_Count][(member_model_obj.user_id, hour)].count == value
                 
 
     async def _save(self):
@@ -409,7 +412,9 @@ class Processor:
         # sometimes, the program will save() before the previous save() is done saving
         # using a semaphore here ensures that only one call to save() will be running at any given time
         async with self._saving_semaphore:
-            self._compare_hour_and_user_counts()
+            assert self.save_checker == 0
+            self.save_checker = 1
+            logger.info("Saving something")
 
             self.guild_model_obj.last_msg_dt = datetime.datetime.now(datetime.UTC)
             await self.guild_model_obj.asave()
@@ -436,9 +441,11 @@ class Processor:
                 gather_list.append(self._update_and_save_count_model_objects(Model_Class))
 
             await asyncio.gather(*gather_list)
+            logger.info("Done saving")
+            self.save_checker = 0
 
     async def save(self):
         try:
-            await self._save()
+            await asyncio.shield(self._save()) # saving to DB should finish once it starts, hence the shield
         except Exception as e:
             logger.error(e, exc_info=True)

@@ -16,18 +16,18 @@ hour_strings = ('12AM', '1AM', '2AM', '3AM', '4AM', '5AM',
 weekdays = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
 
 @timed
-def get_time_of_day_table(guild: models.Guild):
+def get_time_of_day_table(guild: models.Guild, timezone: str):
     return list(zip(
-        models.Hour_Count.objects.top_n_members_in_range(guild, 10, 0, 5),
-        models.Hour_Count.objects.top_n_members_in_range(guild, 10, 6, 11),
-        models.Hour_Count.objects.top_n_members_in_range(guild, 10, 12, 17),
-        models.Hour_Count.objects.top_n_members_in_range(guild, 10, 18, 23),
+        models.Member.whitelist.top_n_in_hour_range(guild, timezone, 10, 0, 6),
+        models.Member.whitelist.top_n_in_hour_range(guild, timezone, 10, 6, 12),
+        models.Member.whitelist.top_n_in_hour_range(guild, timezone, 10, 12, 18),
+        models.Member.whitelist.top_n_in_hour_range(guild, timezone, 10, 18, 24)
     ))
 @timed
 def get_unique_word_table(guild: models.Guild):
     ROWS = 10
     COLS = 10
-    words = models.Unique_Word_Count.objects.top_n_objs(guild, ROWS * COLS)
+    words = models.Unique_Word_Count.objects.guild_top_n(guild, ROWS * COLS)
     return [words[i*COLS:i*COLS+COLS] for i in range(10)]
 
 
@@ -38,18 +38,6 @@ def hour_graph(guild: models.Guild, timezone: str, total_messages: int) -> list[
     '''
     totals = models.Member.objects.total_hour_counts(guild, timezone)
     return [(hour, totals[hour], (totals[hour]/total_messages) * 100) for hour in range(24)]
-
-
-
-def hour_graph_deprecated(guild: models.Guild, total_messages: int):
-
-    totals = models.Hour_Count.objects.total_hour_counts(guild)
-
-    result = list()
-    for hour, value in totals.items():
-        pctvalue = (value/total_messages) * 100
-        result.append((hour, value, pctvalue))
-    return result
 
 def timezone_string(timezone):
     with open("stats/data/timezones.json") as f:
@@ -68,20 +56,18 @@ def weekday_graph(guild: models.Guild, total_messages: int):
         result.append((value, pctvalue))
     return result 
 @timed
-def index(request, guild_id):
+def overview(request, guild_id):
     
     # predefine variables
     guild = models.Guild.objects.get(id=guild_id)
 
     total_messages = models.Member.objects.total_messages(guild)
-    print(hour_graph(guild, request.user.timezone, total_messages))
-    print(hour_graph_deprecated(guild, total_messages))
 
     # hour graph 
     hour_totals = hour_graph(guild, request.user.timezone, total_messages)
     hour_max = max(hour_totals, key=lambda tup: tup[1])[1] # tup[1] gives the int value
 
-    time_of_day_table = get_time_of_day_table(guild)
+    time_of_day_table = get_time_of_day_table(guild, request.user.timezone)
 
     time_of_day_maxes = tuple(item[1] for item in time_of_day_table[0])
 

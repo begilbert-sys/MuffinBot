@@ -5,7 +5,7 @@ import logging
 from textwrap import dedent
 from timeit import default_timer
 
-from .utils.collector import Collector
+from .utils.collector import History_Collector
 
 logger = logging.getLogger('collection')
 
@@ -18,14 +18,13 @@ class History_Collection_Cog(commands.Cog):
 
     async def collection_instance(self, guild: discord.Guild):
         if guild.id in self.active_collectors:
-            logger.warning("Collection instance for guild no. " + str(guild.id) + " is already running")
+            logger.warning("Collection instance for guild no. " + str(guild.id) + " is already running!")
             return
         
-        collector = Collector(self.bot, guild)
+        collector = History_Collector(self.bot, guild)
         self.active_collectors[guild.id] = collector
         try:
             await collector.collect_data()
-
         except Exception as e:
             # for some reason the exception is temporarily swallowed by the event loop
             # so I need to log it explicitly
@@ -57,15 +56,14 @@ class History_Collection_Cog(commands.Cog):
         
     @commands.Cog.listener()
     async def on_ready(self):
-        for guild in self.bot.guilds:
-            self.bot.loop.create_task(self.collection_instance(guild))
-        #guild2 = self.bot.get_guild(100770673609150464)
-        #if guild2.id not in self.active_collectors:
-            #self.bot.loop.create_task(self.collection_instance(guild2))
+        #for guild in self.bot.guilds:
+            #self.bot.loop.create_task(self.collection_instance(guild))
+        guild = self.bot.get_guild(424942639906029568)
+        self.bot.loop.create_task(self.collection_instance(guild))
 
     @commands.Cog.listener()
     async def on_disconnect(self):
-        logger.warning("CLIENT DISCONNECTED")
+        logger.error("CLIENT DISCONNECTED")
         for collector in self.active_collectors.values():
             await collector.db_processor.save()
         await self.bot.close()
