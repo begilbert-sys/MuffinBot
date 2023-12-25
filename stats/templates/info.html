@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    {% load static %}
+    
+    <title>Stats FAQ</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+    <link rel="icon">
+
+</head>
+<body>
+    <header>
+        <div class="header-navigation">
+            <nav class="pages_directory">
+                <ul>
+                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
+                    <li class="muffinstats"><a href="../">MuffinStats</a></li>
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/add/">Add to server</a></li>
+                    <li>Additional Info</li>
+                    <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
+                </ul>
+            </nav>
+            <div class="logout">
+                <img src="{{ user.avatar }}">
+                <div class="logout_text">
+                    <span>{{ user.tag }}</span>
+                    <a href="/logout/">Logout</a>
+                </div>
+            </div>
+        </div>
+        <div class="greybar"></div>
+    </header>
+    <h1>Additional Info</h1>
+    <div class="greybar"></div>
+    <div class='textblock'>
+        <h3>
+            Credits
+        </h3>
+        <p>
+            MuffinStats was heavily influenced by <a href="https://storage.googleapis.com/mircstats/index.html">mIRCStats</a>, a program that served the same purpose for <a href="https://en.wikipedia.org/wiki/Internet_Relay_Chat">IRC</a> chatrooms back in the day.
+            As for development, MuffinStats was written mostly in Python, with indespensible help from the following third-party tools:
+            <ul>
+                <li><a href="https://discordpy.readthedocs.io/en/stable/">discord.py</a> - a library for handling interaction with Discord's API</li>
+                <li><a href="https://www.djangoproject.com/">Django</a> - a framework for database and website management</li>
+            </ul>
+        </p>
+            <p>Both of these have beautifully-written documentation and made the development of this project much easier.</p>
+            <p>Aside from that, MuffinStats was created by and is maintained solely by me - @muffinlicious on Discord.</p>
+        <h3>
+            Bug Reporting
+        </h3>
+        <p>
+            The project is still in beta, so expect things to occasionally go wrong. If you encounter any bugs, please DM me on Discord (@muffinlicious), join my server, or email me at <u>muffinstats@gmail.com</u>. Any help is greatly appreciated!
+        </p>
+        <h3>
+            Support The Project
+        </h3>
+        <p>
+            As of right now, I pay out-of-pocket to host this project. If you'd like to support its development, send me any amount of money via the following link:
+            <br>
+            The extra income can go towards purchasing hosting premiums such as additional database storage space, faster loading times, etc. 
+        </p>
+    </div>
+</body>
+</html>

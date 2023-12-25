@@ -59,7 +59,7 @@
         <li>Most Active Users</li>
         <li><a href="../details/">Detailed Info</a></li>
         <li><a href="../details/">Emojis/Reactions</a></li>
-        <li><a href="../user/{{ user.tag }}">My Profile</a></li>
+        <li><a href="../user/{{ user.full_tag }}">My Profile</a></li>
       </ul>
     </nav>
     <div class="greybar"></div>
@@ -88,7 +88,7 @@
             <td class="nick">
               <img src="{{ user_dict.member.user.avatar }}" class="icon">
               &nbsp;
-              <a href="/stats/users/{{ user_dict.member.user.tag }}" class="userlink">{{ user_dict.member.user.tag }}</a>
+              <a href="../user/{{ user_dict.member.user.full_tag }}" class="userlink">{{ user_dict.member.nick }}</a>
             </td>
 
             <td class="line_count">

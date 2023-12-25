@@ -8,6 +8,8 @@ from collections import Counter
 import datetime
 import heapq
 
+from typing import Self
+
 class MemberStat_Manager(models.Manager):
     async def abulk_create_or_update(self, objs):
         update_fields = ['count']
@@ -28,7 +30,7 @@ class MemberStat_Manager(models.Manager):
         else:
             return objs.most_common(n)
     @timed
-    def member_top_n(self, member: Member, n: int) -> list['models.MemberStat']:
+    def member_top_n(self, member: Member, n: int) -> list[Self]:
         return list(self.filter(member=member).order_by('-count')[:n])
 
 class MemberStat(models.Model):
@@ -113,8 +115,8 @@ class Mention_Count_Manager(MemberStat_Manager):
             ))
         return top_n_tuples_result
     
-    def top_n_member_mentions(self, member, n):
-        return [(mention_count.obj, mention_count.count) for mention_count in self.filter(member=member, obj__hidden=False).order_by('-count')[:n]]
+    def member_top_n(self, member: Member, n: int) -> list[Self]:
+        return list(self.filter(member=member, obj__hidden=False).order_by('-count')[:n])
 
 class Mention_Count(MemberStat):
     obj = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='mentioned_member')
@@ -151,7 +153,9 @@ class Date_Count_Manager(MemberStat_Manager):
     def last_member_message_date(self, member: Member):
         return self.filter(member=member).latest().obj
     
-    def total_member_days(self, member: Member):
+    def total_member_days(self, member: Member) -> int:
+        if member.messages == 0:
+            return 0
         return (self.last_member_message_date(member) - self.first_member_message_date(member)).days + 1
     
     def total_member_active_days(self, member: Member):

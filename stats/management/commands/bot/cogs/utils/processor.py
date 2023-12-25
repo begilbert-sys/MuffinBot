@@ -1,5 +1,4 @@
 import discord
-
 import asyncio
 import datetime 
 import emoji
@@ -75,7 +74,7 @@ class Processor:
         self.cached_model_objects[models.Emoji] = dict()
         self.cached_model_objects[models.Channel] = dict()
 
-    def _get_member(self, user: discord.User) -> models.Member:
+    def _get_member(self, user: discord.User | discord.Member) -> models.Member:
         '''
         Return a Member model object from the cache dict or, if one does not exist, then add one and return it
         '''
@@ -90,8 +89,11 @@ class Processor:
         self.cached_model_objects[models.User][user.id] = new_user_model_obj
         new_member_model_obj = models.Member(
             guild=self.guild_model_obj,
-            user=new_user_model_obj
+            user=new_user_model_obj,
+            nick=user.global_name if user.global_name else user.name
         )
+        if type(user) is discord.Member and user.nick:
+            new_member_model_obj.nick = user.nick
         if user.id == DELETED_USER_ID:
             new_member_model_obj.hidden = True
         self.cached_model_objects[models.Member][user.id] = new_member_model_obj

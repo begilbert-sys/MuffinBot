@@ -2,6 +2,8 @@ from django.shortcuts import render
 
 from stats import models
 
+from .utils import guild_perms
+
 from stats.models.debug import timed 
 
 def get_time_of_day_counts(member: models.Member, timezone: str):
@@ -31,10 +33,11 @@ def messages_table(guild: models.Guild, timezone: str):
         })
     return member_table
 
-@timed
-def activity(request, guild_id):
-    guild = models.Guild.objects.get(id=guild_id)
 
+
+@timed
+@guild_perms
+def activity(request, guild: models.Guild):
     context = {
         'guild': guild,
         'first_message_date': models.Date_Count.objects.first_message_date(guild),

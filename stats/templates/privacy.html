@@ -2,47 +2,58 @@
 <html>
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  {% load static %}
-
-  <title>Stats FAQ</title>
-
-  <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
-  <link rel="icon" href="">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    {% load static %}
+    
+    <title>Stats FAQ</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+    <link rel="icon">
 
 </head>
 <body>
-    <div class="greybar" style="margin-bottom:15px;"></div>
-    <div class="headerlinks">
-        <a href="/stats/">1. Main page</a> | <a href="/stats/details/">2. Detailed info</a> | 3. FAQ
-    </div>
+    <header>
+        <div class="header-navigation">
+            <nav class="pages_directory">
+                <ul>
+                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
+                    <li class="muffinstats"><a href="../">MuffinStats</a></li>
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/add/">Add to server</a></li>
+                    <li><a href="/info">Additional Info</a></li>
+                    <li>Privacy Policy/Opt-Out</li>
+                </ul>
+            </nav>
+            <div class="logout">
+                <img src="{{ user.avatar }}">
+                <div class="logout_text">
+                    <span>{{ user.tag }}</span>
+                    <a href="/logout/">Logout</a>
+                </div>
+            </div>
+        </div>
+        <div class="greybar"></div>
+    </header>
+    <h1>Privacy Policy</h1>
     <div class="greybar"></div>
-    <h2>Privacy Policy & Opting Out</h2>
-    <div class='textbox questions'> 
+    <div class='textblock'> 
     <h3>
         Introduction 
     </h3>
     <p>
         The privacy policy outlines exactly what data is collected, and how you can view, manage, or delete it. 
 
-        If you're in a server running this bot, the stats pages are the <b>only</b> place your data will ever be used. <b>Your data 
-        will never be shared with any third-party, ever.</b>
+        If you're in a server running this bot, the stats pages are the <b>only</b> place your data will ever be used. 
+        This project complies to Discord's <a href="https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service">Developer Terms of Service</a>, which guarantees that your data will <b>never</b> be shared with a third-party.
     </p>
-    <br>
     <h3>
         How is my data kept safe?
     </h3>
     <p>
-        To see statistics for a server, your account must be in that server. This information is verified when you login using your Discord account.
-        Unfortunately, this means that if you leave a server, its statistics will be hidden from you. 
+        Statistics for a server may only be accessed by accounts that are currently in the server. 
+        This means that once your account leaves a server, other user's statistics will be hidden from you. However, you will still be able to see your account's statistics for that server.
         <br>
-        Because Discord users are prone to leaving and rejoining servers, your data will <b>not</b> be deleted if you leave a server. If you want to delete it, 
-        you may do so via the dashboard for that server. 
-
-        <br>
-        <br>
-        The data itself is securely hosted in an Amazon RDS database. 
+        Your account's data will <b>not</b> be deleted if you leave a server. If you'd like to delete it yourself, you may do so by visiting your server profile via the <a href="/dashboard">dashboard</a>.
     </p>
     <h3>
         What data is collected? 
@@ -60,10 +71,11 @@
         </ul>
         <h4>Data collected per user</h4>
         <ul>
-            <li>Tag (your username)</li>
+            <li>Username</li>
+            <li>Server-specific nickname</li>
             <li>User ID</li>
             <li>Avatar URL</li>
-            <li>Number of messages per viewable text channel</li>
+            <li>Number of messages sent per viewable text channel</li>
             <li>Average message length</li>
             <li>Curse word frequency - curse words themselves are <b>not</b> collected</li>
         </ul>
@@ -74,7 +86,7 @@
             <li>Message date and hour</li>
             <li>URLs used</li>
             <li>Emojis used</li>
-            <li>Reactions</li>
+            <li>Reactions received</li>
         </ul>
     </p>
     <br>
@@ -83,30 +95,34 @@
     </h3>
     <p>
         If you aren't comfortable with the bot displaying or retaining your data, you can manage
-        the data associated with your account using a few simple commands.
+        the data associated with your account via either the <a href="/dashboard">dashboard</a> or your account's server profile.
     </p>
         <h4>Hiding your data</h4>
     <p>
-        Using this command means that any mentions of your account in the server's stats will be hidden. 
+        Enabling this option means that any mentions of your account in the server's statistics will be hidden. 
         However, your data will still anonymously count towards server-wide statistics. 
         This action <b>can</b> be undone. All of your data will be retained, but not shown.
     </p>
         <h4>Deleting your data</h4>
     <p>
-        Using this command deletes your data. This action <b>cannot be undone!</b> All data associated 
-        with your account will be permanently erased. The bot will subsequently ignore all activity associated with your account. 
+        Using this option deletes your data. This action <b>cannot be undone!</b> All data associated 
+        with your account will be permanently erased, and the bot will subsequently ignore all activity associated with your account. 
     </p>
         <h4>What if my account is no longer in the server?</h4>
     <p>
-        The opt-out commands may still be used if you DM the bot.
+        The opt-out options may still be used. 
     </p>
         <h4>What if I deleted my account?</h4>
     <p>
-        Unfortunately, Discord does not alert bots when accounts are deleted. 
+        Discord does not alert bots when accounts are deleted, so there is no way to automatically delete your data upon account deletion. Therefore, you should ideally delete your data <b>before</b> you delete your account.
+        <br>
         If your account's data was collected before your account's deletion, and you want it erased, 
-        you will have to send an email to [email here] containing the following data: 
+        you will have to send an email to <u>muffinstats@gmail.com</u> with your deleted account's username. 
         After some time, your data will be manually deleted and a confirmation email will be sent in reply. 
     </p>
     </div>
+    <br>
+    <br>
+    <br>
 </body>
 </html>

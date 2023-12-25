@@ -58,7 +58,7 @@
         <li><a href="../activity/">Most Active Users</a></li>
         <li>Detailed Info</li>
         <li><a href="../emojis/">Emojis/Reactions</li>
-        <li><a href="../user/{{ user.tag }}">My Profile</a></li>
+        <li><a href="../user/{{ user.full_tag }}">My Profile</a></li>
       </ul>
     </nav>
     <div class="greybar"></div>
@@ -85,7 +85,7 @@
                 <td>{{ forloop.counter }}</td>
                 <td>
                     <img class="icon mini_icon" src="{{ member.user.avatar }}">
-                    <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
+                    <a href="../user/{{ member.user.full_tag }}" class="userlink">{{ member.nick }}</a>
                 </td>
                 <td>
                     <div class="defaultbar" style="height:5px; width: {% widthratio member.curse_ratio top_curse_members.0.curse_ratio 100 %}px"></div>
@@ -119,7 +119,7 @@
                 <td>{{ forloop.counter }}</td>
                 <td>
                     <img class="icon mini_icon" src="{{ member.user.avatar }}">
-                    <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
+                    <a href="../user/{{ member.user.full_tag }}" class="userlink">{{ member.nick }}</a>
                 </td>
                 <td>
                     <div class="defaultbar" style="height:5px; width: {% widthratio member.CAPS_ratio top_ALL_CAPS_members.0.CAPS_ratio 100 %}px"></div>
@@ -154,7 +154,7 @@
                 <td>{{ forloop.counter }}</td>
                 <td>
                     <img class="icon mini_icon" src="{{ member.user.avatar }}">
-                    <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
+                    <a href="../user/{{ member.user.full_tag }}" class="userlink">{{ member.nick }}</a>
                 </td>
                 <td>
                     <div class="defaultbar" style="height:5px; width: {% widthratio member.average_chars top_verbose_members.0.average_chars 100 %}px"></div>
@@ -187,7 +187,7 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td style="text-align: right;">
-                    <a href="../users/{{ member1.user.tag }}" class="userlink">{{ member1.user.tag }}</a>
+                    <a href="../user/{{ member1.user.full_tag }}" class="userlink">{{ member1.nick }}</a>
                     <img class="icon mini_icon" src="{{ member1.user.avatar }}">
                     <!--<div class="defaultbar" style="height: 5px; width: {% widthratio member1count max_mention_count 100 %}px">-->
                     <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio member1count max_mention_count 100 %}">
@@ -197,7 +197,7 @@
                     {{ user2count }}
                     <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio member2count max_mention_count 100 %}">
                     <img class="icon mini_icon" src="{{ member2.user.avatar }}">
-                    <a href="../users/{{ member2.user.tag }}" class="userlink">{{ member2.user.tag }}</a>
+                    <a href="../users/{{ member2.user.full_tag }}" class="userlink">{{ member2.nick }}</a>
                 </td>
             </tr>
             {% endfor %}
@@ -235,7 +235,7 @@
                 </td>
                 <td>
                     <img class="icon mini_icon" src="{{ member.user.avatar }}">
-                    <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
+                    <a href="../user/{{ member.user.full_tag }}" class="userlink">{{ member.nick }}</a>
                 </td>
             </tr>
             {% endfor %}
@@ -269,7 +269,7 @@
                     {% for member in memberlist %}
                         <td>
                             <img class="icon mini_icon" src="{{ member.user.avatar }}">
-                            <a href="../users/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a>
+                            <a href="../user/{{ member.user.full_tag }}" class="userlink">{{ member.nick }}</a>
                         {% endfor %}
                         </td>
                     {% endfor %}

@@ -64,7 +64,7 @@
       <li><a href="activity/">Most Active Users</a></li>
       <li><a href="details/">Detailed Info</a></li>
       <li><a href="emojis/">Emojis/Reactions</a></li>
-      <li><a href="user/{{ user.tag }}">My Profile</a></li>
+      <li><a href="user/{{ user.full_tag }}">My Profile</a></li>
     </ul>
   </nav>
   <div class="greybar"></div>
@@ -198,7 +198,7 @@
             <td>{{ forloop.counter }} </td>
             {% for member, count in zip_packet %}
               <td>
-                <a href="user/{{ member.user.tag }}" class="userlink">{{ member.user.tag }}</a> - {{ count|intcomma }}
+                <a href="user/{{ member.user.full_tag }}" class="userlink">{{ member.nick }}</a> - {{ count|intcomma }}
                 <br>
                 {% cycle 'bluebar' 'greenbar' 'yellowbar' 'redbar' as bar_class silent %}
                 {% cycle time_of_day_maxes.0 time_of_day_maxes.1 time_of_day_maxes.2 time_of_day_maxes.3 as current_time_most_messages silent %}

@@ -69,7 +69,7 @@
   <div class="user_header">
     <div class="user_column user_display">
       <img src="{{ member.user.avatar }}" class="user_icon">
-      &nbsp;{{ member.user.tag }}
+      &nbsp;{{ member.nick }} ({{ member.user.tag }})
     </div>
     <div class="user_column user_rank">
       {{ rank }}
@@ -167,7 +167,7 @@
           <td>
             {{ mentionrank }}.&nbsp;
               <img class="icon time_of_day_icon" height="15" style="vertical-align: middle" src="{{ friend.user.avatar }}">
-              <a href="./{{ friend.user.tag }}" class="userlink" style="color: white">{{ friend.user.tag }}</a>
+              <a href="./{{ friend.user.full_tag }}" class="userlink" style="color: white">{{ friend.nick }}</a>
           </td>
           <td class="pipe">
             <div class="defaultbar" style="height:8px; width:{% widthratio count talking_partner_max 80 %}px"></div>

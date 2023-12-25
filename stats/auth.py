@@ -1,4 +1,5 @@
 import discord
+from django.conf import settings
 from django.contrib.auth.backends import BaseBackend
 from stats import models
 
@@ -14,9 +15,11 @@ class DiscordAuthenticationBackend(BaseBackend):
             defaults={
                 'tag': user['username'],
                 'avatar_id': user['avatar'],
-                'discriminator': int(discriminator) if discriminator != '0' else None
+                'discriminator': int(discriminator) if discriminator != '0' else None,
             }
         )
+        user_model_obj.is_superuser = int(user['id']) == settings.ADMIN_ID
+        user_model_obj.save()
 
         # adjust permissions for the user
         # this updates the database on the user's permissions, 

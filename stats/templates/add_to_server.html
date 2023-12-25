@@ -9,14 +9,10 @@
   <title>Stats FAQ</title>
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" type="text/css" />
   <link rel="icon">
 
 </head>
-<body>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-    <script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
-    
+<body>    
     <header>
         <div class="header-navigation">
             <nav class="pages_directory">
@@ -41,11 +37,11 @@
     </header>
     <h1>Adding MuffinBot</h1>
     <div class="greybar"></div>
-    <div class='textblock questions' style="width:1000px; margin:0 auto;">
+    <div class='textblock'>
         <h3>
             Step 1: Add the bot to your server
         </h3>
-        <p style="margin-left: 50px;">
+        <p>
             <a>Click this link!</a>
             <br>
             Verify that you approve of the permissions, and add it to your server. 
@@ -54,14 +50,14 @@
         <h3>
             Step 2: Perform basic setup
         </h3>
-        <p style="margin-left: 50px;"> 
-            Visit the <a href="/dashboard">dashboard</a>, select your server, and select which channels you want the bot to be able to read. Anyone with manage server permissions may perform this setup. 
+        <p> 
+            Visit the <a href="/dashboard">dashboard</a>, select your server, and select which channels you want the bot to be able to read. Anyone with "Manage Server" permissions may perform this setup. 
         </p>
         <br>
         <h3>
             Step 3: Start the bot
         </h3>
-        <p style="margin-left: 50px;">
+        <p>
             Use the <code>/start</code> command in any channel that MuffinBot can read, and it will begin reading your messages. 
             <br>
             To confirm that the command has worked, select your server from the <a href="/dashboard">dashboard</a> to see its statistics. 
@@ -69,10 +65,10 @@
         </p>
         <br>
         <h3>
-            Step 4: Collect statistics on the server's history
+            Step 4 (Optional): Collect statistics on the server's history
         </h3>
-        <p style="margin-left: 50px;">
-            If you'd like, you may use the <a>history</a> command, which collects statistics on all of your server's past messages. It may take a while to fully complete this process.
+        <p>
+            If you'd like, you may use the <a>history</a> command, which collects statistics on all of your server's past messages. It may take a while for the bot to complete this process.
         </p>
     </div>
 

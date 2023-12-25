@@ -25,9 +25,11 @@ class User(models.Model):
     discriminator = models.CharField(max_length=4, null=True)
     avatar_id = models.CharField(max_length=34, null=True) # the 'a_' prefix for animated avatars adds two characters
 
-    last_login = models.DateTimeField(null=True)
     timezone = models.CharField(max_length=32, default='US/Pacific', choices=get_timezones)
     timezone_set = models.BooleanField(default=False)
+
+    last_login = models.DateTimeField(null=True)
+    is_superuser = models.BooleanField(default=False)
 
     objects = User_Manager()
 
@@ -46,7 +48,11 @@ class User(models.Model):
         else:
             return 'https://cdn.discordapp.com/embed/avatars/0.png'
 
-    
+    def full_tag(self):
+        if self.discriminator is None:
+            return self.tag
+        else:
+            return self.tag + '＃' + self.discriminator
     def is_authenticated(self):
         return True
 

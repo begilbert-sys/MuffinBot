@@ -443,18 +443,25 @@ nav.stats_directory ul li:not(:last-child):after {
   vertical-align: bottom;
 }
 
-.questions {
+.textblock {
   text-align: left;
   width:1000px; 
   margin:0 auto;
 }
 
-.questions h3 {
+.textblock h3 {
   text-decoration: underline;
 }
 
-.questions p {
+.textblock p {
   line-height: 150%;
+  margin-left: 40px;
+}
+.textblock ul {
+  margin: 0px 0px 14px 40px;
+}
+.textblock ul li {
+  margin: 5px 0px;
 }
 
 .command {

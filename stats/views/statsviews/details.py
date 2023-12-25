@@ -4,13 +4,15 @@ from django.shortcuts import render
 
 from stats import models
 
+from .utils import guild_perms
+
 from collections import Counter
 from stats.models.debug import timed 
 
 @timed
 def get_channel_table(guild: models.Guild):
     rows = {}
-    for channel_count in models.Channel_Count.objects.filter(member__guild=guild).select_related("obj", "member"):
+    for channel_count in models.Channel_Count.objects.filter(member__guild=guild, member__hidden=False).select_related("obj", "member"):
         if channel_count.obj not in rows:
             row = (channel_count.count, [(channel_count.member,channel_count.count)])
             rows[channel_count.obj] = row
@@ -34,9 +36,8 @@ def top_URLs_table(guild: models.Guild):
         ))
     return table
 
-#@cache_page(60 * 30)
-def details(request, guild_id):
-    guild = models.Guild.objects.get(id=guild_id)
+@guild_perms
+def details(request, guild: models.Guild):
     # prep variables
     top_mention_pairs = models.Mention_Count.objects.top_n_mention_pairs(guild, 20)
 
@@ -56,10 +57,11 @@ def details(request, guild_id):
         'top_curse_members': models.Member.objects.top_n_curse_members(guild, 10),
         'top_ALL_CAPS_members': models.Member.objects.top_n_ALL_CAPS_members(guild, 10),
         'top_verbose_members': models.Member.objects.top_n_verbose_members(guild, 10),
-        'channel_counts': get_channel_table(guild),
         'top_mention_pairs': top_mention_pairs,
         'max_mention_count': max_mention_count,
 
-        'top_URLs': top_URLs_table(guild)
+        'top_URLs': top_URLs_table(guild),
+
+        'channel_counts': get_channel_table(guild)
     }
     return render(request, "stats/details.html", context)

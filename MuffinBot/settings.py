@@ -22,6 +22,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-r*%oomxomz&&$v5^k1s9$z@o8-(mr=28rhew-j%q(%bn49oi^j'
 SECRET_KEY_FALLBACKS = ['django-insecure-3a%#z(xcw8bi))%ss(n77f@ubabg%6gxi#1ih+ie-dbz06v0+h']
 
+ADMIN_ID = 173610171883454464
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

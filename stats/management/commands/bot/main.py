@@ -16,8 +16,15 @@ class Stats_Bot(commands.Bot):
         #await self.load_extension('.cogs.interface', package = __package__)
 
 
-intents = discord.Intents.default()
-intents.message_content = True
+intents = discord.Intents(
+    guilds = True,
+    members = True,
+    messages = True,
+    message_content = True,
+    emojis = True,
+    reactions = True,
+)
+
 description = '''A stats bot'''
 bot = Stats_Bot(
     command_prefix='$', 

@@ -20,9 +20,9 @@ urlpatterns = [
     path("logout/", views.discord_logout, name="logout"),
 
     # static pages
-    path("thanks/", views.channel_thanks, name="channel thanks"),
     path("FAQ/", views.faq, name="FAQ"),
     path("add/", views.add, name="add to server"),
+    path("info/", views.info, name="additional info"),
     path("privacy/", views.privacy, name="privacy policy"),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("timezone/", views.set_timezone, name="set timezone"),

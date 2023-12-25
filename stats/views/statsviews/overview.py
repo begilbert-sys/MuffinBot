@@ -4,6 +4,8 @@ from django.shortcuts import render
 
 from stats import models
 
+from .utils import guild_perms
+
 from stats.models.debug import timed 
 
 import json, pytz, datetime
@@ -55,11 +57,10 @@ def weekday_graph(guild: models.Guild, total_messages: int):
         pctvalue = (value/total_messages) * 100
         result.append((value, pctvalue))
     return result 
+
 @timed
-def overview(request, guild_id):
-    
-    # predefine variables
-    guild = models.Guild.objects.get(id=guild_id)
+@guild_perms
+def overview(request, guild: models.Guild):
 
     total_messages = models.Member.objects.total_messages(guild)
 

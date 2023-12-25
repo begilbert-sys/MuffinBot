@@ -12,7 +12,7 @@ from . import Guild, User
 
 from .debug import timed
 
-CACHE_TIMEOUT = 60 * 60 * 24
+CACHE_TIMEOUT = 30
 
 
 def half_hours_to_hours(half_hour_counts: tuple[int], timezone: str) -> tuple[int]:
@@ -32,7 +32,7 @@ class Member_Manager(models.Manager):
         return await self.abulk_create(
             objs,
             update_conflicts = True,
-            update_fields = ['messages', 'curse_word_count', 'ALL_CAPS_count', 'total_chars', 'half_hour_counts'],
+            update_fields = ['messages', 'curse_word_count', 'ALL_CAPS_count', 'total_chars', 'half_hour_counts', 'nick'],
             unique_fields = ['id']
         )
     def top_100(self, guild: Guild):
@@ -102,6 +102,8 @@ class Member(models.Model):
     guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    nick = models.CharField(max_length=32)
+
     messages = models.PositiveIntegerField(default=0)
 
     half_hour_counts = ArrayField(models.PositiveIntegerField(), size=48, default=_hourfield)
@@ -145,7 +147,7 @@ class Member(models.Model):
         Args:
             other (MemberStat) - a model of the same type 
         '''
-
+        self.nick = other.nick
         self.messages += other.messages
 
         self.curse_word_count += other.curse_word_count

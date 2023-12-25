@@ -58,7 +58,4 @@ def channel_submit(request, guild_id):
     formset = ChannelFormSet(request.POST)
     if formset.is_valid:
         formset.save()
-        return redirect("/thanks/")
-    
-def channel_thanks(request):
-    return render(request, "channel_thanks.html")
+        return redirect("/add")

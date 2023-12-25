@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponseNotFound
+
 from stats import models
+
+from .utils import profile_perms
 
 hour_strings = ['12AM', '1AM', '2AM', '3AM', '4AM', '5AM', 
             '6AM', '7AM', '8AM', '9AM', '10AM', '11AM', 
@@ -47,12 +50,8 @@ def reaction_table(member: models.Member) -> list[list[models.Reaction_Count]]:
     reactions = models.Reaction_Count.objects.member_top_n(member, COLS * ROWS)
     return [reactions[i*COLS:i*COLS+COLS] for i in range(10)]
 
-def users(request, guild_id, tag):
-    try:
-        guild = models.Guild.objects.get(id=guild_id)
-        member = models.Member.whitelist.get(guild=guild, user__tag=tag)
-    except (models.Guild.DoesNotExist, models.User.DoesNotExist):
-        return HttpResponseNotFound()
+@profile_perms
+def users(request, guild: models.Guild, member: models.Member):
     # predefine variables
     total_member_active_days = models.Date_Count.objects.total_member_active_days(member)
     total_member_days = models.Date_Count.objects.total_member_days(member)
@@ -60,12 +59,12 @@ def users(request, guild_id, tag):
     member_hour_counts =  member.hour_counts_tz(request.user.timezone)
 
     talking_partners = talking_partners_table(member)
-    talking_partner_max = max([item for row in talking_partners for item in row], key=lambda item: item[1].count if item is not None else 0)[1].count
+    talking_partner_max = talking_partners[0][0][1].count if talking_partners[0][0] is not None else 0
 
 
 
     # this is hacky, change this
-    weekday_dist = [(item, item/member.messages * 100) for item in models.Date_Count.objects.weekday_distribution_member(member)]
+    weekday_dist = [(item, item/max(member.messages, 1) * 100) for item in models.Date_Count.objects.weekday_distribution_member(member)]
     max_weekday = max([item[0] for item in weekday_dist])
     # set up context 
     context = {
@@ -80,13 +79,13 @@ def users(request, guild_id, tag):
         'member': member,
         'profile_user': member.user,
         'rank': models.Member.whitelist.get_rank(guild, member),
-        'avg_messages': member.messages / models.Date_Count.objects.total_member_days(member),
+        'avg_messages': member.messages / max(models.Date_Count.objects.total_member_days(member), 1),
         'avg_letters': member.average_chars,
         'curse_word_ratio': member.curse_ratio,
         'CAPS_ratio': member.CAPS_ratio,
         'total_member_active_days': total_member_active_days,
         'total_member_days': total_member_days,
-        'total_member_active_days_percentage': (total_member_active_days / total_member_days) * 100,
+        'total_member_active_days_percentage': (total_member_active_days / max(total_member_days, 1)) * 100,
         'member_hour_counts' : zip(member_hour_counts, hour_strings),
         'max_hour_count': max(member_hour_counts),
         'talking_partners': talking_partners,

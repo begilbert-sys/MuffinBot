@@ -1,6 +1,9 @@
 from django.shortcuts import render
 
 from stats import models
+
+from .utils import guild_perms
+
 from collections import Counter
 def emojis_table(guild: models.Guild, count: int) -> list[list[(models.Emoji, int)]]:
     '''
@@ -44,9 +47,8 @@ def reactions_table(guild: models.Guild, count: int) -> list[list[(models.Emoji,
     reactions = models.Reaction_Count.objects.guild_top_n(guild, count)
     return tablemaker(reactions, COLS)
     
-
-def emojis(request, guild_id):
-    guild = models.Guild.objects.get(id=guild_id)
+@guild_perms
+def emojis(request, guild: models.Guild):
     context = {
         'guild': guild,
         'first_message_date': models.Date_Count.objects.first_message_date(guild),
