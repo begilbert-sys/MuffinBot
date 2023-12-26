@@ -54,9 +54,9 @@ def details(request, guild: models.Guild):
         'total_members': models.Member.objects.total_members(guild),
         'total_messages': models.Member.objects.total_messages(guild),
 
-        'top_curse_members': models.Member.objects.top_n_curse_members(guild, 10),
-        'top_ALL_CAPS_members': models.Member.objects.top_n_ALL_CAPS_members(guild, 10),
-        'top_verbose_members': models.Member.objects.top_n_verbose_members(guild, 10),
+        'top_curse_members': models.Member.whitelist.top_n_curse_members(guild, 10),
+        'top_ALL_CAPS_members': models.Member.whitelist.top_n_ALL_CAPS_members(guild, 10),
+        'top_verbose_members': models.Member.whitelist.top_n_verbose_members(guild, 10),
         'top_mention_pairs': top_mention_pairs,
         'max_mention_count': max_mention_count,
 

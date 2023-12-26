@@ -10,7 +10,7 @@
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" type="text/css" />
-  <link rel="icon">
+  <link rel="icon" href="{% static 'assets/logo.svg' %}">
 
 </head>
 <body>
@@ -39,9 +39,48 @@
         </div>
         <div class="greybar"></div>
     </header>
-    <h1>Servers</h1>
-    <span class="subtext">All of the servers that you have statistics for</span>
-    <br>
+
+
+    <!-- Hide Button Modal-->
+    <div id="hideModal" class="modal">
+    
+      <div class="modal-content">
+        <span id="hideX" class="close">&times;</span>
+        <h2>Hide My Data</h2>
+        <p>Enabling this option will hide all of your account info across all servers, and make your server profiles viewable only by you. 
+            <br> Your data will still anonymously count towards server-wide statistics.</p>
+        <p>This option can be undone.</p>
+        <button class="action_button hide_button" role="button">Hide It!</button>
+      </div>
+    
+    </div>
+
+    <!-- Delete Button Modal-->
+    <div id="deleteModal" class="modal">
+    
+        <div class="modal-content">
+          <span id="deleteX" class="close">&times;</span>
+          <h2>Delete My Data</h2>
+          <p> <img src="{% static 'assets/warning.svg' %}" height="20" style='display: inline;'> WARNING: This is an extremely sensitive operation!<img src="{% static 'assets/warning.svg' %}" height="20" style='display: inline;'></p>
+          <p>Enabling this option will permanently delete your account's data across all servers, <br> and the bot will permanently stop collecting data associated with your account. 
+          <p>This action <b>CANNOT</b> be undone!</p>
+          <button class="action_button delete_button" role="button">Delete My Data</button>
+        </div>
+      
+      </div>
+
+
+    <div class="top_display">
+        <div style="text-align: left;">
+            <h1>Servers</h1>
+            <span class="subtext">All of the servers that you have statistics for</span>
+        </div>
+        <div class="button_box">
+            <button class="action_button" onclick="window.location.href='/timezone/'">Set Timezone</button>
+            <button class="action_button hide_button" id="hideButton" role="button">Hide My Data</button>
+            <button class="action_button delete_button" id="deleteButton" role="button">Delete My Data</button>
+        </div>
+    </div>
     <br>
     <table class="cardtable">
         {% for row in server_table %}
