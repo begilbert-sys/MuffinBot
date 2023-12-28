@@ -1,4 +1,3 @@
-
 function fitText() {
   /* resize the name of a server to fit its card container */
   var container = $('.servercard');
@@ -32,6 +31,13 @@ $(document).ready(function() {
   $(window).on('resize', fitText);
 
   setModalScript("#hideModal", "#hideButton", "#hideX");
+  
   setModalScript("#deleteModal", "#deleteButton", "#deleteX");
+
+  if ($(".success_notif")) { // handles the popup success notification on when a POST is processed
+    setTimeout(() => {
+      $(".success_notif").addClass("success_notif_gone");
+    }, 1000);
+  }
 
 });

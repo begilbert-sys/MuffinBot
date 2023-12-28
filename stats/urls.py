@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
@@ -19,12 +19,15 @@ urlpatterns = [
     path("login/redirect/", views.discord_login_redirect, name="login redirect"),
     path("logout/", views.discord_logout, name="logout"),
 
+    # dashboard
+    path("dashboard/", views.dashboard, name="dashboard"),
+
+    
     # static pages
     path("FAQ/", views.faq, name="FAQ"),
     path("add/", views.add, name="add to server"),
     path("info/", views.info, name="additional info"),
     path("privacy/", views.privacy, name="privacy policy"),
-    path("dashboard/", views.dashboard, name="dashboard"),
     path("timezone/", views.set_timezone, name="set timezone"),
     path("timezone/submit/", views.submit_timezone, name="submit timezone"),
     path("", views.faq)

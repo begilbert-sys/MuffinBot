@@ -2,12 +2,15 @@ import discord
 from django.conf import settings
 from django.contrib.auth.backends import BaseBackend
 from stats import models
+from stats.utils import hashed_id
 
 class DiscordAuthenticationBackend(BaseBackend):
     def authenticate(self, request, user_data) -> models.User:
         user = user_data['user']
         guilds = user_data['guilds']
-        
+        user_id = int(user['id'])
+        if models.UserBlacklist.objects.filter(hash_value=hashed_id(user_id)).exists():
+            return None
         # authenticate the user: get the user from the DB or add them if they aren't there
         discriminator = user['discriminator']
         user_model_obj, user_was_created = models.User.objects.get_or_create(

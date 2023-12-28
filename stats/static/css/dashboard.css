@@ -154,7 +154,7 @@
     align-items: center;
 }
 
-.action_button {
+.select_button {
     font-family: -apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif;
     background-color: #667cf7;
     border-radius: 6px;
@@ -168,7 +168,7 @@
     width: 100%;
 }
 
-.action_button:hover {
+.select_button:hover {
     border-style: solid;
     border-color: white;
     border-width: 1px;
@@ -182,8 +182,9 @@
     background-color: #FF6861;
 }
 
-
-
+#hider:active {
+    cursor:wait;
+}
 
 
 .modal {
@@ -212,11 +213,19 @@
 .modal-content p {
     padding: 0px 15%;
 }
+
+.modal-content img {
+    height: 20px;
+    display: inline;
+    vertical-align: middle;
+    padding-bottom: 7px;
+}
   
   /* The Close Button */
 .close {
     color: #aaaaaa;
     float: right;
+    padding-right: 10px;
     font-size: 28px;
     font-weight: bold;
 }
@@ -227,3 +236,4 @@
     text-decoration: none;
     cursor: pointer;
 }
+

@@ -5,10 +5,11 @@ import emoji
 import json
 import logging
 import re
-
 from itertools import chain 
 
 from stats import models
+from stats.utils import hashed_id
+
 
 logger = logging.getLogger('collection')
 
@@ -43,7 +44,6 @@ def get_half_hour_increment(dt: datetime.datetime) -> int:
     '''Given a datetime, return an int from 0 to 47 denoting the time of day'''
     return (dt.hour * 2) + (1 if dt.minute >= 30 else 0)
 
-
 # list all of the count model classes
 COUNT_MODELS = models.MemberStat.__subclasses__()
 
@@ -54,7 +54,8 @@ class Processor:
 
         # explanation for this variable in save() function 
         self._saving_semaphore = asyncio.Semaphore(1)
-        self.save_checker = 0
+        # ensures that the save() function finishes every time 
+        self._save_checker = 0
         
         if history:
             self.current_channel_model_obj = None
@@ -192,10 +193,11 @@ class Processor:
         '''
         Given a message, increment or decrement all of the cached models accordingly 
         '''
-        if message.author.bot:
+        if message.author.bot: # ignore if user is bot 
             if self.history:
                 self.current_channel_model_obj.last_message_dt = message.created_at
                 return
+        
 
         if unprocess:
             crement = -1
@@ -324,7 +326,12 @@ class Processor:
         else:
             self._get_channel(channel)
 
-
+    @staticmethod
+    async def is_blacklisted(user: discord.User) -> bool:
+        '''Return whether or not a user is blacklisted'''
+        hashed_id = hashed_id(user.id)
+        return await models.UserBlacklist.objects.filter(hash_value=hashed_id).aexists()
+    
     async def _update_and_save_count_model_objects(self, Model_Class):
         '''
         Update all model objects for a specific model, and save them to the DB
@@ -388,7 +395,6 @@ class Processor:
 
         logger.debug(self.guild_name + '::Member saved to DB')
 
-
     async def _update_and_save_objects(self, Model_Class):
         '''
         Update and save objects from the cache to the DB
@@ -414,8 +420,8 @@ class Processor:
         # sometimes, the program will save() before the previous save() is done saving
         # using a semaphore here ensures that only one call to save() will be running at any given time
         async with self._saving_semaphore:
-            assert self.save_checker == 0
-            self.save_checker = 1
+            assert self._save_checker == 0
+            self._save_checker = 1
             logger.info("Saving something")
 
             self.guild_model_obj.last_msg_dt = datetime.datetime.now(datetime.UTC)
@@ -444,10 +450,10 @@ class Processor:
 
             await asyncio.gather(*gather_list)
             logger.info("Done saving")
-            self.save_checker = 0
+            self._save_checker = 0
 
     async def save(self):
         try:
-            await asyncio.shield(self._save()) # saving to DB should finish once it starts, hence the shield
+            await self._save() # saving to DB should finish once it starts, hence the shield
         except Exception as e:
             logger.error(e, exc_info=True)

@@ -1,4 +1,5 @@
 from django.db import models
+from hashlib import sha256
 import json
 
 def get_timezones() -> dict:
@@ -28,6 +29,9 @@ class User(models.Model):
     timezone = models.CharField(max_length=32, default='US/Pacific', choices=get_timezones)
     timezone_set = models.BooleanField(default=False)
 
+    hidden = models.BooleanField(default=False)
+    blacklisted = models.BooleanField(default=False)
+
     last_login = models.DateTimeField(null=True)
     is_superuser = models.BooleanField(default=False)
 
@@ -48,13 +52,15 @@ class User(models.Model):
         else:
             return 'https://cdn.discordapp.com/embed/avatars/0.png'
 
-    def full_tag(self):
+    def full_tag(self) -> str:
+        '''Return the user's tag with the discriminator attatched, if they have one '''
         if self.discriminator is None:
             return self.tag
         else:
             return self.tag + '＃' + self.discriminator
+
     def is_authenticated(self):
         return True
 
 class UserBlacklist(models.Model):
-    id = models.PositiveBigIntegerField(primary_key=True) # user ID of blacklisted user
+    hash_value = models.CharField(max_length=64, primary_key=True)

@@ -71,6 +71,24 @@ table {
   border-spacing: 1px;
 }
 
+.success_notif {
+  background-color: #66b266;
+  position: relative;
+  width: 100%;
+  padding: 10px 0px;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  max-height: 27px;
+}
+
+.success_notif_gone {
+  padding: 0;
+  overflow: hidden;
+  max-height: 0;
+  transition: all 1s ease;
+}
+
 .unset_tz_warning {
   background-color: #E46667;
   width: 100%;
@@ -80,6 +98,7 @@ table {
   left: 0;
   z-index: 1;
 }
+
 
 .header-navigation {
   display: flex;
@@ -447,6 +466,7 @@ nav.stats_directory ul li:not(:last-child):after {
   text-align: left;
   width:1000px; 
   margin:0 auto;
+  line-height: 1.5;
 }
 
 .textblock h3 {
@@ -454,11 +474,10 @@ nav.stats_directory ul li:not(:last-child):after {
 }
 
 .textblock p {
-  line-height: 150%;
   margin-left: 40px;
 }
 .textblock ul {
-  margin: 0px 0px 14px 40px;
+  margin: 0px 0px 14px 0px;
 }
 .textblock ul li {
   margin: 5px 0px;
@@ -490,7 +509,7 @@ nav.stats_directory ul li:not(:last-child):after {
 }
 
 .submit:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 table.word_table tr {

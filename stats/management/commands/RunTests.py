@@ -21,11 +21,5 @@ class Command(BaseCommand):
 
 class TestChronology(unittest.TestCase):
     def test_suite(self):
-        for member in Member.objects.all():
-            new_hour_counts = member.hour_counts_tz('utc')
-            old_hour_counts = tuple(Hour_Count.objects.member_hour_counts(member))
-            if new_hour_counts != old_hour_counts:
-                print(member.user.tag)
-                print(new_hour_counts)
-                print(old_hour_counts)
-                print('---')
+        for i in range(100000):
+            Member.objects.filter(id=5).exists

@@ -44,14 +44,23 @@
         The privacy policy outlines exactly what data is collected, and how you can view, manage, or delete it. 
 
         If you're in a server running this bot, the stats pages are the <b>only</b> place your data will ever be used. 
-        This project complies to Discord's <a href="https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service">Developer Terms of Service</a>, which guarantees that your data will <b>never</b> be shared with a third-party.
+        This project complies to Discord's <a href="https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service">Developer Terms of Service</a>, which guarantees that your data will be shared with a third-party, among other things.
     </p>
+    <h3>
+        Main Points
+    </h3>
+    <ul>
+        <li>Your statistics per server are <b>only</b> viewable by other members who are in the server - nobody can see your data unless they can already view your messages, and no data is collected that other server members can't already see</li>
+        <li>You can hide all of your data or completely opt-out of the service with the click of a button</li>
+        <li>You can also hide or opt-out of specific servers</li>
+        <li>Your data is stored in a secure, encrypted database</li>
+    </ul>
     <h3>
         How is my data kept safe?
     </h3>
     <p>
-        Statistics for a server may only be accessed by accounts that are currently in the server. 
-        This means that once your account leaves a server, other user's statistics will be hidden from you. However, you will still be able to see your account's statistics for that server.
+        All data is encrypted-at-rest - this means that when the data isn't being viewed by you, it's stored in an unreadable format. Additionally, statistics for a server may only be accessed by members of that server. 
+        Once a user's account leaves a server, other user's statistics will be hidden from them. 
         <br>
         Your account's data will <b>not</b> be deleted if you leave a server. If you'd like to delete it yourself, you may do so by visiting your server profile via the <a href="/dashboard">dashboard</a>.
     </p>
@@ -90,7 +99,7 @@
         </ul>
     </p>
     <br>
-    <h3>
+    <h3 id="opt-out">
         Opting Out - Hiding or Deleting Your Data
     </h3>
     <p>
@@ -108,16 +117,32 @@
         Using this option deletes your data. This action <b>cannot be undone!</b> All data associated 
         with your account will be permanently erased, and the bot will subsequently ignore all activity associated with your account. 
     </p>
-        <h4>What if my account is no longer in the server?</h4>
+        <h4>What if my account is no longer in a server?</h4>
     <p>
-        The opt-out options may still be used. 
+        The opt-out options for that server may still be used. 
     </p>
+    <h4>
+        If I decide to opt-out, can I still view server stastics?
+    </h4>
+    <p>
+        No. Opting-out completely wipes all info associated with your account, including what servers you're in.
+    </p>
+    <h4>
+        How do you know if an account has opted-out if you don't store the account's data?
+    </h4>
+    <p>
+        Opted-out accounts have their IDs converted into a <a href="https://en.wikipedia.org/wiki/Cryptographic_hash_function">hash value</a>, and then stored in a blacklist. This means that no info about the account is actually retained.
+        <br>
+        Hash values are a one-way conversion: an account ID can be converted into a specific hash value, but that hash value cannot be converted back into an ID.
+        This provides a way to check if an account ID is blacklisted without having to save the ID.<br> Hashing is very safe. In fact, it's the same security measure used by most websites to store your password information.
+    </p>
+
         <h4>What if I deleted my account?</h4>
     <p>
-        Discord does not alert bots when accounts are deleted, so there is no way to automatically delete your data upon account deletion. Therefore, you should ideally delete your data <b>before</b> you delete your account.
+        Discord does not alert bots when accounts are deleted, so there is no way to automatically delete your data upon account deletion. Therefore, if you're going to delete your account, delete your data here first.
         <br>
-        If your account's data was collected before your account's deletion, and you want it erased, 
-        you will have to send an email to <u>muffinstats@gmail.com</u> with your deleted account's username. 
+        If your account is already deleted, and data was collected before its deletion,
+        you will have to send an email to <u>muffinstats@gmail.com</u> with your deleted account's username or ID.
         After some time, your data will be manually deleted and a confirmation email will be sent in reply. 
     </p>
     </div>

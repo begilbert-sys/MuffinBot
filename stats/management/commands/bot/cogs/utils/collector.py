@@ -60,7 +60,8 @@ class History_Collector:
 
             process_start = default_timer()
             for message in messages:
-                self.db_processor.process_message(message)
+                if not await self.db_processor.is_blacklisted(message.author):
+                    self.db_processor.process_message(message)
             
                 ### progress update
                 self.messages_scraped += 1

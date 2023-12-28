@@ -1,6 +1,6 @@
-from django.shortcuts import render, redirect
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import redirect
 from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 import requests
 
 from .client_info import CLIENT_ID, CLIENT_SECRET
@@ -47,8 +47,9 @@ def discord_login_redirect(request):
     code = request.GET.get('code')
     response = exchange_code(code)
     user_data = get_user_data(response)
-    user_dict = user_data['user']
     user_model_obj = authenticate(request, user_data=user_data)
+    if user_model_obj is None:
+        messages.add_message(request, messages.ERROR, "You have opted-out of the service and cannot login using this account")
     login(request, user_model_obj)
     return redirect("/dashboard/")
 
