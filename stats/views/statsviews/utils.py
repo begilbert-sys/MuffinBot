@@ -27,16 +27,17 @@ def profile_perms(func):
         # parse the tag
         if '＃' in tag:
             tag, discriminator = tag.split('＃')
-            profile_member = get_object_or_404(models.Member.whitelist, guild=guild, user__tag=tag, user__discriminator=discriminator)
+            profile_member = get_object_or_404(models.Member, guild=guild, user__tag=tag, user__discriminator=discriminator)
         else:
-            profile_member = get_object_or_404(models.Member.whitelist, guild=guild, user__tag=tag)
+            profile_member = get_object_or_404(models.Member, guild=guild, user__tag=tag)
+        
+
         if not request.user.is_superuser:
             try:
                 member = models.Member.objects.get(guild=guild, user_id=request.user.id)
             except models.Member.DoesNotExist:
                 return HttpResponseForbidden()
-            if not member.in_guild:
-                if request.user.tag != tag:
-                    return HttpResponseForbidden()
+            if (request.user.tag != tag) and (not member.in_guild or profile_member.hidden):
+                return HttpResponseForbidden()
         return func(request, guild, profile_member, *args, **kwargs)
     return view

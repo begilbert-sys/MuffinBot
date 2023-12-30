@@ -115,6 +115,7 @@ class Member(models.Model):
     manage_guild_perm = models.BooleanField(default=False)
     in_guild = models.BooleanField(default=True)
     
+    
     objects = Member_Manager()
     whitelist = Member_Whitelist_Manager()
 

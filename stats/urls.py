@@ -19,16 +19,15 @@ urlpatterns = [
     path("login/redirect/", views.discord_login_redirect, name="login redirect"),
     path("logout/", views.discord_logout, name="logout"),
 
-    # dashboard
+    # dashboard / timezone
     path("dashboard/", views.dashboard, name="dashboard"),
-
-    
-    # static pages
-    path("FAQ/", views.faq, name="FAQ"),
-    path("add/", views.add, name="add to server"),
-    path("info/", views.info, name="additional info"),
-    path("privacy/", views.privacy, name="privacy policy"),
     path("timezone/", views.set_timezone, name="set timezone"),
     path("timezone/submit/", views.submit_timezone, name="submit timezone"),
-    path("", views.faq)
+    
+    # static pages
+    path("", views.staticpages.index, name="add to server"),
+    path("add/", views.staticpages.add, name="add to server"),
+    path("info/", views.staticpages.info, name="additional info"),
+    path("privacy/", views.staticpages.privacy, name="privacy policy"),
+    #path("tos/", views.)
 ]

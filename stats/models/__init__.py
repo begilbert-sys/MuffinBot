@@ -1,4 +1,4 @@
-from .guild import Guild
+from .guild import Guild, MemberBlacklist
 from .emoji import Emoji
 from .channel import Channel
 from .user import User, UserBlacklist

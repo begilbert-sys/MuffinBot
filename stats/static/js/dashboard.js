@@ -1,43 +1,20 @@
 function fitText() {
-  /* resize the name of a server to fit its card container */
-  var container = $('.servercard');
-  var text = $('.text');
-  var fontSize = 16;
-  text.css('font-size', fontSize + 'px');
-  while (text.height() > 82) {
-    fontSize--;
-    text.css('font-size', fontSize + 'px');
-  }
+	/* resize the name of a server to fit its card container */
+	var container = $('.servercard');
+	var text = $('.text');
+	var fontSize = 16;
+	text.css('font-size', fontSize + 'px');
+	while (text.height() > 82) {
+		fontSize--;
+		text.css('font-size', fontSize + 'px');
+	}
 }
 
-function setModalScript(modalID, buttonID, XID) {
-  $(buttonID).on("click", () => {
-    $(modalID).show();
-  });
+$(document).ready(function () {
+	fitText();
+	$(window).on('resize', fitText);
 
-  $(XID).on("click", () => {
-    $(modalID).hide();
-  });
+	setModalScript("#hideModal", "#hideButton", "#hideX");
 
-  $(window).on("click", (event) => {
-    if ($(event.target).is(modalID)) {
-      $(modalID).hide();
-    }
-  });
-}
-
-$(document).ready(function() {
-  fitText();
-  $(window).on('resize', fitText);
-
-  setModalScript("#hideModal", "#hideButton", "#hideX");
-  
-  setModalScript("#deleteModal", "#deleteButton", "#deleteX");
-
-  if ($(".success_notif")) { // handles the popup success notification on when a POST is processed
-    setTimeout(() => {
-      $(".success_notif").addClass("success_notif_gone");
-    }, 1000);
-  }
-
+	setModalScript("#deleteModal", "#deleteButton", "#deleteX");
 });

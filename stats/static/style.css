@@ -71,7 +71,7 @@ table {
   border-spacing: 1px;
 }
 
-.success_notif {
+.message {
   background-color: #66b266;
   position: relative;
   width: 100%;
@@ -82,11 +82,15 @@ table {
   max-height: 27px;
 }
 
-.success_notif_gone {
+.message_gone {
   padding: 0;
   overflow: hidden;
   max-height: 0;
   transition: all 1s ease;
+}
+
+.message_level_error {
+  background-color: #FF6861;
 }
 
 .unset_tz_warning {
@@ -406,60 +410,6 @@ nav.stats_directory ul li:not(:last-child):after {
 
 .hours {
   font-size: 10px;
-}
-
-.user_table {
-  width: 90%;
-}
-
-.user_icon {
-  width: 50px;
-  border-radius: 50%;
-  vertical-align: middle;
-}
-
-.user_header {
-  display:flex;
-  text-align: left;
-  width: 70%;
-  padding: 12px 0px;
-  border-style: solid;
-  border-width: 5px 0px;
-  border-color: #7289DA;
-  font-size: 16px;
-  font-weight: bold;
-  margin: 0 auto;
-}
-
-.user_column {
-  flex: 100%;
-}
-
-.user_display {
-  margin-left: 5px;
-}
-
-.user_rank {
-  background-color:#7289DA;
-  flex: 0 0 42px;
-  padding: 2px;
-  margin-right: 5px;
-  font-family: "Arial";
-  font-size: 32px; 
-  text-align: center; 
-  border-style: solid; 
-  border-width: 4px; 
-  border-color: #ffffff #000000 #000000 #ffffff; 
-}
-
-.user_hour_table tr {
-  vertical-align: bottom;
-}
-.user_hour_counter {
-  background-color: #7289DA;
-  font-size: 9px;
-  text-align: center;
-  vertical-align: bottom;
 }
 
 .textblock {

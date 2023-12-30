@@ -15,3 +15,7 @@ class Guild(models.Model):
         if self.icon_id is None:
             return 'https://cdn.discordapp.com/embed/avatars/0.png'
         return f'https://cdn.discordapp.com/icons/{self.id}/{self.icon_id}'
+
+class MemberBlacklist(models.Model):
+    guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
+    id=models.BigIntegerField(primary_key=True)

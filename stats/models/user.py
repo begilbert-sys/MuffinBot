@@ -30,7 +30,6 @@ class User(models.Model):
     timezone_set = models.BooleanField(default=False)
 
     hidden = models.BooleanField(default=False)
-    blacklisted = models.BooleanField(default=False)
 
     last_login = models.DateTimeField(null=True)
     is_superuser = models.BooleanField(default=False)

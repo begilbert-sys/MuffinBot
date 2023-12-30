@@ -2,230 +2,308 @@
 <html>
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  {% load static %}
-  {% load humanize %}
-  {% load stat_extras %}
-
-  <title>{{ guild.name }} Stats</title>
-
-  <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
-  <link rel="stylesheet" href="{% static 'css/user.css' %}" type="text/css" />
-  <link rel="stylesheet" href="{% static 'css/emojis.css' %}" type="text/css" />
-  <link rel="icon" href="{{ guild.display_icon }}">
-
-  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-  {{ date_data|json_script:"dateData" }}
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	{% load static %}
+	{% load humanize %}
+	{% load stat_extras %}
+	
+	<title>{{ guild.name }} Stats</title>
+	
+	<link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+	<link rel="stylesheet" href="{% static 'css/hide_delete.css' %}" type="text/css" />
+	<link rel="stylesheet" href="{% static 'css/emojis.css' %}" type="text/css" />
+	<link rel="stylesheet" href="{% static 'css/user.css' %}" type="text/css" />
+	<link rel="icon" href="{{ guild.display_icon }}">
+	
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	{{ date_data|json_script:"dateData" }}
 </head>
 
 <body>
-  <header>
-    <div class="header-navigation">
-        <nav class="pages_directory">
-            <ul>
-                <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
-                <li class="muffinstats"><a href="../">MuffinStats</a></li>
-                <li><a href="/dashboard">Dashboard</a></li>
-                <li><a href="/add">Add to server</a></li>
-                <li><a href="/info">Additional Info</a></li>
-                <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
-            </ul>
-        </nav>
-        <div class="logout">
-            <img src="{{ user.avatar }}">
-            <div class="logout_text">
-                <span>{{ user.tag }}</span>
-                <a href="/logout/">Logout</a>
-            </div>
+	{% if logged_in_profile %}
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/modals.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/messages.js' %}"></script>
+	<script type="text/javascript" src="{% static 'js/user.js' %}"></script>
+    {% if messages %}
+    {% for message in messages %}
+        <div class="message message_level_{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+    {% endif %}
+    <!-- Hide Button Modal-->
+    <div id="hideModal" class="modal">
+        <div class="modal-content">
+            <span id="hideX" class="close">&times;</span>
+            {% if member.hidden %}
+            <h2>Unhide My Data</h2>
+            <p>This will make all of your data visible again.</p>
+            <p>This action is not immediate, and may take a few minutes to take effect. </p>
+            <form action="" method="post">
+                {% csrf_token %}
+                <button class="select_button action_button hide_button" type="submit" name="action" value="toggle_hide">Unhide Data</button>
+            </form>
+            {% else %}
+            <h2>Hide My Data For This Server</h2>
+            <p>Enabling this option will hide all of your account info for this server, and make your server profile viewable only by you. 
+            <br> Your data will still anonymously count towards server-wide statistics.</p>
+            <p>This action can be undone.</p>
+            <form action="" method="post">
+                {% csrf_token %}
+                <button class="select_button action_button hide_button" type="submit" name="action" value="toggle_hide">Hide it!</button>
+            </form>
+            {% endif %}
         </div>
     </div>
-    <div class="greybar"></div>
-  </header>
-  <h1>
-      {{ guild.name }} Stats (rendered on {% now "n/j/o" %})
-  </h1>
-  <span class="subtext">
-      Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
-  </span>
-  <br>
-  <span class="subtext">
-      {{ total_members|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
-  </span>
-  <br>
-  <div class="greybar"></div>
-  <nav class="stats_directory">
-    <ul>
-      <li><a href="../">Overview</a></li>
-      <li><a href="../activity/">Most Active Users</a></li>
-      <li><a href="../details/">Detailed Info</a></li>
-      <li><a href="../emojis/">Emojis/Reactions</a></li>
-      <li>My Profile</li>
-    </ul>
-  </nav>
-  <div class="greybar"></div>
 
-  <h3>Personal Stats</h3>
-  <div class="user_header">
-    <div class="user_column user_display">
-      <img src="{{ member.user.avatar }}" class="user_icon">
-      &nbsp;{{ member.nick }} ({{ member.user.tag }})
+    <!-- Delete Button Modal-->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span id="deleteX" class="close">&times;</span>
+            <h2>Delete My Data For This Server and Opt-Out</h2>
+            <p><img src="{% static 'assets/warning.svg' %}"> WARNING: This is a sensitive operation <img src="{% static 'assets/warning.svg' %}"></p>
+			<p>This option will permanently delete your data for this server, and data associated with your account for this server will permanently stop being collected.</p>
+            <p>For more detailed information, please read the <a href="/privacy/">Privacy Policy.</a></p>
+            <p>This action <b>CANNOT</b> be undone.</p>
+            <form action="" method="post">
+                {% csrf_token %}
+                <button class="select_button action_button delete_button" type="submit" name="action" value="delete">Delete My Data</button>
+            </form>
+        </div>
     </div>
-    <div class="user_column user_rank">
-      {{ rank }}
-    </div>
-  </div>
-  <table class="info_table">
-    <tbody>
-      <tr>
-        <td>
-          Messages: {{ member.messages|intcomma }}
-        </td>
-        <td>
-          Average messages per day: {{ avg_messages|floatformat:2 }}
-        </td>
-        <td>
-          Average letters per message: {{ avg_letters|floatformat:2 }} (<b>{{ chars_magnitude }}</b>)
-        </td>
-      </tr>
-      <tr>
-        <td>
-          Curse ratio: {{ curse_word_ratio|floatformat:2 }}% (<b>{{ curse_magnitude }}</b>)
-        </td>
-        <td>
-          CAPS ratio: {{ CAPS_ratio|floatformat:2 }}% (<b>{{ CAPS_magnitude }}</b>)
-        </td>
-        <td>
-          Active Days: {{ total_member_active_days }} / {{ total_member_days }} ({{ total_member_active_days_percentage|floatformat:2 }}%)
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <br>
-  <br>
+	{% endif %}
 
 
-  <table cellspacing="0" cellpadding="0" class="mini_table weekday_table" >
-    <thead>
-      <th colspan="7" class="subtext" style="padding-bottom: 18px;">Weekly Activity</th>
-    </thead>
-    <tbody>
-      <tr class="hour_percentage" valign="bottom">
-        {% for value, pctvalue in weekday_dist %}
-          <td class="tgr" align="center">
-            <!-- hour percentage value -->
-            {{ pctvalue|floatformat:1 }}%
-            <!-- changes color of bar based on time of day -->
-            <div class='defaultbar' style="height:{% widthratio value max_weekday 65 %}px;">
-          </td>
-        {% endfor %}
-      </tr>
+	<header>
+		<div class="header-navigation">
+			<nav class="pages_directory">
+				<ul>
+					<li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40></li>
+					<li class="muffinstats"><a href="../">MuffinStats</a></li>
+					<li><a href="/dashboard">Dashboard</a></li>
+					<li><a href="/add">Add to server</a></li>
+					<li><a href="/info">Additional Info</a></li>
+					<li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
+				</ul>
+			</nav>
+			<div class="logout">
+				<img src="{{ user.avatar }}">
+				<div class="logout_text">
+					<span>{{ user.tag }}</span>
+					<a href="/logout/">Logout</a>
+				</div>
+			</div>
+		</div>
+		<div class="greybar"></div>
+	</header>
 
-      <tr class="user_hour_counter">
-        <td class="cd">Mon</td>
-        <td class="cd">Tue</td>
-        <td class="cd">Wed</td>
-        <td class="cd">Thu</td>
-        <td class="cd">Fri</td>
-        <td class="cd">Sat</td>
-        <td class="cd">Sun</td>
-      </tr>
-    </tbody>
-  </table>
+	<h1>
+		{{ guild.name }} Stats (rendered on {% now "n/j/o" %})
+	</h1>
+	<span class="subtext">
+		Statistics generated from {{ first_message_date|date:"l n/j/o" }} to {{ last_message_date|date:"l n/j/o" }}
+	</span>
+	<br>
+	<span class="subtext">
+		{{ total_members|intcomma }} different users sent a total of {{ total_messages|intcomma }} messages in this server during this {{ total_days|intcomma }}-day reporting period
+	</span>
+	<br>
+	<div class="greybar"></div>
+	<nav class="stats_directory">
+		<ul>
+			<li><a href="../">Overview</a></li>
+			<li><a href="../activity/">Most Active Users</a></li>
+			<li><a href="../details/">Detailed Info</a></li>
+			<li><a href="../emojis/">Emojis/Reactions</a></li>
+			<li>My Profile</li>
+		</ul>
+	</nav>
+	<div class="greybar"></div>
+	
+	{% if logged_in_profile %}
+	<div class="top_display">
+		<div style="text-align: left;">
+			<h1>Personal Stats</h1>
+		</div>
+		<div class="button_box">
+			<button class="select_button hide_button" id="hideButton" role="button">
+			{% if member.hidden %}
+			Unhide My Data
+			{% else %}
+			Hide My Data
+			{% endif %}
+			</button>
+			<button class="select_button delete_button" id="deleteButton" role="button">Delete My Data</button>
+		</div>
+	</div>
+	{% else %}
+		<h1>Personal Stats</h1>
+	{% endif %}
 
-  <table class="mini_table user_hour_table">
-    <thead>
-      <th colspan="24" class="subtext" style="padding-bottom: 18px;">Hourly Activity</th>
-    </thead>
-    <tbody>
-      <tr>
-        {% for hour_count, hour_string in member_hour_counts %}
-          <td>
-            <div class="{{ forloop.counter0|set_hour_class }}" title="{{ hour_string }}" style="height:{% widthratio hour_count max_hour_count 71 %}px; width:6px"></div>
-          </td>
-        {% endfor %}
-      </tr>
-      <tr class="user_hour_counter">
-        <td colspan="6">12AM-5AM</td>
-        <td colspan="6">6AM-11AM</td>
-        <td colspan="6">12PM-5PM</td>
-        <td colspan="6">6PM-11PM</td>
-      </tr>
-    </tbody>
-  </table>
+	<div class="profile_header">
+		<div class="profile_column profile_display">
+			<img src="{{ member.user.avatar }}" class="profile_icon">
+			&nbsp;{{ member.nick }} ({{ member.user.tag }})
+		</div>
+		<div class="profile_column profile_rank">
+			{{ rank }}
+		</div>
+	</div>
 
-  <table class="mini_table tiny_table">
-    <thead>
-      <th colspan="2" class="subtext">Likes chatting with</th>
-    </thead>
-    <tbody>
-      {% for pair in talking_partners %}
-      <tr>
-        {% for mention in pair %}
-        {% if mention != None %}
-          {% with mentionrank=mention.0 friend=mention.1.obj count=mention.1.count %}
-          <td>
-            {{ mentionrank }}.&nbsp;
-              <img class="icon time_of_day_icon" height="15" style="vertical-align: middle" src="{{ friend.user.avatar }}">
-              <a href="./{{ friend.user.full_tag }}" class="userlink" style="color: white">{{ friend.nick }}</a>
-          </td>
-          <td class="pipe">
-            <div class="defaultbar" style="height:8px; width:{% widthratio count talking_partner_max 80 %}px"></div>
-          </td>
-          {% endwith %}
-        {% endif %}
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <div class="greybar"></div>
-  
-  <div class="tablink_wrapper">
-    <button class="subtext selectedTablink" onclick="openPage('topWeekly', this)">Weekly</button>
-    <button class="subtext tablink" onclick="openPage('topMonthly', this)">Monthly</button>
-    <button class="subtext tablink" onclick="openPage('topYearly', this)">Yearly</button>
-    <button class="subtext tablink" onclick="openPage('topAllTime', this)">All Time</button>
-  </div>
-  <br>
-  <div id="topWeekly" class="tabcontent"></div>
-  <div id="topMonthly" class="tabcontent"></div>
-  <div id="topYearly" class="tabcontent"></div>
-  <div id="topAllTime" class="tabcontent"></div>
 
-  <div class="greybar"></div>
-  <h3>Vocabulary</h3>
-  <br>
-  <table class="default_table tiny_table word_table">
-    {% for row in unique_word_table %}
-      <tr>
-        {% for unique_word_count in row %}
-          <td><i>{{ unique_word_count.obj }}</i> ({{ unique_word_count.count|intcomma }})</td>
-        {% endfor %}
-      </tr>
-    {% endfor %}
-  </table>
-
-  <div class="greybar"></div>
-  <h3>Reactions Received</h3>
-  <table class="reaction_ranking">
-    {% for row in reaction_table %}
-      <tr>
-        {% for reaction_count in row %}
-        <td>
-          <div class="reaction">
-            <img src="{{ reaction_count.obj.URL}}" height="20">
-            <span class="reaction_number">{{ reaction_count.count }}</span>
-            <span class="tooltiptext">
-              <img src="{{ reaction_count.obj.URL }}" height="40">
-              {{ reaction_count.obj.name }}
-            </span>
-          </div>
-        </td>
-        {% endfor %}
-      </tr>
-    {% endfor %}
-  </table>
-  <script type="text/javascript" src="{% static 'js/chart_setup.js' %}"></script>
+	<table class="info_table">
+		<tbody>
+			<tr>
+				<td>
+					Messages: {{ member.messages|intcomma }}
+				</td>
+				<td>
+					Average messages per day: {{ avg_messages|floatformat:2 }}
+				</td>
+				<td>
+					Average letters per message: {{ avg_letters|floatformat:2 }} (<b>{{ chars_magnitude }}</b>)
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Curse ratio: {{ curse_word_ratio|floatformat:2 }}% (<b>{{ curse_magnitude }}</b>)
+				</td>
+				<td>
+					CAPS ratio: {{ CAPS_ratio|floatformat:2 }}% (<b>{{ CAPS_magnitude }}</b>)
+				</td>
+				<td>
+					Active Days: {{ total_member_active_days }} / {{ total_member_days }} ({{ total_member_active_days_percentage|floatformat:2 }}%)
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<br>
+	<br>
+	
+	
+	<table cellspacing="0" cellpadding="0" class="mini_table weekday_table" >
+		<thead>
+			<th colspan="7" class="subtext" style="padding-bottom: 18px;">Weekly Activity</th>
+		</thead>
+		<tbody>
+			<tr class="hour_percentage" valign="bottom">
+				{% for value, pctvalue in weekday_dist %}
+				<td class="tgr" align="center">
+					<!-- hour percentage value -->
+					{{ pctvalue|floatformat:1 }}%
+					<!-- changes color of bar based on time of day -->
+					<div class='defaultbar' style="height:{% widthratio value max_weekday 65 %}px;"></div>
+				</td>
+				{% endfor %}
+			</tr>
+			
+			<tr class="hour_counter">
+				<td class="cd">Mon</td>
+				<td class="cd">Tue</td>
+				<td class="cd">Wed</td>
+				<td class="cd">Thu</td>
+				<td class="cd">Fri</td>
+				<td class="cd">Sat</td>
+				<td class="cd">Sun</td>
+			</tr>
+		</tbody>
+	</table>
+	
+	<table class="mini_table hour_table">
+		<thead>
+			<th colspan="24" class="subtext" style="padding-bottom: 18px;">Hourly Activity</th>
+		</thead>
+		<tbody>
+			<tr>
+				{% for hour_count, hour_string in member_hour_counts %}
+				<td>
+					<div class="{{ forloop.counter0|set_hour_class }}" title="{{ hour_string }}" style="height:{% widthratio hour_count max_hour_count 71 %}px; width:6px"></div>
+				</td>
+				{% endfor %}
+			</tr>
+			<tr class="hour_counter">
+				<td colspan="6">12AM-5AM</td>
+				<td colspan="6">6AM-11AM</td>
+				<td colspan="6">12PM-5PM</td>
+				<td colspan="6">6PM-11PM</td>
+			</tr>
+		</tbody>
+	</table>
+	
+	<table class="mini_table tiny_table">
+		<thead>
+			<th colspan="2" class="subtext">Likes chatting with</th>
+		</thead>
+		<tbody>
+			{% for pair in talking_partners %}
+			<tr>
+				{% for mention in pair %}
+				{% if mention != None %}
+				{% with mentionrank=mention.0 friend=mention.1.obj count=mention.1.count %}
+				<td>
+					{{ mentionrank }}.&nbsp;
+					<img class="icon time_of_day_icon" height="15" style="vertical-align: middle" src="{{ friend.user.avatar }}">
+					<a href="./{{ friend.user.full_tag }}" class="userlink" style="color: white">{{ friend.nick }}</a>
+				</td>
+				<td class="pipe">
+					<div class="defaultbar" style="height:8px; width:{% widthratio count talking_partner_max 80 %}px"></div>
+				</td>
+				{% endwith %}
+				{% endif %}
+				{% endfor %}
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<div class="greybar"></div>
+	
+	<div class="tablink_wrapper">
+		<button class="subtext selectedTablink" onclick="openPage('topWeekly', this)">Weekly</button>
+		<button class="subtext tablink" onclick="openPage('topMonthly', this)">Monthly</button>
+		<button class="subtext tablink" onclick="openPage('topYearly', this)">Yearly</button>
+		<button class="subtext tablink" onclick="openPage('topAllTime', this)">All Time</button>
+	</div>
+	<br>
+	<div id="topWeekly" class="tabcontent"></div>
+	<div id="topMonthly" class="tabcontent"></div>
+	<div id="topYearly" class="tabcontent"></div>
+	<div id="topAllTime" class="tabcontent"></div>
+	
+	<div class="greybar"></div>
+	<h3>Vocabulary</h3>
+	<br>
+	<table class="default_table tiny_table word_table">
+		{% for row in unique_word_table %}
+		<tr>
+			{% for unique_word_count in row %}
+			<td><i>{{ unique_word_count.obj }}</i> ({{ unique_word_count.count|intcomma }})</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</table>
+	
+	<div class="greybar"></div>
+	<h3>Reactions Received</h3>
+	<table class="reaction_ranking">
+		{% for row in reaction_table %}
+		<tr>
+			{% for reaction_count in row %}
+			<td>
+				<div class="reaction">
+					<img src="{{ reaction_count.obj.URL}}" height="20">
+					<span class="reaction_number">{{ reaction_count.count }}</span>
+					<span class="tooltiptext">
+						<img src="{{ reaction_count.obj.URL }}" height="40">
+						{{ reaction_count.obj.name }}
+					</span>
+				</div>
+			</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</table>
+	<script type="text/javascript" src="{% static 'js/chart_setup.js' %}"></script>
 </body>
 </html>

@@ -9,22 +9,22 @@
   <title>Stats FAQ</title>
 
   <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css" />
+  <link rel="stylesheet" href="{% static 'css/hide_delete.css' %}" type="text/css" />
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" type="text/css" />
   <link rel="icon" href="{% static 'assets/logo.svg' %}">
 
 </head>
 <body>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/modals.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/messages.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
-
-    {% if action == "hide" %}
-        <div class="success_notif">
-            Data Hidden Successfully
+    {% if messages %}
+    {% for message in messages %}
+        <div class="message message_level_{{ message.tags }}">
+            {{ message }}
         </div>
-    {% elif action == "unhide" %}
-        <div class="success_notif">
-            Data Unhidden Successfully
-        </div>
+    {% endfor %}
     {% endif %}
 
 
@@ -32,7 +32,7 @@
         <div class="header-navigation">
             <nav class="pages_directory">
                 <ul>
-                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
+                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40></li>
                     <li class="muffinstats"><a href="../">MuffinStats</a></li>
                     <li>Dashboard</li>
                     <li><a href="/add">Add to server</a></li>
@@ -83,7 +83,7 @@
             <span id="deleteX" class="close">&times;</span>
             <h2>Delete All Data and Opt-Out</h2>
             <p> <img src="{% static 'assets/warning.svg' %}"> WARNING: This is an extremely sensitive operation <img src="{% static 'assets/warning.svg' %}"></p>
-            <p>Enabling this option will permanently delete your account's data across all servers, <br> and the bot will permanently stop collecting data associated with your account. You will be logged out and will not be able to log back in to MuffinStats.</p>
+            <p>This option will permanently delete your account's data across all servers, <br> and the bot will permanently stop collecting data associated with your account. You will be logged out and will not be able to log back in to MuffinStats.</p>
             <p>For more detailed information, please read the <a href="/privacy/">Privacy Policy.</a>
             <p>This action <b>CANNOT</b> be undone.</p>
             <form action="/dashboard/" method="post">
@@ -101,10 +101,11 @@
         </div>
         <div class="button_box">
             <button class="select_button" onclick="window.location.href='/timezone/'">Set Timezone</button>
+            <button class="select_button hide_button" id="hideButton" role="button">
             {% if user.hidden %}
-            <button class="select_button hide_button" id="hideButton" role="button">Unhide My Data</button>
+            Unhide My Data
             {% else %}
-            <button class="select_button hide_button" id="hideButton" role="button">Hide My Data</button>
+            Hide My Data
             {% endif %}
             <button class="select_button delete_button" id="deleteButton" role="button">Delete My Data</button>
         </div>
@@ -139,3 +140,4 @@
         {% endfor %}
     </table>
 </body>
+</html>

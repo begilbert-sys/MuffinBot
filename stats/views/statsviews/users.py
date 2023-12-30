@@ -1,5 +1,7 @@
-from django.shortcuts import render
-from django.http import HttpResponseNotFound
+from django.shortcuts import render, redirect
+from django.http import HttpResponseBadRequest
+from django.contrib import messages
+from django.core.cache import cache
 
 from stats import models
 
@@ -12,7 +14,7 @@ hour_strings = ['12AM', '1AM', '2AM', '3AM', '4AM', '5AM',
 
 
 def memberstat_magnitude(guild, user, attr):
-    top_100_members = models.Member.objects.top_100(guild)
+    top_100_members = models.Member.whitelist.top_100(guild)
     sorted_users = sorted(top_100_members, key=lambda user: getattr(user, attr))
     if getattr(user, attr) > getattr(sorted_users[int((3/4) * len(sorted_users))], attr): # 75th percentile
         return 'HIGH'
@@ -52,6 +54,24 @@ def reaction_table(member: models.Member) -> list[list[models.Reaction_Count]]:
 
 @profile_perms
 def users(request, guild: models.Guild, member: models.Member):
+    # handle POST requests
+    if request.method == "POST": 
+        cache.delete("top100", version=member.guild_id)
+        action = request.POST.get("action")
+        if action == "toggle_hide":
+            if member.hidden:
+                messages.add_message(request, messages.INFO, "Data has been successfully unhidden")
+            else:
+                messages.add_message(request, messages.INFO, "Data has been successfully hidden")
+            edit_hidden(member)
+            return redirect(request.path_info) # redirects back to current page 
+        elif action == "delete":
+            delete_member_data(member)
+            messages.add_message(request, messages.INFO, "Data has successfully been deleted")
+            return redirect("../")
+        else:
+            return HttpResponseBadRequest()
+        
     # predefine variables
     total_member_active_days = models.Date_Count.objects.total_member_active_days(member)
     total_member_days = models.Date_Count.objects.total_member_days(member)
@@ -60,7 +80,6 @@ def users(request, guild: models.Guild, member: models.Member):
 
     talking_partners = talking_partners_table(member)
     talking_partner_max = talking_partners[0][0][1].count if talking_partners[0][0] is not None else 0
-
 
 
     # this is hacky, change this
@@ -75,7 +94,7 @@ def users(request, guild: models.Guild, member: models.Member):
         'total_members': models.Member.objects.total_members(guild),
         'total_messages': models.Member.objects.total_messages(guild),
 
-
+        'logged_in_profile': member.user == request.user,
         'member': member,
         'profile_user': member.user,
         'rank': models.Member.whitelist.get_rank(guild, member),
@@ -104,3 +123,22 @@ def users(request, guild: models.Guild, member: models.Member):
         'reaction_table': reaction_table(member)
     }
     return render(request, "stats/user.html", context)
+
+
+def edit_hidden(member: models.Member) -> str:
+    '''
+    Hide or unhide the member in their guild. Return the action performed.
+    '''
+    member.hidden = not member.hidden
+    member.save()
+
+
+def delete_member_data(member: models.Member):
+    '''
+    Delete the member and blacklist them, and return a blank blacklisted member object 
+    '''
+    models.MemberBlacklist(
+        guild = member.guild,
+        id=member.user_id
+    )
+    member.delete()

@@ -50,6 +50,7 @@ def discord_login_redirect(request):
     user_model_obj = authenticate(request, user_data=user_data)
     if user_model_obj is None:
         messages.add_message(request, messages.ERROR, "You have opted-out of the service and cannot login using this account")
+        return redirect("/")
     login(request, user_model_obj)
     return redirect("/dashboard/")
 
