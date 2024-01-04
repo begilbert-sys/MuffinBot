@@ -67,6 +67,10 @@ table.emoji_ranking td {
     opacity: 1;
 }
 
+.rank_number {
+    width: 23px;
+}
+
 table.reaction_ranking {
     border-spacing: 6px;
 }
@@ -106,22 +110,24 @@ table.reaction_ranking td:hover {
     text-align: center;
 }
 
+.tooltip_wrapper {
+    position: absolute;
+    top: -25px;
+    display:flex;
+    justify-content:center;
+    align-items:end;
+}
+
 .reaction .tooltiptext {
     visibility: hidden;
-    max-width: 200px;
-    min-width: 60px;
     background-color: black;
     color: #fff;
     text-align:center;
     font-size: 11px;
     line-height: 1.5;
-    margin-left: 10px;
     border-radius: 6px;
     padding: 15px;
     position: absolute;
-    bottom: 190%;
-    left:  86%;
-    margin-left: -100px;
     opacity: 0;
     transition: opacity 0.3s;
     word-wrap:break-word;
@@ -131,10 +137,17 @@ table.reaction_ranking td:hover {
     align-items: center;
 }
 .reaction .tooltiptext img {
-    margin-right: 8px;
+    margin-right: 4px;
+    margin-left: 15px;
     max-height: 40px;
     max-width: 40px;
-    height: 40px;
+    height: auto;
+    width: auto;
+}
+
+.reaction .tooltiptext span {
+    margin-right: 15px;
+    margin-left: 4px;
 }
 
 .reaction:hover .tooltiptext {

@@ -64,7 +64,7 @@
     <table class="emoji_ranking">
         {% for emoji_row in top_emojis_table %}
         <tr> 
-            <td>
+            <td class="rank_number">
                 {{ forloop.counter }}
             </td>
             <td align="center">
@@ -94,10 +94,12 @@
                 <div class="reaction">
                     <img src="{{ reaction.URL }}">
                     <span class="reaction_number">{{ count }}</span>
-                    <span class="tooltiptext">
-                        <img src="{{ reaction.URL }}" height="40">
-                        {{ reaction.name }}
-                    </span>
+                    <div class="tooltip_wrapper">
+                        <div class="tooltiptext">
+                            <img src="{{ reaction.URL }}">
+                            <span>{{ reaction.name }}</span>
+                        </div>
+                    </div>
                 </div>
             </td>
             {% endfor %}

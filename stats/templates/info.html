@@ -24,13 +24,15 @@
                     <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
                 </ul>
             </nav>
-            <div class="logout">
-                <img src="{{ user.avatar }}">
-                <div class="logout_text">
-                    <span>{{ user.tag }}</span>
-                    <a href="/logout/">Logout</a>
-                </div>
-            </div>
+            {% if user.is_authenticated %}
+            <a href="../logout/" class="discord_button logout">
+                <img src="">Logout
+            </a>
+            {% else %}
+                <a href="../login/" class="discord_button">
+                    <img src="{% static 'assets/discord.svg' %}" height=20>Discord Login
+                </a>
+            {% endif %}
         </div>
         <div class="greybar"></div>
     </header>
@@ -41,20 +43,20 @@
             Credits
         </h3>
         <p>
-            MuffinStats was heavily influenced by <a href="https://storage.googleapis.com/mircstats/index.html">mIRCStats</a>, a program that served the same purpose for <a href="https://en.wikipedia.org/wiki/Internet_Relay_Chat">IRC</a> chatrooms back in the day.
-            As for development, MuffinStats was written mostly in Python, with indespensible help from the following third-party tools:
-            <ul>
+            MuffinStats is heavily influenced by <a href="https://storage.googleapis.com/mircstats/index.html">mIRCStats</a>, a program that served the same purpose for <a href="https://en.wikipedia.org/wiki/Internet_Relay_Chat">IRC</a> chatrooms back in the day.
+            As for development, MuffinStats is written mostly in Python, with indespensible help from the following third-party tools:
+            <ul style="margin-left: 50px;">
                 <li><a href="https://discordpy.readthedocs.io/en/stable/">discord.py</a> - a library for handling interaction with Discord's API</li>
                 <li><a href="https://www.djangoproject.com/">Django</a> - a framework for database and website management</li>
             </ul>
         </p>
             <p>Both of these have beautifully-written documentation and made the development of this project much easier.</p>
-            <p>Aside from that, MuffinStats was created by and is maintained solely by @muffinlicious on Discord.</p>
+            <p>Aside from that, MuffinStats is created and maintained solely by @muffinlicious on Discord.</p>
         <h3>
-            Bug Reporting
+            Bug Reporting & Suggestions
         </h3>
         <p>
-            The project is still in beta, so expect things to occasionally go wrong. If you encounter any bugs, please DM me on Discord (@muffinlicious), join my server, or email me at <a href="mailto:muffinstats@gmail.com" target="_blank">muffinstats@gmail.com</a>. Any help is greatly appreciated!
+            The project is still in beta, so expect things to occasionally go wrong. If you encounter any bugs, or want to suggest an idea, please DM me on Discord (@muffinlicious), join my server, or email me at <a href="mailto:muffinstats@gmail.com" target="_blank">muffinstats@gmail.com</a>. Any help is greatly appreciated!
         </p>
         <h3>
             Support The Project
@@ -62,7 +64,6 @@
         <p>
             If you'd like to support the project's development, send me any amount of money via the following link:
             <br>
-            Any extra income can go towards purchasing hosting premiums such as additional database storage space and faster loading times. 
         </p>
     </div>
 </body>

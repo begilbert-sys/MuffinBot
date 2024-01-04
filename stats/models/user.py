@@ -63,3 +63,6 @@ class User(models.Model):
 
 class UserBlacklist(models.Model):
     hash_value = models.CharField(max_length=64, primary_key=True)
+
+class UserDeletionQueue(models.Model):
+    id = models.BigIntegerField(primary_key=True)

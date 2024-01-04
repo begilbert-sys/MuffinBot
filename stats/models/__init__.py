@@ -1,8 +1,8 @@
-from .guild import Guild, MemberBlacklist
+from .guild import Guild
 from .emoji import Emoji
 from .channel import Channel
-from .user import User, UserBlacklist
-from .member import Member
+from .user import User, UserBlacklist, UserDeletionQueue
+from .member import Member, MemberBlacklist, MemberDeletionQueue
 from .memberstats import (
     MemberStat,
     Channel_Count,

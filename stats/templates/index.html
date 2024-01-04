@@ -33,13 +33,15 @@
                     <li><a href="/tos">Terms of Service</a></li>
                 </ul>
             </nav>
-            <div class="logout">
-                <img src="{{ user.avatar }}">
-                <div class="logout_text">
-                    <span>{{ user.tag }}</span>
-                    <a href="/logout/">Logout</a>
-                </div>
-            </div>
+            {% if user.is_authenticated %}
+            <a href="../logout/" class="discord_button logout">
+                <img src="">Logout
+            </a>
+            {% else %}
+                <a href="../login/" class="discord_button">
+                    <img src="{% static 'assets/discord.svg' %}" height=20>Discord Login
+                </a>
+            {% endif %}
         </div>
         <div class="greybar"></div>
     </header>

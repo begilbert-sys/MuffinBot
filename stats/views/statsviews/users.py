@@ -43,6 +43,36 @@ def unique_word_table(member: models.Member) -> list[list[models.Unique_Word_Cou
     words = models.Unique_Word_Count.objects.member_top_n(member, COLS * ROWS)
     return [words[i*COLS:i*COLS+COLS] for i in range(10)]
 
+def emoji_table(member: models.Member, count: int) -> list[list[models.Emoji_Count]]:
+    '''
+    Return a 2D list of the guild's top `count` `emojis, divided into categories depending on their usage
+    '''
+    ROWS = 5
+    emojis = models.Emoji_Count.objects.member_top_n(member, count)
+
+    if len(emojis) <= ROWS:
+        return [emojis]
+
+    max_emoji_count = emojis[0].count
+    step = round(max_emoji_count * (1/ROWS))
+    lower_bound = max_emoji_count
+    emoji_matrix = list()
+    for slice in range(ROWS):
+        if len(emojis) == 0:
+            break
+        sublist = list()
+        lower_bound = lower_bound - step
+        while True:
+            if len(emojis) == 0:
+                break
+            if emojis[0].count >= lower_bound:
+                sublist.append(emojis.pop(0))
+            else:
+                break
+        if len(sublist) > 0:
+            emoji_matrix.append(sublist)
+    return emoji_matrix
+
 def reaction_table(member: models.Member) -> list[list[models.Reaction_Count]]:
     '''
     Return a 2D list of the member's top reaction counts
@@ -85,6 +115,7 @@ def users(request, guild: models.Guild, member: models.Member):
     # this is hacky, change this
     weekday_dist = [(item, item/max(member.messages, 1) * 100) for item in models.Date_Count.objects.weekday_distribution_member(member)]
     max_weekday = max([item[0] for item in weekday_dist])
+    table = emoji_table(member, 60)
     # set up context 
     context = {
         'guild': guild,
@@ -120,6 +151,7 @@ def users(request, guild: models.Guild, member: models.Member):
 
 
         'unique_word_table': unique_word_table(member),
+        'emoji_table': emoji_table(member, 60),
         'reaction_table': reaction_table(member)
     }
     return render(request, "stats/user.html", context)

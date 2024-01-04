@@ -90,9 +90,9 @@
         </tr>
 
         <!-- lists out every hour from 12AM to 11PM -->
-        <tr class="s3">
+        <tr class="barchart_label">
           {% for hourstr in hour_strings %}
-            <td class="cd">{{ hourstr }}</td>
+            <td>{{ hourstr }}</td>
           {% endfor %}
         </tr>
       </tbody>
@@ -146,14 +146,14 @@
           {% endfor %}
         </tr>
 
-        <tr class="user_hour_counter">
-            <td class="cd">Mon</td>
-            <td class="cd">Tue</td>
-            <td class="cd">Wed</td>
-            <td class="cd">Thu</td>
-            <td class="cd">Fri</td>
-            <td class="cd">Sat</td>
-            <td class="cd">Sun</td>
+        <tr class="barchart_label">
+            <td>Mon</td>
+            <td>Tue</td>
+            <td>Wed</td>
+            <td>Thu</td>
+            <td>Fri</td>
+            <td>Sat</td>
+            <td>Sun</td>
         </tr>
       </tbody>
     </table>

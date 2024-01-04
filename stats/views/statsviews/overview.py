@@ -62,7 +62,7 @@ def weekday_graph(guild: models.Guild, total_messages: int):
 @guild_perms
 def overview(request, guild: models.Guild):
 
-    total_messages = models.Member.objects.total_messages(guild)
+    total_messages = max(models.Member.objects.total_messages(guild), 1) # if it's zero, zerdivisionerror is raised when the stats are empty
 
     # hour graph 
     hour_totals = hour_graph(guild, request.user.timezone, total_messages)

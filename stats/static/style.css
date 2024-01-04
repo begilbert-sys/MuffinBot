@@ -33,7 +33,6 @@ h4 {
   margin-bottom: 10px;
 }
 
-
 a {
   color: white;
   text-decoration: underline;
@@ -302,14 +301,14 @@ nav.stats_directory ul li:not(:last-child):after {
   border: 0px;
 }
 
-.s3 {
-  font-family: "Arial";
-  color: #ffffff;
+.barchart_label {
   background-color:#7289DA;
   font-size: 9px;
   vertical-align: bottom;
   text-align: center;
 }
+
+
 
 .weekday_table {
   width: 30%;
@@ -325,6 +324,13 @@ nav.stats_directory ul li:not(:last-child):after {
   margin-left: auto;
   margin-right: auto;
   width: 50%;
+}
+
+.weekday_label {
+  background-color: #7289DA;
+  font-size: 9px;
+  text-align: center;
+  vertical-align: bottom;
 }
 
 .userlink:link, .userlink:visited {

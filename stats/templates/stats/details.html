@@ -21,7 +21,7 @@
         <div class="header-navigation">
             <nav class="pages_directory">
                 <ul>
-                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40>
+                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40></li>
                     <li class="muffinstats"><a href="../">MuffinStats</a></li>
                     <li><a href="/dashboard">Dashboard</a></li>
                     <li><a href="/add">Add to server</a></li>
@@ -189,13 +189,12 @@
                 <td style="text-align: right;">
                     <a href="../user/{{ member1.user.full_tag }}" class="userlink">{{ member1.nick }}</a>
                     <img class="icon mini_icon" src="{{ member1.user.avatar }}">
-                    <!--<div class="defaultbar" style="height: 5px; width: {% widthratio member1count max_mention_count 100 %}px">-->
-                    <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio member1count max_mention_count 100 %}">
-                    {{ user1count }}
+                    <div class="defaultbar" style="float: right; margin-right: 0px; margin-left: 7px; height: 5px; width: {% widthratio member1count max_mention_count 100 %}px"></div>
+                    {{ member1count }}
                 </td>
                 <td>
-                    {{ user2count }}
-                    <img src="{% static 'assets/pipedv.png' %}" height="5" width="{% widthratio member2count max_mention_count 100 %}">
+                    {{ member2count }}
+                    <div class="defaultbar" style="height: 5px; width: {% widthratio member2count max_mention_count 100 %}px"></div>
                     <img class="icon mini_icon" src="{{ member2.user.avatar }}">
                     <a href="../users/{{ member2.user.full_tag }}" class="userlink">{{ member2.nick }}</a>
                 </td>

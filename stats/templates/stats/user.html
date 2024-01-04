@@ -39,8 +39,7 @@
             <span id="hideX" class="close">&times;</span>
             {% if member.hidden %}
             <h2>Unhide My Data</h2>
-            <p>This will make all of your data visible again.</p>
-            <p>This action is not immediate, and may take a few minutes to take effect. </p>
+            <p>This action will make your data visible again.</p>
             <form action="" method="post">
                 {% csrf_token %}
                 <button class="select_button action_button hide_button" type="submit" name="action" value="toggle_hide">Unhide Data</button>
@@ -64,8 +63,9 @@
             <span id="deleteX" class="close">&times;</span>
             <h2>Delete My Data For This Server and Opt-Out</h2>
             <p><img src="{% static 'assets/warning.svg' %}"> WARNING: This is a sensitive operation <img src="{% static 'assets/warning.svg' %}"></p>
-			<p>This option will permanently delete your data for this server, and data associated with your account for this server will permanently stop being collected.</p>
-            <p>For more detailed information, please read the <a href="/privacy/">Privacy Policy.</a></p>
+			<p>This option will permanently delete your data for this server, and no further data will be collected.</p>
+			<p>If you'd like to delete your data across <i>all</i> servers, please visit the <a href="/dashboard/">dashboard</a>.</p>
+            <p>For more detailed information, please read the <a href="/privacy#opt-out">Privacy Policy.</a></p>
             <p>This action <b>CANNOT</b> be undone.</p>
             <form action="" method="post">
                 {% csrf_token %}
@@ -117,7 +117,11 @@
 			<li><a href="../activity/">Most Active Users</a></li>
 			<li><a href="../details/">Detailed Info</a></li>
 			<li><a href="../emojis/">Emojis/Reactions</a></li>
+			{% if logged_in_profile %}
 			<li>My Profile</li>
+			{% else %}
+			<li><a href="../user/{{ user.tag }}">My Profile</a></li>
+			{% endif %}
 		</ul>
 	</nav>
 	<div class="greybar"></div>
@@ -199,14 +203,14 @@
 				{% endfor %}
 			</tr>
 			
-			<tr class="hour_counter">
-				<td class="cd">Mon</td>
-				<td class="cd">Tue</td>
-				<td class="cd">Wed</td>
-				<td class="cd">Thu</td>
-				<td class="cd">Fri</td>
-				<td class="cd">Sat</td>
-				<td class="cd">Sun</td>
+			<tr class="barchart_label">
+				<td>Mon</td>
+				<td>Tue</td>
+				<td>Wed</td>
+				<td>Thu</td>
+				<td>Fri</td>
+				<td>Sat</td>
+				<td>Sun</td>
 			</tr>
 		</tbody>
 	</table>
@@ -223,7 +227,7 @@
 				</td>
 				{% endfor %}
 			</tr>
-			<tr class="hour_counter">
+			<tr class="barchart_label">
 				<td colspan="6">12AM-5AM</td>
 				<td colspan="6">6AM-11AM</td>
 				<td colspan="6">12PM-5PM</td>
@@ -283,7 +287,36 @@
 		</tr>
 		{% endfor %}
 	</table>
-	
+
+	<div class="greybar"></div>
+
+    <h3>Emoji Frequencies</h3>
+    <span class="subtext">Hover over an emoji to see its info</span>
+    <table class="emoji_ranking">
+        {% for emoji_row in emoji_table %}
+        <tr> 
+            <td class="rank_number">
+                {{ forloop.counter }}
+            </td>
+            <td align="center">
+                {% for emoji_count in emoji_row %}
+                    <span class="emoji">
+                        <img src="{{ emoji_count.obj.URL }}" height="20">
+                        <span class="tooltiptext">
+                            <b>{{ emoji_count.obj.name }}</b>
+                            <br>
+                            {{ emoji_count.count }} uses
+                        </span>
+                    </span>
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+
+
+
 	<div class="greybar"></div>
 	<h3>Reactions Received</h3>
 	<table class="reaction_ranking">
@@ -294,10 +327,12 @@
 				<div class="reaction">
 					<img src="{{ reaction_count.obj.URL}}" height="20">
 					<span class="reaction_number">{{ reaction_count.count }}</span>
-					<span class="tooltiptext">
-						<img src="{{ reaction_count.obj.URL }}" height="40">
-						{{ reaction_count.obj.name }}
-					</span>
+					<div class="tooltip_wrapper">
+						<div class="tooltiptext">
+							<img src="{{ reaction_count.obj.URL }}" height="40">
+							<span>{{ reaction_count.obj.name }}</span>
+						</div>
+					</div>
 				</div>
 			</td>
 			{% endfor %}

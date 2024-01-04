@@ -42,12 +42,6 @@
 .hour_table tr {
     vertical-align: bottom;
 }
-.hour_counter {
-    background-color: #7289DA;
-    font-size: 9px;
-    text-align: center;
-    vertical-align: bottom;
-}
 
 .info_table {
     width: 70%;

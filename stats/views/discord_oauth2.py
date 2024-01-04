@@ -41,6 +41,7 @@ def get_user_data(response_json) -> dict:
 
 
 def discord_login(request):
+    request.session['next'] = request.GET.get('next', "/dashboard/") # set session "next" to next param, or "/dashboard/" by default 
     return redirect(discord_auth_url)
 
 def discord_login_redirect(request):
@@ -52,7 +53,8 @@ def discord_login_redirect(request):
         messages.add_message(request, messages.ERROR, "You have opted-out of the service and cannot login using this account")
         return redirect("/")
     login(request, user_model_obj)
-    return redirect("/dashboard/")
+    next_url = request.session.pop('next', '/dashboard/') # redirect to the page that redirected to login, or "/dashboard/" by default 
+    return redirect(next_url)
 
 def discord_logout(request):
     logout(request)

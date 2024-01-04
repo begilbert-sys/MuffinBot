@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from typing import Literal, Optional
+
 import logging
 from pathlib import Path
 
@@ -19,10 +21,10 @@ class Stats_Bot(commands.Bot):
 intents = discord.Intents(
     guilds = True,
     members = True,
-    messages = True,
+    guild_messages = True,
     message_content = True,
     emojis = True,
-    reactions = True,
+    guild_reactions = True,
 )
 
 description = '''A stats bot'''
@@ -34,6 +36,43 @@ bot = Stats_Bot(
 )
 
 
+@bot.command()
+@commands.guild_only()
+@commands.is_owner()
+async def sync(ctx: commands.Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None) -> None:
+    '''
+    Sync all bot commands globally 
+    '''
+    if not guilds:
+        if spec == "~":
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "*":
+            ctx.bot.tree.copy_global_to(guild=ctx.guild)
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "^":
+            ctx.bot.tree.clear_commands(guild=ctx.guild)
+            await ctx.bot.tree.sync(guild=ctx.guild)
+            synced = []
+        else:
+            synced = await ctx.bot.tree.sync()
+
+        await ctx.send(
+            f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
+        )
+        return
+
+    ret = 0
+    for guild in guilds:
+        try:
+            await ctx.bot.tree.sync(guild=guild)
+        except discord.HTTPException:
+            pass
+        else:
+            ret += 1
+
+    await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
+
+
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
@@ -42,4 +81,3 @@ async def on_ready():
 
 def run():
     bot.run(TOKEN)
-

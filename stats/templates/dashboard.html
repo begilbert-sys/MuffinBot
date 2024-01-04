@@ -58,7 +58,6 @@
             {% if user.hidden %}
             <h2>Unhide My Data</h2>
             <p>This will make all of your data visible again.</p>
-            <p>This action is not immediate, and may take a few minutes to take effect. </p>
             <form action="/dashboard/" method="post">
                 {% csrf_token %}
                 <button class="select_button action_button hide_button" type="submit" name="action" value="toggle_hide">Unhide Data</button>
@@ -84,7 +83,7 @@
             <h2>Delete All Data and Opt-Out</h2>
             <p> <img src="{% static 'assets/warning.svg' %}"> WARNING: This is an extremely sensitive operation <img src="{% static 'assets/warning.svg' %}"></p>
             <p>This option will permanently delete your account's data across all servers, <br> and the bot will permanently stop collecting data associated with your account. You will be logged out and will not be able to log back in to MuffinStats.</p>
-            <p>For more detailed information, please read the <a href="/privacy/">Privacy Policy.</a>
+            <p>For more detailed information, please read the <a href="/privacy#opt-out">Privacy Policy</a>.
             <p>This action <b>CANNOT</b> be undone.</p>
             <form action="/dashboard/" method="post">
                 {% csrf_token %}

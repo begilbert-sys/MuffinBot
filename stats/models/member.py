@@ -159,3 +159,12 @@ class Member(models.Model):
 
     class Meta:
         ordering = ['-messages']
+
+class MemberBlacklist(models.Model):
+    guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
+    user_id = models.BigIntegerField()
+
+
+class MemberDeletionQueue(models.Model):
+    guild = models.ForeignKey(Guild, on_delete=models.CASCADE)
+    user_id = models.BigIntegerField()

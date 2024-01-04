@@ -24,13 +24,15 @@
                     <li>Privacy Policy/Opt-Out</li>
                 </ul>
             </nav>
-            <div class="logout">
-                <img src="{{ user.avatar }}">
-                <div class="logout_text">
-                    <span>{{ user.tag }}</span>
-                    <a href="/logout/">Logout</a>
-                </div>
-            </div>
+            {% if user.is_authenticated %}
+            <a href="../logout/" class="discord_button logout">
+                <img src="">Logout
+            </a>
+            {% else %}
+                <a href="../login/" class="discord_button">
+                    <img src="{% static 'assets/discord.svg' %}" height=20>Discord Login
+                </a>
+            {% endif %}
         </div>
         <div class="greybar"></div>
     </header>
@@ -145,7 +147,15 @@
         you will have to send an email to <u>muffinstats@gmail.com</u> with your deleted account's username or ID.
         After some time, your data will be manually deleted and a confirmation email will be sent in reply. 
     </p>
-    </div>
+    <h3>
+        Deleting All Server Data
+    </h3>
+    <p>If you want to remove <b>all</b> of the data associated with a server, kick MuffinBot from the server, and the data will be deleted automatically.</p>
+    <h3>
+        Requesting Your Data
+    </h3>
+    <p>If you'd like, you may request a copy of the raw data associated with your account, by messaging @muffinlicious on Discord. It's stored in Postgres, so you may request it as an SQL script, CSV, JSON, or any other easily-exportable file type. The raw data is not designed for human readability, that's what this site is for. So it's up to you to make sense of it.</p>
+    </div> 
     <br>
     <br>
     <br>

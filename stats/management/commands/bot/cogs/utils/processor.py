@@ -10,7 +10,6 @@ from itertools import chain
 from stats import models
 from stats.utils import hashed_id
 
-
 logger = logging.getLogger('collection')
 
 DELETED_USER_ID = 456226577798135808
@@ -24,37 +23,32 @@ with open('stats/data/curse_words.txt') as f:
 with open('stats/data/emoji_ids.json') as f:
     EMOJI_IDS = json.load(f)
 
+# list all of the count model classes
+COUNT_MODELS = models.MemberStat.__subclasses__()
+
 def get_URLs(string: str) -> list[str]:
     '''Extract all the URLs from a string'''
     url_regex = r'(http|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])'
     raw_urls = [url.group(0) for url in re.finditer(url_regex, string) if len(url.group(0)) <= 200]
     return raw_urls
 
-def get_icon_id(icon_url: str) -> str:
-    # storiung this instead of the entire URL cuts storage space big time
-    '''Given the URL of a discord avatar, return the avatar's hex ID'''
-    av_id_regex = r'https://cdn\.discordapp\.com/(?:avatars|icons)/\d+/((?:a_)?[0-9a-f]+)'
-    regex_match = re.match(av_id_regex, icon_url)
-    if regex_match:
-        return regex_match.group(1)
-    else:
-        return None # indicates default avatar
-
 def get_half_hour_increment(dt: datetime.datetime) -> int:
     '''Given a datetime, return an int from 0 to 47 denoting the time of day'''
     return (dt.hour * 2) + (1 if dt.minute >= 30 else 0)
 
-# list all of the count model classes
-COUNT_MODELS = models.MemberStat.__subclasses__()
-
 class Processor:
-    def __init__(self, *, history: bool):
+    def __init__(self, *, history: bool = False):
+        self.active = False
+
         # denotes if the processor is processing message history or current messages
         self.history = history
 
+        self.guild_model_obj = None
+
         # explanation for this variable in save() function 
         self._saving_semaphore = asyncio.Semaphore(1)
-        # ensures that the save() function finishes every time 
+
+        # ensures that the save() function finishes every time. for debugging
         self._save_checker = 0
         
         if history:
@@ -74,10 +68,16 @@ class Processor:
         self.cached_model_objects[models.Member] = dict()
         self.cached_model_objects[models.Emoji] = dict()
         self.cached_model_objects[models.Channel] = dict()
+    
+    async def activate(self):
+        self.active = True
+        self.guild_model_obj.setup = True
+        self.guild_model_obj.start_dt = datetime.datetime.now(datetime.UTC)
+        await self.guild_model_obj.asave()
 
     def _get_member(self, user: discord.User | discord.Member) -> models.Member:
         '''
-        Return a Member model object from the cache dict or, if one does not exist, then add one and return it
+        
         '''
         if user.id in self.cached_model_objects[models.Member]:
             return self.cached_model_objects[models.Member][user.id]
@@ -85,7 +85,7 @@ class Processor:
             id=user.id,
             tag=user.name,
             discriminator=user.discriminator if user.discriminator != '0' else None,
-            avatar_id = get_icon_id(str(user.display_avatar))
+            avatar_id = user.display_avatar.key
         )
         self.cached_model_objects[models.User][user.id] = new_user_model_obj
         new_member_model_obj = models.Member(
@@ -100,9 +100,13 @@ class Processor:
         self.cached_model_objects[models.Member][user.id] = new_member_model_obj
         return new_member_model_obj
     
-    def _get_channel(self, channel: discord.TextChannel):
+    def _get_channel(self, channel: discord.TextChannel) -> models.Channel:
+        '''
+        Get, update, or create a channel model obj in the cache. Return the obj
+        '''
         if channel.id in self.cached_model_objects[models.Channel]:
             channel_model_obj = self.cached_model_objects[models.Channel][channel.id]
+            channel_model_obj.name = channel.name
         else:
             channel_model_obj = models.Channel(
                 id=channel.id,
@@ -174,6 +178,11 @@ class Processor:
             count_model_obj = Count_Class(**{'obj': object, 'member': member})
             self.cached_model_objects[Count_Class][key] = count_model_obj
         count_model_obj.count += increment_by
+
+    async def is_blacklisted(self, user: discord.User) -> bool:
+        '''Return whether or not a user is blacklisted'''
+        hashed = hashed_id(user.id)
+        return await models.UserBlacklist.objects.filter(hash_value=hashed).aexists() or await models.MemberBlacklist.objects.filter(user_id=user.id, guild=self.guild_model_obj).aexists()
     
     def process_reaction(self, message, reaction, count):
         emoji_object = reaction.emoji
@@ -193,11 +202,10 @@ class Processor:
         '''
         Given a message, increment or decrement all of the cached models accordingly 
         '''
-        if message.author.bot: # ignore if user is bot 
+        if message.author.bot: # ignore if user is bot
             if self.history:
                 self.current_channel_model_obj.last_message_dt = message.created_at
-                return
-        
+            return
 
         if unprocess:
             crement = -1
@@ -281,16 +289,17 @@ class Processor:
         '''
         Save a guild's info to the DB if it has not already been added
         '''
-        self.guild_name = guild.name
-        self.guild_model_obj, newly_created = await models.Guild.objects.aget_or_create(
+        if self.guild_model_obj: # the guild must always be the same
+            assert self.guild_model_obj.id == guild.id
+
+        self.guild_model_obj, newly_created = await models.Guild.objects.aupdate_or_create(
             id=guild.id, 
             defaults={
                 "name": guild.name, 
-                "icon_id": get_icon_id(str(guild.icon)),
-                "join_dt": datetime.datetime.now(datetime.UTC)
+                "icon_id": guild.icon.key if guild.icon else None
             }
         )
-        if newly_created: 
+        if newly_created:
             for channel in guild.channels:
                 perms = channel.permissions_for(guild.me)
                 if type(channel) is discord.channel.TextChannel and perms.read_message_history:
@@ -299,11 +308,7 @@ class Processor:
                         id=channel.id,
                         name=channel.name,
                     )
-        else: # update these values, just in case they've changed
-            self.guild_model_obj.name = guild.name
-            self.guild_model_obj.icon_id = get_icon_id(str(guild.icon))
-            await self.guild_model_obj.asave()
-        
+
     async def process_channel(self, channel: discord.channel):
         '''
         Sets up the channel history object to be 
@@ -325,18 +330,12 @@ class Processor:
         # but this is just in case. . .
         else:
             self._get_channel(channel)
-
-    @staticmethod
-    async def is_blacklisted(user: discord.User) -> bool:
-        '''Return whether or not a user is blacklisted'''
-        hashed_id = hashed_id(user.id)
-        return await models.UserBlacklist.objects.filter(hash_value=hashed_id).aexists()
     
     async def _update_and_save_count_model_objects(self, Model_Class):
         '''
         Update all model objects for a specific model, and save them to the DB
         '''
-        logger.debug(f'{self.guild_name}::{Model_Class.__name__} saving. . .')
+        logger.debug(f'{self.guild_model_obj.name}::{Model_Class.__name__} saving. . .')
         items = tuple(self.cache_copy[Model_Class].items())
         for hash_val, dummy_model_obj in items:
             assert issubclass(Model_Class, models.MemberStat)
@@ -360,14 +359,14 @@ class Processor:
         await Model_Class.objects.abulk_create_or_update(
             self.cache_copy[Model_Class].values()
         )
-        logger.debug(f'{self.guild_name}::{Model_Class.__name__} saved to DB')
+        logger.debug(f'{self.guild_model_obj.name}::{Model_Class.__name__} saved to DB')
     
     async def _update_and_save_member_objects(self):
         '''
         Update and save Member objects to the DB
         Update the Member object IDs to those assigned to them by the database
         '''
-        logger.debug(self.guild_name + '::Member saving. . . ')
+        logger.debug(self.guild_model_obj.name + '::Member saving. . . ')
         for hash_val, dummy_model_obj in self.cache_copy[models.Member].items():
             user_id = dummy_model_obj.user_id
             guild = dummy_model_obj.guild
@@ -393,13 +392,13 @@ class Processor:
         # this is ABSOLUTELY NECESSARY
         self.cache_copy[models.Member] = {member_model_obj.user_id:member_model_obj for member_model_obj in updated_models_list}
 
-        logger.debug(self.guild_name + '::Member saved to DB')
+        logger.debug(self.guild_model_obj.name + '::Member saved to DB')
 
     async def _update_and_save_objects(self, Model_Class):
         '''
         Update and save objects from the cache to the DB
         '''
-        logger.debug(f'{self.guild_name}::{Model_Class.__name__} saving. . .')
+        logger.debug(f'{self.guild_model_obj.name}::{Model_Class.__name__} saving. . .')
         for obj_id, dummy_model_obj in self.cache_copy[Model_Class].items():
             try:
                 real_model_obj = await Model_Class.objects.aget(id=dummy_model_obj.id)
@@ -410,8 +409,32 @@ class Processor:
         await Model_Class.objects.abulk_create_or_update(
             self.cache_copy[Model_Class].values()
         )   
-        logger.debug(f'{self.guild_name}::{Model_Class.__name__} saved to DB')
-                
+        logger.debug(f'{self.guild_model_obj.name}::{Model_Class.__name__} saved to DB')
+    
+    async def _clear_deletion_queue(self) -> [int, int]:
+        '''
+        Delete all member objects in the deletion queue, if any
+        Return number of member and user objects deleted, respectively 
+        '''
+        count = [0, 0]
+        async for obj in models.MemberDeletionQueue.objects.filter(guild=self.guild_model_obj):
+            user_id = obj.user_id
+            member_model_obj = await models.Member.objects.aget(user_id=user_id, guild=self.guild_model_obj)
+            await member_model_obj.adelete()
+            await obj.adelete()
+            count[0] += 1
+            # if all member objects have been deleted, and there's still an object in the user deletion queue, delete it
+
+            if not await models.MemberDeletionQueue.objects.filter(user_id=user_id).aexists():
+                try:
+                    user_deletion_obj = await models.UserDeletionQueue.objects.aget(id=user_id)
+                except models.UserDeletionQueue.DoesNotExist:
+                    return count
+                user_model_obj = await models.User.objects.aget(id=user_deletion_obj.id)
+                await user_model_obj.adelete()
+                await user_deletion_obj.adelete()
+                count[1] += 1
+        return count
 
     async def _save(self):
         '''
@@ -438,6 +461,8 @@ class Processor:
 
             await self._update_and_save_member_objects()
 
+            await asyncio.sleep(5)
+
             if self.history:
                 await self.current_channel_model_obj.asave()
             else:
@@ -450,8 +475,13 @@ class Processor:
 
             await asyncio.gather(*gather_list)
             logger.info("Done saving")
-            self._save_checker = 0
 
+            logger.info("Clearing Deletion Queue")
+            member_count, user_count = await self._clear_deletion_queue()
+            logger.info(f"{member_count} members deleted, {user_count} users deleted")
+
+            self._save_checker = 0
+            
     async def save(self):
         try:
             await self._save() # saving to DB should finish once it starts, hence the shield

@@ -138,22 +138,53 @@ class Hour_Count(MemberStat):
 
 class Date_Count_Manager(MemberStat_Manager):
     @timed
-    def total_days(self, guild: Guild):
-        return (self.last_message_date(guild) - self.first_message_date(guild)).days + 1
+    def total_days(self, guild: Guild) -> int:
+        '''
+        Return the collected messages date range for the guild, as an int
+        '''
+        if self.all().count() > 0:
+            return (self.last_message_date(guild) - self.first_message_date(guild)).days + 1
+        else:
+            return 0
     @timed
-    def first_message_date(self, guild: Guild):
-        return self.filter(member__guild=guild).earliest().obj
+    def first_message_date(self, guild: Guild) -> datetime.datetime:
+        '''
+        Return the guild's first collected message date 
+        '''
+        if self.all().count() > 0:
+            return self.filter(member__guild=guild).earliest().obj
+        else:
+            return datetime.datetime.now()
     @timed
     def last_message_date(self, guild: Guild):
-        return self.filter(member__guild=guild).latest().obj
-    
-    def first_member_message_date(self, member: Member):
-        return self.filter(member=member).earliest().obj
-    
+        '''
+        Return the guild's last collected message date 
+        '''
+        if self.all().count() > 0:
+            return self.filter(member__guild=guild).latest().obj
+        else:
+            return datetime.datetime.now()
+    def first_member_message_date(self, member: Member) -> datetime.datetime:
+        '''
+        Return the member's first collected message date 
+        '''
+        if self.all().count() > 0:
+            return self.filter(member=member).earliest().obj
+        else:
+            return datetime.datetime.now()
     def last_member_message_date(self, member: Member):
-        return self.filter(member=member).latest().obj
+        '''
+        Return the member's last collected message date 
+        '''
+        if self.all().count() > 0:
+            return self.filter(member=member).latest().obj
+        else:
+            return datetime.datetime.now()
     
     def total_member_days(self, member: Member) -> int:
+        '''
+       Return the collected messages date range for the member, as an int
+        '''
         if member.messages == 0:
             return 0
         return (self.last_member_message_date(member) - self.first_member_message_date(member)).days + 1
@@ -163,8 +194,10 @@ class Date_Count_Manager(MemberStat_Manager):
     @timed
     def date_counts_as_str(self, obj) -> dict:
         # optimized-ish
-        '''returns a dictionary of how many messages were sent on every date
-        past_n_days: allows the dict to be limited to the past n days. If None, returns all.'''
+        '''Return a dictionary of how many messages were sent on every date'''
+        if self.all().count() < 1:
+            return dict()
+
         date_strs = list()
         if type(obj) is Member:
             date_sums = list(self.filter(member=obj).values_list('obj').order_by('-obj').annotate(models.Sum('count')))

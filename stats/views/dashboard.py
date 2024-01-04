@@ -30,11 +30,11 @@ def dashboard(request):
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "toggle_hide":
+            toggle_hidden_all(request.user)
             if request.user.hidden:
                 messages.add_message(request, messages.INFO, "Data has been successfully unhidden")
             else:
                 messages.add_message(request, messages.INFO, "Data has been successfully hidden")
-            edit_hidden_all(request.user)
             return redirect(request.path_info) # redirects back to current page 
         elif action == "delete":
             delete_all(request.user)
@@ -48,30 +48,42 @@ def dashboard(request):
     }
     return render(request, "dashboard.html", context)
 
-def edit_hidden_all(user: models.User):
+
+def reset_cache(user: models.User):
     '''
-    Hides or unhides the user in all guilds
+    Reset the cache of everry guild the user is in
     '''
-    if not user.hidden:
-        user.hidden = True
-        # reset the cache 
-        guild_ids = [tup[0] for tup in models.Member.objects.filter(user=user).values_list("guild_id")]
-        for guild_id in guild_ids:
-            cache.delete("top100", version=guild_id)
-        user.save()
-    else:
-        user.hidden = False
-        user.save()
+    guild_ids = [tup[0] for tup in models.Member.objects.filter(user=user).values_list("guild_id")]
+    for guild_id in guild_ids:
+        cache.delete("top100", version=guild_id)
+
+def toggle_hidden_all(user: models.User):
+    '''
+    Hide or unhide the user in all guilds
+    '''
+    models.Member.objects.filter(user=user).update(hidden=not user.hidden) # toggle hide for all member objs
+    user.hidden = not user.hidden
+    user.save()
+
+    reset_cache(user)
     
 
 def delete_all(user: models.User):
     '''
-    Deletes the users data and opts them out of the service. Return the action performed ('delete')
+    Add all users/members to the deletion queue and opt them out of the service.
     '''
-    # add hashed ID to the blacklist 
-    models.UserBlacklist(hash_value=hashed_id(user.id)).save()
+    # start by hiding the user and all member objs
+    models.Member.objects.filter(user=user).update(hidden=True)
+    user.hidden = True
+    user.save()
 
-    # delete the user 
+    # add hashed ID to the blacklist 
+    models.UserBlacklist.objects.create(hash_value=hashed_id(user.id))
+
+    # add the user and all members too the deletion queue
     for member_model_obj in models.Member.objects.filter(user=user):
-        member_model_obj.delete()
-    user.delete()
+        models.MemberDeletionQueue.objects.create(user_id=user.id, guild_id=member_model_obj.guild_id)
+    models.UserDeletionQueue.objects.create(id=user.id)
+
+    reset_cache(user)
+    logout(user)
