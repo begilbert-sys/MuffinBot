@@ -13,8 +13,6 @@ class History_Collection_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.active_collectors = dict()
-
 
     async def collection_instance(self, guild: discord.Guild):
         if guild.id in self.active_collectors:

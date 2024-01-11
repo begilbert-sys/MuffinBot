@@ -6,16 +6,24 @@ from typing import Literal, Optional
 import logging
 from pathlib import Path
 
-from .token import TOKEN
+from django.conf import settings
+
+if settings.PRODUCTION_MODE:
+    import boto3
+    _ssm_client = boto3.client('ssm', 'us-west-1')
+    TOKEN = _ssm_client.get_parameter(
+        Name=['/discord/token'],
+        WithDecryption=True
+    )['Parameter']['Value']
+else:
+    from .token import TOKEN
 
 parentdir = Path(__file__).parent
 logging.config.fileConfig(f'{parentdir}/logger.ini')
 
 class Stats_Bot(commands.Bot):
     async def setup_hook(self):
-        await self.load_extension('.cogs.history_collection', package = __package__)
-        #await self.load_extension('.cogs.current_collection', package = __package__)
-        #await self.load_extension('.cogs.interface', package = __package__)
+        await self.load_extension('.cogs.collection', package = __package__)
 
 
 intents = discord.Intents(

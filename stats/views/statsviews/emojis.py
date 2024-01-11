@@ -4,13 +4,13 @@ from stats import models
 
 from .utils import guild_perms
 
-from collections import Counter
 def emojis_table(guild: models.Guild, count: int) -> list[list[(models.Emoji, int)]]:
     '''
     Return a 2D list of the guild's top `count` `emojis, divided into categories depending on their usage
     '''
     ROWS = 10
-    emojis = models.Emoji_Count.objects.guild_top_n(guild, count)
+    emoji_ids = models.Emoji_Count.objects.guild_top_n(guild, count)
+    emojis = [(models.Emoji.objects.get(id=id), count) for id, count in emoji_ids]
 
     if len(emojis) <= ROWS:
         return emojis
@@ -43,8 +43,10 @@ def reactions_table(guild: models.Guild, count: int) -> list[list[(models.Emoji,
     Return a 2D list of the guild's top `count` reactions, divided into COLScolumns
     '''
     COLS = 15
-    reaction_counts = Counter()
-    reactions = models.Reaction_Count.objects.guild_top_n(guild, count)
+    reaction_ids = models.Reaction_Count.objects.guild_top_n(guild, count)
+    print(reaction_ids)
+    reactions = [(models.Emoji.objects.get(id=id), count) for id, count in reaction_ids]
+    print(reactions)
     return tablemaker(reactions, COLS)
     
 @guild_perms

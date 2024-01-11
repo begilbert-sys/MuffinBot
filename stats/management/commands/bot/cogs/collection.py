@@ -1,15 +1,16 @@
 import discord
 from discord.ext import commands
 
-import datetime
 import logging 
 from stats import models
 from textwrap import dedent
+from timeit import default_timer
 from .utils.processor import Processor
+from .utils.collector import History_Collector
 
 logger = logging.getLogger('collection')
 
-class Current_Collection_Cog(commands.Cog):
+class Collection_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.processors = dict()
@@ -34,7 +35,14 @@ class Current_Collection_Cog(commands.Cog):
     @commands.check_any(commands.is_owner(), commands.has_guild_permissions(manage_guild=True))
     async def history(self, ctx: commands.Context):
         '''Start history collection for a server'''
-        pass
+        if ctx.guild.id in self.processors:
+            processor = self.processors[ctx.guild.id]
+            if processor.active and not processor.history:
+                processor = self.get_processor(ctx.guild)
+                self.history_collector = History_Collector(self.bot, ctx.guild, processor)
+                self.bot.loop.create_task(self.history_collector.collect_data())
+                await ctx.send("👍")
+
     @commands.hybrid_command(name="stats")
     async def stats(self, ctx: commands.Context):
         '''Get a link to the server's stats page'''
@@ -114,11 +122,14 @@ class Current_Collection_Cog(commands.Cog):
         if processor:
             print('processor active')
             processor.process_message(message)
-            await processor.save()
+
+            if processor.cache_count % 20000 == 0:
+                self.bot.loop.create_task(self.db_processor.save())
+
 
 
     @commands.Cog.listener()
-    async def on_message_edit(self, before, after): # unchecked
+    async def on_message_edit(self, before, after): 
         processor = await self.get_processor(after)
         if processor:
             processor.process_message(before, unprocess=True)
@@ -126,7 +137,7 @@ class Current_Collection_Cog(commands.Cog):
 
 
     @commands.Cog.listener()
-    async def on_message_delete(self, message): # unchecked
+    async def on_message_delete(self, message): 
         processor = await self.get_processor(message)
         if processor:
             processor.process_message(message, unprocess=True)
@@ -165,4 +176,4 @@ class Current_Collection_Cog(commands.Cog):
             processor.process_reaction(reaction, -reaction.count)
 
 async def setup(bot):
-    await bot.add_cog(Current_Collection_Cog(bot))
+    await bot.add_cog(Collection_Cog(bot))

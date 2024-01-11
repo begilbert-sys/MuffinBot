@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path
 
 from . import views
 
@@ -29,5 +29,6 @@ urlpatterns = [
     path("add/", views.staticpages.add, name="add to server"),
     path("info/", views.staticpages.info, name="additional info"),
     path("privacy/", views.staticpages.privacy, name="privacy policy"),
+    path("stats/", views.staticpages.stats, name="stats redirect")
     #path("tos/", views.)
 ]

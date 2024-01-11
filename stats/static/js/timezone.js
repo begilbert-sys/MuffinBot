@@ -17,19 +17,22 @@ function militaryTime(dateTime) {
 function meridiemTime(dateTime) {
     var hour = dateTime.getHours();
     var hourString = String(hour);
-    if (hour === 0) {
-        hourString = '12';
-    }
 
     var minute = dateTime.getMinutes();
     var minuteString = String(minute);
     if (minute < 10) {
         minuteString = '0' + minuteString;
     }
-
-    if (hour <= 12) {
+    if (hour === 0) {
+        return "12:" + minuteString + "am";
+    }
+    else if (hour === 12) {
+        return "12:" + minuteString + "pm";
+    }
+    else if (hour < 12) {
         return hourString + ":" + minuteString + "am";
-    } else {
+    } 
+    else {
         return (hour - 12) + ":" + minuteString + "pm";
     }
 }

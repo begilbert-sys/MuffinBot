@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 
 from . import Channel, Emoji, Guild, Member
 
@@ -20,18 +21,11 @@ class MemberStat_Manager(models.Manager):
             unique_fields = ['id']
         )
     
-    @timed
     def guild_top_n(self, guild: Guild, n: int = None) -> list[tuple['models.MemberStat', int]]:
-        objs = Counter()
-        for model_obj in self.filter(member__guild=guild).only('obj', 'count'):
-            objs[model_obj.obj] += model_obj.count
-        if n is None:
-            return objs.most_common()
-        else:
-            return objs.most_common(n)
-    @timed
+        return list(self.filter(member__guild=guild, count__gt=0).values_list('obj').annotate(total_count=Sum('count')).order_by('-total_count')[:n])
+    
     def member_top_n(self, member: Member, n: int) -> list[Self]:
-        return list(self.filter(member=member).order_by('-count')[:n])
+        return list(self.filter(member=member, count__gt=0).order_by('-count')[:n])
 
 class MemberStat(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
@@ -142,7 +136,7 @@ class Date_Count_Manager(MemberStat_Manager):
         '''
         Return the collected messages date range for the guild, as an int
         '''
-        if self.all().count() > 0:
+        if self.filter(member__guild=guild).count() > 0:
             return (self.last_message_date(guild) - self.first_message_date(guild)).days + 1
         else:
             return 0
@@ -151,16 +145,16 @@ class Date_Count_Manager(MemberStat_Manager):
         '''
         Return the guild's first collected message date 
         '''
-        if self.all().count() > 0:
+        if self.filter(member__guild=guild).count() > 0:
             return self.filter(member__guild=guild).earliest().obj
         else:
             return datetime.datetime.now()
-    @timed
+        
     def last_message_date(self, guild: Guild):
         '''
         Return the guild's last collected message date 
         '''
-        if self.all().count() > 0:
+        if self.filter(member__guild=guild).count() > 0:
             return self.filter(member__guild=guild).latest().obj
         else:
             return datetime.datetime.now()
@@ -168,7 +162,7 @@ class Date_Count_Manager(MemberStat_Manager):
         '''
         Return the member's first collected message date 
         '''
-        if self.all().count() > 0:
+        if member.messages > 0:
             return self.filter(member=member).earliest().obj
         else:
             return datetime.datetime.now()
@@ -176,7 +170,7 @@ class Date_Count_Manager(MemberStat_Manager):
         '''
         Return the member's last collected message date 
         '''
-        if self.all().count() > 0:
+        if member.messages > 0:
             return self.filter(member=member).latest().obj
         else:
             return datetime.datetime.now()
@@ -191,7 +185,7 @@ class Date_Count_Manager(MemberStat_Manager):
     
     def total_member_active_days(self, member: Member):
         return self.filter(member=member).count()
-    @timed
+
     def date_counts_as_str(self, obj) -> dict:
         # optimized-ish
         '''Return a dictionary of how many messages were sent on every date'''
@@ -251,7 +245,7 @@ class URL_Count(MemberStat):
 
 
 class Emoji_Count_Manager(MemberStat_Manager):
-    @timed
+
     def top_n_emojis(self, guild: Guild, n):
         emojis = Counter()
         for emoji_count in self.filter(member__guild=guild):

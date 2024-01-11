@@ -33,9 +33,6 @@ def messages_table(guild: models.Guild, timezone: str):
         })
     return member_table
 
-
-
-@timed
 @guild_perms
 def activity(request, guild: models.Guild):
     context = {

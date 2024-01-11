@@ -13,3 +13,4 @@ curse_words.txt
 client_info.py
 utils.py
 settings.py
+secrets.py

@@ -37,11 +37,12 @@ def get_half_hour_increment(dt: datetime.datetime) -> int:
     return (dt.hour * 2) + (1 if dt.minute >= 30 else 0)
 
 class Processor:
-    def __init__(self, *, history: bool = False):
+    def __init__(self):
         self.active = False
 
-        # denotes if the processor is processing message history or current messages
-        self.history = history
+        # denotes if the processor is also processing message history
+        self.history = False
+        self.current_channel_model_obj = None
 
         self.guild_model_obj = None
 
@@ -50,9 +51,6 @@ class Processor:
 
         # ensures that the save() function finishes every time. for debugging
         self._save_checker = 0
-        
-        if history:
-            self.current_channel_model_obj = None
 
         self.reset()
 
@@ -178,15 +176,16 @@ class Processor:
             count_model_obj = Count_Class(**{'obj': object, 'member': member})
             self.cached_model_objects[Count_Class][key] = count_model_obj
         count_model_obj.count += increment_by
-
+        
     async def is_blacklisted(self, user: discord.User) -> bool:
         '''Return whether or not a user is blacklisted'''
         hashed = hashed_id(user.id)
         return await models.UserBlacklist.objects.filter(hash_value=hashed).aexists() or await models.MemberBlacklist.objects.filter(user_id=user.id, guild=self.guild_model_obj).aexists()
     
-    def process_reaction(self, message, reaction, count):
+    def process_reaction(self, reaction: discord.Reaction, count):
         emoji_object = reaction.emoji
-        member_model_obj = self._get_member(message.author)
+        print(emoji_object)
+        member_model_obj = self._get_member(reaction.message.author)
         if type(emoji_object) is str:
             if emoji_object not in EMOJI_IDS:
                 return
@@ -198,7 +197,7 @@ class Processor:
             emoji_model_obj = self._get_emoji(emoji_object.id, emoji_object.name, custom=True)
             self._increment_count(models.Reaction_Count, member_model_obj, emoji_model_obj, count)
             
-    def process_message(self, message: discord.Message, *, unprocess = False):
+    def process_message(self, message: discord.Message, *, unprocess = False, history = False):
         '''
         Given a message, increment or decrement all of the cached models accordingly 
         '''
@@ -248,17 +247,7 @@ class Processor:
 
         ### REACTIONS
         for reaction in message.reactions:
-            emoji_object = reaction.emoji
-            if type(emoji_object) is str:
-                if emoji_object not in EMOJI_IDS:
-                    continue
-                emoji_id = EMOJI_IDS[emoji_object]
-                emoji_name = emoji.demojize(emoji_object, delimiters=('', ''))
-                emoji_model_obj = self._get_emoji(emoji_id, emoji_name, custom=False)
-                self._increment_count(models.Reaction_Count, member_model_obj, emoji_model_obj, (reaction.count * crement))
-            elif type(emoji_object) in [discord.Emoji, discord.PartialEmoji]:
-                emoji_model_obj = self._get_emoji(emoji_object.id, emoji_object.name, custom=True)
-            self._increment_count(models.Reaction_Count, member_model_obj, emoji_model_obj, (reaction.count * crement))
+            self.process_reaction(reaction, crement)
         
         ### URL
         for URL in get_URLs(message.content):
@@ -308,28 +297,30 @@ class Processor:
                         id=channel.id,
                         name=channel.name,
                     )
+    
+    async def set_channel(self, channel: discord.channel):
+        '''
+        Only for use when collecting server history
+        Sets the channel model obj
+        '''
+        assert self.history
+        # this save is to ensure the last_message_dt value gets saved
+        if not self.current_channel_model_obj is None:
+            await self.current_channel_model_obj.asave()
+        try:
+            self.current_channel_model_obj = await models.Channel.objects.aget(id=channel.id)
+        except models.Channel.DoesNotExist:
+            self.current_channel_model_obj = models.Channel(
+                id=channel.id,
+                guild=self.guild_model_obj,
+                name=channel.name
+            )
 
     async def process_channel(self, channel: discord.channel):
         '''
-        Sets up the channel history object to be 
+        Processes a channel
         '''
-        if self.history:
-            # this save is to ensure the last_message_dt value gets saved
-            if not self.current_channel_model_obj is None:
-                await self.current_channel_model_obj.asave()
-            try:
-                self.current_channel_model_obj = await models.Channel.objects.aget(id=channel.id)
-            except models.Channel.DoesNotExist:
-                self.current_channel_model_obj = models.Channel(
-                    id=channel.id,
-                    guild=self.guild_model_obj,
-                    name=channel.name
-                )
-        
-        # I don't actually know when this would be used 
-        # but this is just in case. . .
-        else:
-            self._get_channel(channel)
+        self._get_channel(channel)
     
     async def _update_and_save_count_model_objects(self, Model_Class):
         '''
@@ -445,7 +436,7 @@ class Processor:
         async with self._saving_semaphore:
             assert self._save_checker == 0
             self._save_checker = 1
-            logger.info("Saving something")
+            logger.info(f"Saving {self.guild_model_obj.name}. . .")
 
             self.guild_model_obj.last_msg_dt = datetime.datetime.now(datetime.UTC)
             await self.guild_model_obj.asave()
@@ -461,12 +452,9 @@ class Processor:
 
             await self._update_and_save_member_objects()
 
-            await asyncio.sleep(5)
-
             if self.history:
                 await self.current_channel_model_obj.asave()
-            else:
-                await self._update_and_save_objects(models.Channel)
+            await self._update_and_save_objects(models.Channel)
 
             # save the rest asynchronously
             gather_list = []

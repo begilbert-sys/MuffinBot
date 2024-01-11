@@ -3,13 +3,27 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 import requests
 
-from .client_info import CLIENT_ID, CLIENT_SECRET
+from django.conf import settings
 
-discord_auth_url = 'https://discord.com/api/oauth2/authorize?client_id=403745322007920643&response_type=code&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Flogin%2Fredirect&scope=identify+guilds'
+if settings.PRODUCTION_MODE:
+    import boto3
+    _ssm_client = boto3.client('ssm', 'us-west-1')
+    _client_id, _client_secret = _ssm_client.get_parameters(
+        Names=['/discord/client-id', '/discord/client-secret'],
+        WithDecryption=True
+    )['Parameters']
+    CLIENT_ID = _client_id['Value']
+    CLIENT_SECRET  = _client_secret['Value']
+    site_url = 'muffinstats.net'
+    discord_auth_url = 'https://discord.com/api/oauth2/authorize?client_id=403745322007920643&response_type=code&redirect_uri=https%3A%2F%2Fmuffinstats.net%2Flogin%2Fredirect&scope=guilds+identify'
+else:
+    from .client_info import CLIENT_ID, CLIENT_SECRET
+    site_url = '127.0.0.1:8000'
+    discord_auth_url = 'https://discord.com/api/oauth2/authorize?client_id=403745322007920643&response_type=code&redirect_uri=http%3A%2F%2F127.0.0.1%3A8000%2Flogin%2Fredirect&scope=identify+guilds'
 
 def exchange_code(code: str) -> dict:
     discord_endpoint = 'https://discord.com/api/v10/oauth2/token'
-    redirect_uri = 'http://127.0.0.1:8000/login/redirect'
+    redirect_uri = f'http://{site_url}/login/redirect'
 
     data = {
         'grant_type': 'authorization_code',

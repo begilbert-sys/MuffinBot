@@ -9,7 +9,7 @@ from .utils import guild_perms
 from collections import Counter
 from stats.models.debug import timed 
 
-@timed
+
 def get_channel_table(guild: models.Guild):
     rows = {}
     for channel_count in models.Channel_Count.objects.filter(member__guild=guild, member__hidden=False).select_related("obj", "member"):
@@ -24,7 +24,6 @@ def get_channel_table(guild: models.Guild):
             rows[channel_count.obj] = row
     return tuple((item[0], item[1][0], [n[0] for n in item[1][1]]) for item in sorted(rows.items(), key=lambda item: item[1][0], reverse=True))
 
-@timed
 def top_URLs_table(guild: models.Guild):
     url_counts = models.URL_Count.objects.guild_top_n(guild, 15)
     table = []
