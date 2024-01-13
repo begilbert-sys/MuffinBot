@@ -21,7 +21,10 @@ class History_Collector:
     def __init__(self, bot, guild, processor):
         self.bot = bot
         self.guild = guild
+
         self.processor = processor
+        processor.history = True
+
         self.messages_scraped = 0
         self._processing_time = 0 
 
@@ -74,10 +77,9 @@ class History_Collector:
                 
                 # save on every 20,000th message 
                 if self.processor.cache_count % 20000 == 0:
-                    self.bot.loop.create_task(self.db_processor.save())
-                self.messages_scapred += 1
+                    self.bot.loop.create_task(self.processor.save())
+                self.messages_scraped += 1
 
-            
             process_end = default_timer()
             self._processing_time += (process_end-process_start)
             logger.debug(self.guild.name + ' Processing time: ' + str((process_end-process_start)) + ' seconds')
@@ -85,7 +87,7 @@ class History_Collector:
             if len(messages) < MSG_LIMIT:
                 break
 
-        self.bot.loop.create_task(self.db_processor.save())
+        self.bot.loop.create_task(self.processor.save())
         
     async def _collect_data(self):
 

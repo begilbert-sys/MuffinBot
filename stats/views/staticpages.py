@@ -12,5 +12,8 @@ def info(request):
 def privacy(request):
     return render(request, "privacy.html")
 
+def tos(request):
+    return render(request, "tos.html")
+
 def stats(request):
     return redirect("/")

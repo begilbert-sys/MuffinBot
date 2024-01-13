@@ -29,6 +29,6 @@ urlpatterns = [
     path("add/", views.staticpages.add, name="add to server"),
     path("info/", views.staticpages.info, name="additional info"),
     path("privacy/", views.staticpages.privacy, name="privacy policy"),
-    path("stats/", views.staticpages.stats, name="stats redirect")
-    #path("tos/", views.)
+    path("stats/", views.staticpages.stats, name="stats redirect"),
+    path("tos/", views.staticpages.tos, name="terms of service")
 ]

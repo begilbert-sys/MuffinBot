@@ -1,0 +1,95 @@
+.page-wrapper {
+    display:flex;
+    justify-content: space-evenly;
+}
+
+.text-container {
+    text-align:left;
+    max-width: 500px;
+}
+
+.slideshow-container {
+    max-width: 700px;
+    position: relative;
+    margin: auto;
+}
+
+.slide {
+    display: none;
+}
+.slide img {
+    width: 700px;
+    height: 400px;
+    border-radius: 5px;
+}
+
+
+.prev, .next {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    width: auto;
+    margin-top: -22px;
+    padding: 16px;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    transition: 0.6s ease;
+    border-radius: 0 3px 3px 0;
+    user-select: none;
+    left: 0;
+}
+
+
+.next {
+    left: calc(100% - 40px);
+    border-radius: 3px 0 0 3px;
+}
+
+.prev:hover, .next:hover {
+    background-color: rgba(0,0,0,0.8);
+}
+.dot {
+    cursor: pointer;
+    height: 15px;
+    width: 15px;
+    margin: 0 2px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    transition: background-color 0.6s ease;
+}
+
+.active, .dot:hover {
+    background-color: #717171;
+}
+
+/* Fading animation */
+.fade {
+    animation-name: fade;
+    animation-duration: 1.5s;
+}
+  
+@keyframes fade {
+    from {opacity: .4}
+    to {opacity: 1}
+}
+
+.checklist {
+    list-style: none;
+    padding-left: 10px;
+}
+.checklist li {
+    margin-bottom: 20px;
+}
+
+.checklist li:before {
+    /* background-image specified in html document */
+    background-size: 15px 15px;
+    vertical-align:middle;
+    display: inline-block;
+    width: 15px; 
+    height: 15px;
+    margin-right: 7px;
+    content:"";
+}

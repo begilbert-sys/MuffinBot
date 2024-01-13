@@ -12,7 +12,7 @@ if settings.PRODUCTION_MODE:
     import boto3
     _ssm_client = boto3.client('ssm', 'us-west-1')
     TOKEN = _ssm_client.get_parameter(
-        Name=['/discord/token'],
+        Name='/discord/token',
         WithDecryption=True
     )['Parameter']['Value']
 else:

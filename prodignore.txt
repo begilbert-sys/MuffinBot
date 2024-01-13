@@ -1,0 +1,17 @@
+# files to ignore when uploading to production
+__pycache__
+.DS_Store
+presets.py
+migrations
+debug.log
+discord.log
+Archive.zip
+token.py
+client_info.py
+secrets.py
+create-prodfolder.sh
+dbsize_piechart.py
+prodignore.txt
+README.md
+reset_db.sh
+useful_queries

@@ -54,24 +54,12 @@ def emoji_table(member: models.Member, count: int) -> list[list[models.Emoji_Cou
         return [emojis]
 
     max_emoji_count = emojis[0].count
-    step = round(max_emoji_count * (1/ROWS))
-    lower_bound = max_emoji_count
-    emoji_matrix = list()
-    for slice in range(ROWS):
-        if len(emojis) == 0:
-            break
-        sublist = list()
-        lower_bound = lower_bound - step
-        while True:
-            if len(emojis) == 0:
-                break
-            if emojis[0].count >= lower_bound:
-                sublist.append(emojis.pop(0))
-            else:
-                break
-        if len(sublist) > 0:
-            emoji_matrix.append(sublist)
-    return emoji_matrix
+    emoji_matrix = [list() for row in range(ROWS)]
+    for emoji_count_model_obj in emojis:
+        rev_index = ROWS * emoji_count_model_obj.count // max_emoji_count if emoji_count_model_obj.count != max_emoji_count else ROWS - 1
+        emoji_matrix[ROWS - rev_index].append(emoji_count_model_obj)
+
+    return [row for row in emoji_matrix if row] # remove all empty rows
 
 def reaction_table(member: models.Member) -> list[list[models.Reaction_Count]]:
     '''

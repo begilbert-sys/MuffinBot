@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.forms import modelformset_factory
 from django.http import *
 
-from stats import models, forms
+from stats import models
 
 
 ChannelFormSet = modelformset_factory(
