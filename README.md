@@ -1,5 +1,6 @@
 # MuffinBot
 http://muffinstats.net/
+
 A WIP Discord Statistics Service bot wrapped inside of a Django application.
 This app has two main functionalities: 
 * On the backend: all readable messages from a discord server are processed in batches, and relevant info is saved to a PostgreSQL database
