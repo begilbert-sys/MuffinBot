@@ -1,16 +1,18 @@
+import asyncio
 import discord
 from discord.ext import commands
 import logging 
 from stats import models
 from textwrap import dedent
 from .utils.processor import Processor
-
+from .utils.collector import History_Collector
 logger = logging.getLogger('collection')
 
 class Current_Collection_Cog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.processors = dict()
+        self.collectors = dict()
     
     async def get_processor(self, message: discord.Message) -> Processor | None:
         if message.guild.id in self.processors:
@@ -32,7 +34,14 @@ class Current_Collection_Cog(commands.Cog):
     @commands.check_any(commands.is_owner(), commands.has_guild_permissions(manage_guild=True))
     async def history(self, ctx: commands.Context):
         '''Start history collection for a server'''
-        pass
+        if ctx.guild.id in self.processors:
+            processor = self.processors[ctx.guild.id]
+            if processor.active:
+                collector = History_Collector(self.bot, ctx.guild, processor)
+                task = self.bot.loop.create_task(collector.collect_data(), name = f"History Collection {ctx.guild.id}")
+                self.collectors[ctx.guild.id] = collector
+                await ctx.send("👍")
+
     @commands.hybrid_command(name="stats")
     async def stats(self, ctx: commands.Context):
         '''Get a link to the server's stats page'''
@@ -50,6 +59,7 @@ class Current_Collection_Cog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         '''Create a processor instance for the guild'''
+        logger.info("CLIENT DISCONNECTED")
         self.disconnected = False
         for guild in self.bot.guilds:
             processor = Processor()
@@ -61,7 +71,7 @@ class Current_Collection_Cog(commands.Cog):
         logger.error("CLIENT DISCONNECTED")
         if not self.disconnected:
             self.disconnected = True
-            for processor in self.processors:
+            for processor in self.processors.values():
                 if processor.active:
                     await processor.save()
             
@@ -110,11 +120,13 @@ class Current_Collection_Cog(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, message):
+        for task in asyncio.all_tasks():
+            logger.debug(str(task))
         processor = await self.get_processor(message)
         if processor:
-            print('processor active')
             processor.process_message(message)
-            await processor.save()
+            if processor.cache_count % 5 == 0:
+                await processor.save()
 
 
     @commands.Cog.listener()

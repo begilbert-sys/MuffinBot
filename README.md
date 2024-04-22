@@ -1,5 +1,10 @@
 # MuffinBot
-http://muffinstats.net/stats
+A WIP Discord Statistics Servivce. The website can be found here:
+http://muffinstats.net/
+
+
+Some samples from development:
+<img src="https://i.imgur.com/9GlxI0q.png">
 
 A discord.py bot wrapped inside of a Django application.
 This app has two main functionalities: 

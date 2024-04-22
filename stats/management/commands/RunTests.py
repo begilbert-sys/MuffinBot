@@ -4,13 +4,12 @@ import unittest
 from django.db.models import Count, Sum
 from django.db.models.functions import ExtractWeekDay
 
-from stats.models import *
+from stats import models
 from timeit import default_timer
 from collections import Counter
 
+import random 
 import asyncio
-
-from asgiref.sync import sync_to_async
 
 class Command(BaseCommand):
     help = """
@@ -25,10 +24,5 @@ class Command(BaseCommand):
 
 class TestChronology(unittest.TestCase):
     def test_suite(self):
-        guild_model_obj = Guild.objects.all().first()
-        asyncio.run(self.main())
-
-    async def main(self):
-        guild_model_obj = await Guild.objects.all().afirst()
-        guild_ids_query = MemberBlacklist.objects.filter(guild=guild_model_obj).values_list('id')
-        print({tup[0] async for tup in guild_ids_query})
+        guilds = models.Guild.objects.all()
+        print(guilds)

@@ -39,9 +39,13 @@
                 </ul>
             </nav>
             {% if user.is_authenticated %}
-            <a href="../logout/" class="discord_button logout">
-                <img src="">Logout
-            </a>
+            <div class="logout">
+                <img src="{{ user.avatar }}">
+                <div class="logout_text">
+                    <span>{{ user.tag }}</span>
+                    <a href="/logout/">Logout</a>
+                </div>
+            </div>
             {% else %}
                 <a href="../login/" class="discord_button">
                     <img src="{% static 'assets/discord.svg' %}" height=20>Discord Login
@@ -62,19 +66,24 @@
                 <li><b>Secure</b> - Statistics are private, and you can select exactly which members of your server are allowed to view them</li>
                 <li><b>Privacy-Friendly</b> - Each user has complete control over any data collected by the bot</li>
                 <li><b>Intuitive</b> - Setting up the bot is simple and quick</li>
+            </ul>
+            <div class="button_container">
+                <a href="/login"><button class="big_button">Login</button></a>
+                <a href="/add"><button class="big_button big_add_button">Add to Server</button>
+            </div>
         </div>
         <div>
             <div class="slideshow-container">
                 <div class="slide fade">
-                <img src="https://www.w3schools.com/howto/img_nature_wide.jpg" style="width:100%">
+                <img src="https://camo.githubusercontent.com/1a8b8bf94e2bf3367ab3a3da981da310c750ba063f00de58497dd4ad5fd6996c/68747470733a2f2f692e696d6775722e636f6d2f39476c784930712e706e67" style="width:100%">
                 </div>
             
                 <div class="slide fade">
-                <img src="https://www.w3schools.com/howto/img_snow_wide.jpg" style="width:100%">
+                <img src="https://camo.githubusercontent.com/259429acb1e10de17a8746b9a14e4129b912c09cfdbdd41f8a1b019078fca7bd/68747470733a2f2f692e696d6775722e636f6d2f7a36364c6753712e706e67" style="width:100%">
                 </div>
             
                 <div class="slide fade">
-                <img src="https://www.w3schools.com/howto/img_lights_wide.jpg" style="width:100%">
+                <img src="https://i.imgur.com/5k4iUoH.png" style="width:100%">
                 </div>
 
                 <a class="prev" onclick="changeSlide(-1)">&#10094;</a>

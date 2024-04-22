@@ -23,7 +23,7 @@ else:
 
 def exchange_code(code: str) -> dict:
     discord_endpoint = 'https://discord.com/api/v10/oauth2/token'
-    redirect_uri = f'http://{site_url}/login/redirect'
+    redirect_uri = f'https://{site_url}/login/redirect'
 
     data = {
         'grant_type': 'authorization_code',

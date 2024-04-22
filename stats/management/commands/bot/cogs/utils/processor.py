@@ -184,7 +184,6 @@ class Processor:
     
     def process_reaction(self, reaction: discord.Reaction, count):
         emoji_object = reaction.emoji
-        print(emoji_object)
         member_model_obj = self._get_member(reaction.message.author)
         if type(emoji_object) is str:
             if emoji_object not in EMOJI_IDS:
@@ -444,6 +443,7 @@ class Processor:
             # freeze the entire cache in-place for it to be saved
             self.cache_copy = self.cached_model_objects
             self.reset()
+            await asyncio.sleep(5)
 
 
             # save these objects first, to avoid foreign key conflicts (you dummy)

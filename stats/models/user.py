@@ -25,7 +25,6 @@ class User(models.Model):
     tag = models.CharField(max_length=32)
     discriminator = models.CharField(max_length=4, null=True)
     avatar_id = models.CharField(max_length=34, null=True) # the 'a_' prefix for animated avatars adds two characters
-
     timezone = models.CharField(max_length=32, default='US/Pacific', choices=get_timezones)
     timezone_set = models.BooleanField(default=False)
 
@@ -43,14 +42,14 @@ class User(models.Model):
         self.tag = other.tag
         self.discriminator = other.discriminator
         self.avatar_id = other.avatar_id
-    
+
     @property
     def avatar(self):
-        if self.avatar_id:
-            return f'https://cdn.discordapp.com/avatars/{self.id}/{self.avatar_id}.png'
+        if len(self.avatar_id) == 1:
+            return f'https://cdn.discordapp.com/embed/avatars/{self.avatar_id}.png'
         else:
-            return 'https://cdn.discordapp.com/embed/avatars/0.png'
-
+            return f'https://cdn.discordapp.com/avatars/{self.id}/{self.avatar_id}.png'
+        
     def full_tag(self) -> str:
         '''Return the user's tag with the discriminator attatched, if they have one '''
         if self.discriminator is None:

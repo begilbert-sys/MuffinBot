@@ -18,7 +18,7 @@ def emojis_table(guild: models.Guild, count: int) -> list[list[(models.Emoji, in
     max_emoji_count = emojis[0][1]
     emoji_matrix = [list() for row in range(ROWS)]
     for emoji_obj, emoji_count in emojis:
-        rev_index = ROWS * emoji_count // max_emoji_count if emoji_count != max_emoji_count else ROWS - 1
+        rev_index = int(emoji_count / (max_emoji_count / ROWS)) + 1 if emoji_count != max_emoji_count else ROWS
         emoji_matrix[ROWS - rev_index].append((emoji_obj, emoji_count))
 
     return [row for row in emoji_matrix if row] # remove all empty rows

@@ -13,7 +13,6 @@ urlpatterns = [
     path("guild/<int:guild_id>/emojis/", views.emojis, name="emojis/reactions"),
     path("guild/<int:guild_id>/user/<str:tag>", views.users, name="users"),
     
-
     # auth 
     path("login/", views.discord_login, name="login"),
     path("login/redirect/", views.discord_login_redirect, name="login redirect"),

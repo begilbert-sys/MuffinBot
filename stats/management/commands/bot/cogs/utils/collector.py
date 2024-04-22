@@ -77,17 +77,18 @@ class History_Collector:
                 
                 # save on every 20,000th message 
                 if self.processor.cache_count % 20000 == 0:
-                    self.bot.loop.create_task(self.processor.save())
+                    self.bot.loop.create_task(self.processor.save(), name = f"Processor Save {self.guild.id}")
                 self.messages_scraped += 1
 
             process_end = default_timer()
             self._processing_time += (process_end-process_start)
             logger.debug(self.guild.name + ' Processing time: ' + str((process_end-process_start)) + ' seconds')
+            logger.debug(self.guild.name + ' Latency:' + str(self.bot.latency))
 
             if len(messages) < MSG_LIMIT:
                 break
 
-        self.bot.loop.create_task(self.processor.save())
+        self.bot.loop.create_task(self.processor.save(), name = f"Processor Save {self.guild.id}")
         
     async def _collect_data(self):
 
@@ -117,7 +118,7 @@ class History_Collector:
                 Messages scraped: {self.messages_scraped}
                 Messages per second: {mps:.2f}
                 Total processing time: {self._processing_time:.4f} seconds
-                Last message in {self.current_channel_model_obj.name} created at {self.current_channel_model_obj.last_message_dt}
+                Last message in {self.processor.current_channel_model_obj.name} created at {self.processor.current_channel_model_obj.last_message_dt}
                 '''
             ))
             logger.info('Saving. . . ')
