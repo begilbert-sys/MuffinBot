@@ -15,6 +15,8 @@ hour_strings = ['12AM', '1AM', '2AM', '3AM', '4AM', '5AM',
 
 def memberstat_magnitude(guild, user, attr):
     top_100_members = models.Member.whitelist.top_100(guild)
+    if len(top_100_members) == 0:
+        return 'MED'
     sorted_users = sorted(top_100_members, key=lambda user: getattr(user, attr))
     if getattr(user, attr) > getattr(sorted_users[int((3/4) * len(sorted_users))], attr): # 75th percentile
         return 'HIGH'

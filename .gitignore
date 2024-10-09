@@ -1,17 +1,13 @@
 __pycache__
 .DS_Store
-db.sqlite3
-presets.py
 migrations
 debug.log
 discord.log
 Archive.zip
 token.py
-theme.custom.min.css
 words.txt
 curse_words.txt
 client_info.py
-utils.py
 settings.py
 secrets.py
 examples

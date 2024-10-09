@@ -70,7 +70,8 @@ def overview(request, guild: models.Guild):
 
     time_of_day_table = get_time_of_day_table(guild, request.user.timezone)
 
-    time_of_day_maxes = tuple(item[1] for item in time_of_day_table[0])
+    time_of_day_maxes = tuple(item[1] for item in time_of_day_table[0]) if len(time_of_day_table) > 0 else (0, 0, 0, 0)
+    
 
     # weekday graph
     weekday_dist = weekday_graph(guild, total_messages)

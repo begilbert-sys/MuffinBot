@@ -49,7 +49,8 @@ class Member_Manager(models.Manager):
     
     @timed
     def top_member_message_count(self, guild: Guild) -> int:
-        return self.filter(guild=guild).first().messages
+        top_member = self.filter(guild=guild).first()
+        return top_member.messages if top_member else 0
     
     @timed
     def top_n_curse_members(self, guild: Guild, n):
