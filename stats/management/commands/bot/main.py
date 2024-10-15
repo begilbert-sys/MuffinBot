@@ -10,7 +10,7 @@ from django.conf import settings
 
 if settings.PRODUCTION_MODE:
     import boto3
-    _ssm_client = boto3.client('ssm', 'us-west-1')
+    _ssm_client = boto3.client('ssm', 'us-east-1')
     TOKEN = _ssm_client.get_parameter(
         Name='/discord/token',
         WithDecryption=True

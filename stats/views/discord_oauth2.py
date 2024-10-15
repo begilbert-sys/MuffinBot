@@ -1,6 +1,7 @@
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.http import HttpResponse
 
 from django.conf import settings
 
@@ -8,7 +9,8 @@ import requests
 
 if settings.PRODUCTION_MODE:
     import boto3
-    _ssm_client = boto3.client('ssm', 'us-west-1')
+    print("boto3 crap importing")
+    _ssm_client = boto3.client('ssm', 'us-east-1')
     _client_id, _client_secret = _ssm_client.get_parameters(
         Names=['/discord/client-id', '/discord/client-secret'],
         WithDecryption=True
@@ -35,7 +37,6 @@ def exchange_code(code: str) -> dict:
         'Content-Type': 'application/x-www-form-urlencoded',
     }
     response = requests.post(discord_endpoint, data=data, headers=headers, auth=(CLIENT_ID, CLIENT_SECRET))
-    print(response.json())
     response.raise_for_status()
     return response.json()
 

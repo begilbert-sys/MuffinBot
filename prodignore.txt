@@ -8,7 +8,7 @@ discord.log
 Archive.zip
 token.py
 client_info.py
-secrets.py
+django_secrets.py
 create-prodfolder.sh
 dbsize_piechart.py
 prodignore.txt

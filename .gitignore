@@ -9,5 +9,5 @@ words.txt
 curse_words.txt
 client_info.py
 settings.py
-secrets.py
+django_secrets.py
 examples
