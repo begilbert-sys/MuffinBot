@@ -6,7 +6,6 @@ app_name = 'stats'
 urlpatterns = [
     # guild paths 
     path("guild/<int:guild_id>/", views.overview, name="index"),
-    path("guild/<int:guild_id>/setup/", views.channel_setup, name="channel setup"),
     path("guild/<int:guild_id>/setup/submit/", views.channel_submit, name="channel submit"),
     path("guild/<int:guild_id>/activity/", views.activity, name="most active users"),
     path("guild/<int:guild_id>/details/", views.details, name="details"),

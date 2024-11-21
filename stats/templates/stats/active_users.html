@@ -19,28 +19,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript" src="{% static 'js/top_users.js' %}"></script>
     
-    <header>
-        <div class="header-navigation">
-            <nav class="pages_directory">
-                <ul>
-                    <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40></li>
-                    <li class="muffinstats"><a href="/">MuffinStats</a></li>
-                    <li><a href="/dashboard">Dashboard</a></li>
-                    <li><a href="/add">Add to server</a></li>
-                    <li><a href="/info">Additional Info</a></li>
-                    <li><a href="/privacy">Privacy Policy/Opt-Out</a></li>
-                </ul>
-            </nav>
-            <div class="logout">
-                <img src="{{ user.avatar }}">
-                <div class="logout_text">
-                    <span>{{ user.tag }}</span>
-                    <a href="/logout/">Logout</a>
-                </div>
-            </div>
-        </div>
-        <div class="greybar"></div>
-    </header>
+    {% include "header_navigation.html" %}
     <h1>
         {{ guild.name }} Stats (rendered on {% now "n/j/o" %})
     </h1>

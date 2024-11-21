@@ -52,17 +52,23 @@ nav ul li a:hover {
   text-decoration: none;
 }
 
-nav.pages_directory ul {
+nav.pages-directory ul {
   padding-left: 30px;
 }
 
-nav.pages_directory ul li {
+nav.pages-directory ul li {
   margin-right:50px;
   color: #d1e3fa99;
 }
 
-nav.pages_directory ul li a {
+nav.pages-directory ul li a {
   color: #d1e3fa99;
+}
+
+.link-disabled {
+  text-decoration: none;
+  cursor: text;
+  
 }
 
 table {

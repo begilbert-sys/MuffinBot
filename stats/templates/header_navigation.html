@@ -1,0 +1,42 @@
+{% load static %}
+<header>
+    <div class="header-navigation">
+        <nav class="pages-directory">
+            <ul>
+                <li style="margin-right:15px"><img src="{% static 'assets/logo.svg' %}" height=40></li>
+                <li class="muffinstats"><a href="/">MuffinStats</a></li>
+                <li><a href="/dashboard/">Dashboard</a></li>
+                <li><a href="/add/">Add to server</a></li>
+                <li><a href="/info/">Additional Info</a></li>
+                <li><a href="/privacy/">Privacy Policy/Opt-Out</a></li>
+            </ul>
+        </nav>
+        {% if user.is_authenticated %}
+        <a href="../logout/" class="discord_button logout">
+            <img src="">Logout
+        </a>
+        {% else %}
+            <a href="../login/" class="discord_button">
+                <img src="{% static 'assets/discord.svg' %}" height=20>Discord Login
+            </a>
+        {% endif %}
+    </div>
+    <div class="greybar"></div>
+    <script>
+        function getPath(href) {
+            return new URL(href).pathname;
+        }
+        const headerLinks = [...document.querySelectorAll('nav.pages-directory li a')];
+        headerLinks.forEach((element) => {
+            /* 
+            if the link is identical to the page we're currently on,
+            replace the <a> tag with a <span> tag
+            */
+            if (getPath(location.href) === (getPath(element.href))) {
+                const spanElement = document.createElement('span');
+                spanElement.textContent = element.textContent;
+                element.parentNode.replaceChild(spanElement, element);
+            }
+        });
+    </script>
+</header>
